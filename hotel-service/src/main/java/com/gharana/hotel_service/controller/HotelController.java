@@ -23,6 +23,7 @@ public class HotelController {
 
     @GetMapping("/")
     public List<Hotel> getHotelsByDestination(@RequestParam("destination") String destination) {
-        return hotelService.getHotels(destination);
+        // Validate input parameters
+        return hotelService.getHotelsByDestination(destination);
     }
 }
