@@ -2,8 +2,11 @@ package com.gharana.hotel_service.dao;
 
 import java.util.List;
 
+import org.springframework.stereotype.Repository;
+
 import com.gharana.hotel_service.model.Hotel;
 
+@Repository
 public class HotelRepository {
 
     public List<Hotel> getHotelsByLocationId(String locationId) {

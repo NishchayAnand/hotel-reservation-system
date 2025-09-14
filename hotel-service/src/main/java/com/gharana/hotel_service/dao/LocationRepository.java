@@ -1,5 +1,8 @@
 package com.gharana.hotel_service.dao;
 
+import org.springframework.stereotype.Repository;
+
+@Repository
 public class LocationRepository {
 
     public String getLocationId(String destination) {

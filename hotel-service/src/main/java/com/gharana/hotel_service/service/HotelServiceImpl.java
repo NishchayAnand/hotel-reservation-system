@@ -3,11 +3,13 @@ package com.gharana.hotel_service.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.gharana.hotel_service.dao.HotelRepository;
 import com.gharana.hotel_service.dao.LocationRepository;
 import com.gharana.hotel_service.model.Hotel;
 
+@Service
 public class HotelServiceImpl implements HotelService { 
 
     @Autowired
