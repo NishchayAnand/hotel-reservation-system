@@ -11,7 +11,7 @@ import com.gharana.inventory_service.model.InventoryRecord;
 public class InventoryRepository {
 
     public List<InventoryRecord> findByHotelIdsAndDateRange(List<String> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) {
-        // Will execute query to fetch inventory records from DB where hotelId in (hotelIds) and date between checkInDate and checkOutDate
+        // Will execute query to fetch inventory records from DB where hotelId in (hotelIds) and date between checkInDate and checkOutDate (excluded)
         return List.of(
             new InventoryRecord("1", "roomType1", LocalDate.now(), 10, 2),
             new InventoryRecord("1", "roomType2", LocalDate.now().plusDays(1), 5, 1)

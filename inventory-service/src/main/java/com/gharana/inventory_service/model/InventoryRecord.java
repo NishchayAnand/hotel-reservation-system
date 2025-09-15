@@ -15,4 +15,10 @@ public class InventoryRecord {
     private LocalDate date;
     private int totalRooms;
     private int reservedRooms;
+
+    @Override
+    public String toString() {
+        return "InventoryRecord [hotelId=" + hotelId + ", roomTypeId=" + roomTypeId + ", date=" + date + ", totalRooms="
+                + totalRooms + ", reservedRooms=" + reservedRooms + "]";
+    }
 }
