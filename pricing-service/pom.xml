@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.gharana</groupId>
-	<artifactId>rate-service</artifactId>
+	<artifactId>pricing-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>rate-service</name>
+	<name>pricing-service</name>
 	<description>Pricing Service for Hotel Reservation System</description>
 	<url/>
 	<licenses>

@@ -28,7 +28,7 @@ public class SearchController {
                                 @RequestParam("check-in-date") LocalDate checkInDate, 
                                 @RequestParam("check-out-date") LocalDate checkOutDate) {
         // Validate input parameters
-        return searchService.search(destination, destination, destination);   
+        return searchService.search(destination, checkInDate, checkOutDate);   
     }
 
 }

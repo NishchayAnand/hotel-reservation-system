@@ -1,13 +1,13 @@
-package com.gharana.rate_service;
+package com.gharana.pricing_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class RateServiceApplication {
+public class PricingServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RateServiceApplication.class, args);
+		SpringApplication.run(PricingServiceApplication.class, args);
 	}
 
 }

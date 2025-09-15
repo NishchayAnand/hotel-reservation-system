@@ -1,4 +1,4 @@
-package com.gharana.inventory_service.dto;
+package com.gharana.search_service;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -8,8 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @AllArgsConstructor
-@Setter
 @Getter
+@Setter
 public class InventoryQueryRequest {
     private List<String> hotelIds;
     private LocalDate checkInDate;

@@ -1,10 +1,10 @@
-package com.gharana.rate_service;
+package com.gharana.pricing_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class RateServiceApplicationTests {
+class PricingServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
