@@ -6,11 +6,12 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import com.gharana.search_service.InventoryQueryRequest;
+import com.gharana.search_service.dto.AvailableRoomType;
 
 @FeignClient(name = "inventory-service", url = "http://localhost:8082/inventory")
 public interface InventoryServiceClient {
 
     @PostMapping("/query")
-    List<String> queryAvailability(InventoryQueryRequest req);
+    List<AvailableRoomType> getAvailableRoomTypes(InventoryQueryRequest req);
 
 }

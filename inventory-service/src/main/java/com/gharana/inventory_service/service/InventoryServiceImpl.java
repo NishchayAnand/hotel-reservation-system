@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.gharana.inventory_service.dao.InventoryRepository;
+import com.gharana.inventory_service.dto.AvailableRoomType;
 import com.gharana.inventory_service.model.InventoryRecord;
 
 @Service
@@ -20,12 +21,13 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public List<String> queryAvailability(List<String> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) {
+    public List<AvailableRoomType> getAvailableRoomTypes(List<String> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) {
         List<InventoryRecord> records = inventoryRepository.findByHotelIdsAndDateRange(hotelIds, checkInDate, checkOutDate);
-        return records.stream()
-                      .map(InventoryRecord::getHotelId) // (record) -> record.getHotelId()
-                      .distinct()
-                      .toList();    
+        return null;
+        // return records.stream()
+        //               .map(InventoryRecord::getHotelId) // (record) -> record.getHotelId()
+        //               .distinct()
+        //               .toList();    
     }
 
 }

@@ -9,9 +9,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class RoomType {
+public class Room {
     private String id;
+    private String roomTypeId;
     private String hotelId;
     private String name;
+    private int number;
     private List<String> amenities;
 }

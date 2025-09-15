@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gharana.inventory_service.dto.AvailableRoomTypes;
 import com.gharana.inventory_service.dto.InventoryQueryRequest;
 import com.gharana.inventory_service.model.InventoryRecord;
 import com.gharana.inventory_service.service.InventoryService;
@@ -24,8 +25,8 @@ public class InventoryController {
     }
 
     @PostMapping("/query")
-    public List<String> queryAvailability(@RequestBody InventoryQueryRequest req) {
-        return inventoryService.queryAvailability(req.getHotelIds(), req.getCheckInDate(), req.getCheckOutDate());
+    public List<AvailableRoomTypes> getAvailableRoomTypes(@RequestBody InventoryQueryRequest req) {
+        return inventoryService.getAvailableRoomTypes(req.getHotelIds(), req.getCheckInDate(), req.getCheckOutDate());
     }
 
 }
