@@ -1,4 +1,4 @@
-package com.gharana.pricing_service;
+package com.gharana.pricing_service.dto;
 
 import java.time.LocalDate;
 

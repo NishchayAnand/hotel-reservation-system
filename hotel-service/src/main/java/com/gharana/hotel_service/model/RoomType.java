@@ -6,16 +6,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-@AllArgsConstructor 
-@Setter 
+@AllArgsConstructor
 @Getter
-public class Hotel {
+@Setter
+public class RoomType {
     private String id;
+    private String hotelId;
     private String name;
-    private String description;
-    private String locationId;
-    private String address;
-    private double rating;
-    private int starRating;
     private List<String> amenities;
 }
