@@ -1,4 +1,4 @@
-package com.gharana.pricing_service.dto;
+package com.gharana.pricing_service.model;
 
 import java.time.LocalDate;
 
@@ -9,9 +9,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class PricingQueryRequest {
+public class PricingRecord {
     private String hotelId;
     private String roomTypeId;
-    private LocalDate checkInDate;
-    private LocalDate checkOutDate;
+    private LocalDate date;
+    private double rate;
 }

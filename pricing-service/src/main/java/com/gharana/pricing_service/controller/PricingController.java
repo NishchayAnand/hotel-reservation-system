@@ -1,24 +1,30 @@
 package com.gharana.pricing_service.controller;
 
-import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gharana.pricing_service.dto.RoomTypeRate;
+import com.gharana.pricing_service.dto.PricingQueryRequest;
+import com.gharana.pricing_service.service.PricingService;
 
 @RestController
 @RequestMapping("/pricing")
 public class PricingController {
 
+    @Autowired
+    private PricingService pricingService;
+
+    public PricingController(PricingService pricingService) {
+        this.pricingService = pricingService;
+    }
+
     @PostMapping("/")
-    public Map<String, List<RoomTypeRate>> getRoomRates(List<String> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) {
-        // Implementation to fetch room rates for the given hotel IDs and date range
-        return 
+    public List<Double> getPrice(@RequestBody PricingQueryRequest req) {
+        return pricingService.getPrice(req.getHotelId(), req.getRoomTypeId(), req.getCheckInDate(), req.getCheckOutDate());
     }
 
 }

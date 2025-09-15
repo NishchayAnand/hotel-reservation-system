@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gharana.search_service.dto.AvailableHotelSummary;
-import com.gharana.search_service.model.Hotel;
 import com.gharana.search_service.service.SearchService;
 
 @RestController

@@ -11,7 +11,7 @@ import com.gharana.search_service.dto.AvailableRoomType;
 @FeignClient(name = "inventory-service", url = "http://localhost:8082/inventory")
 public interface InventoryServiceClient {
 
-    @PostMapping("/query")
+    @PostMapping("/")
     List<AvailableRoomType> getAvailableRoomTypes(InventoryQueryRequest req);
 
 }
