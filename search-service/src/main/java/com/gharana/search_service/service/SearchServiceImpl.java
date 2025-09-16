@@ -2,7 +2,6 @@ package com.gharana.search_service.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -59,15 +58,15 @@ public class SearchServiceImpl implements SearchService {
         Map<String, List<AvailableRoomType>> grouped = availableRoomTypes.stream()
             .collect(Collectors.groupingBy(AvailableRoomType::getHotelId));
 
-        // Step 5: For each available hotel, find the lowest price across the date range: [checkInDate, checkOutDate) among all available room types
+        // Step 5: For each available hotel, find the lowest per-night average price across among all available room types
         for(String hotelId : grouped.keySet()) {
             Hotel hotel = hotelById.get(hotelId);
             AvailableHotelSummary hotelSummary = new AvailableHotelSummary(hotel);
             for(AvailableRoomType availableRoomType : grouped.get(hotelId) ) {
                 List<Double> priceList = pricingServiceClient
                     .getPrice(new PricingQueryRequest(availableRoomType.getHotelId(), availableRoomType.getRoomTypeId(), checkInDate, checkOutDate));
-                double minPrice = Collections.min(priceList);
-                hotelSummary.setLowestPrice(Math.min(hotelSummary.getLowestPrice(), minPrice));
+                double price = priceList.stream().mapToDouble(Double::doubleValue).sum() / priceList.size();
+                hotelSummary.setLowestPrice(Math.min(hotelSummary.getLowestPrice(), price));
             }
             availableHotelSummaries.add(hotelSummary);
         }
