@@ -1,7 +1,6 @@
 package com.gharana.pricing_service.dao;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.stereotype.Repository;

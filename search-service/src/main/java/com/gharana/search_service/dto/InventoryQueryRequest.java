@@ -1,4 +1,4 @@
-package com.gharana.search_service;
+package com.gharana.search_service.dto;
 
 import java.time.LocalDate;
 import java.util.List;

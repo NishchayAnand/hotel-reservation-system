@@ -1,7 +1,5 @@
 package com.gharana.search_service.dto;
 
-import java.util.List;
-
 import com.gharana.search_service.model.Hotel;
 
 import lombok.AllArgsConstructor;
