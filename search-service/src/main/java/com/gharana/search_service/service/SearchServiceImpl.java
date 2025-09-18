@@ -16,7 +16,6 @@ import com.gharana.search_service.dto.AvailableHotelSummary;
 import com.gharana.search_service.dto.AvailableRoomType;
 import com.gharana.search_service.dto.Hotel;
 import com.gharana.search_service.dto.InventoryQueryRequest;
-import com.gharana.search_service.dto.PricingQueryRequest;
 
 @Service
 public class SearchServiceImpl implements SearchService {
@@ -65,9 +64,7 @@ public class SearchServiceImpl implements SearchService {
             Hotel hotel = hotelById.get(hotelId);
             AvailableHotelSummary hotelSummary = new AvailableHotelSummary(hotel);
             for(AvailableRoomType availableRoomType : grouped.get(hotelId) ) {
-                List<Double> priceList = pricingServiceClient
-                    .getPrice(new PricingQueryRequest(availableRoomType.getHotelId(), availableRoomType.getRoomTypeId(), checkInDate, checkOutDate));
-                double price = priceList.stream().mapToDouble(Double::doubleValue).sum() / priceList.size();
+                double price = pricingServiceClient.getAvgPricePerNight(availableRoomType.getHotelId(), availableRoomType.getRoomTypeId(), checkInDate, checkOutDate);
                 hotelSummary.setLowestPrice(Math.min(hotelSummary.getLowestPrice(), price));
             }
             availableHotelSummaries.add(hotelSummary);

@@ -7,5 +7,4 @@ import com.gharana.inventory_service.dto.AvailableRoomType;
 
 public interface InventoryService {
     List<AvailableRoomType> getAvailableRoomTypes(List<String> hotelIds, LocalDate checkInDate, LocalDate checkOutDate);
-
 }

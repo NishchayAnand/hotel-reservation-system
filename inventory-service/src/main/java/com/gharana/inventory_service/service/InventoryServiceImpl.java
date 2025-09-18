@@ -30,7 +30,7 @@ public class InventoryServiceImpl implements InventoryService {
         List<AvailableRoomType> availableRoomTypes = new ArrayList<>();
         
         // Step 1: Fetch inventory records for the given hotels that fall within the [checkInDate, checkOutDate) range  
-        List<InventoryRecord> records = inventoryRepository.findByHotelIdsAndDateRange(hotelIds, checkInDate, checkOutDate);
+        List<InventoryRecord> records = inventoryRepository.findAvailableRoomTypeByHotelIdAndDateRange(hotelIds, checkInDate, checkOutDate);
         
         // Step 2: Group records by hotelId and roomTypeId
         Map<String, Map<String, List<InventoryRecord>>> grouped = records.stream()
@@ -50,6 +50,13 @@ public class InventoryServiceImpl implements InventoryService {
         }
 
         return availableRoomTypes;  
+    }
+
+    public static void main(String[] args) {
+        InventoryRepository repo = new InventoryRepository();
+        InventoryService service = new InventoryServiceImpl(repo);
+        List<String> hotelIds = List.of("101");
+        System.out.println(service.getAvailableRoomTypes(hotelIds, LocalDate.now(), LocalDate.now().plusDays(3)));
     }
 
 }

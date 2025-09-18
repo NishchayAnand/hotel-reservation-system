@@ -25,7 +25,7 @@ public class InventoryController {
 
     @PostMapping("/query")
     public List<AvailableRoomType> getAvailableRoomTypes(@RequestBody InventoryQueryRequest req) {
-        return inventoryService.getAvailableRoomTypes(req.getHotelIds(), req.getCheckInDate(), req.getCheckOutDate());
+            return inventoryService.getAvailableRoomTypes(req.getHotelIds(), req.getCheckInDate(), req.getCheckOutDate());
     }
 
 }

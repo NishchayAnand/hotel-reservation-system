@@ -5,14 +5,13 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import com.gharana.hotel_service.model.Hotel;
-import com.gharana.hotel_service.model.Location;
 
 @Repository
 public class HotelRepository {
 
     public List<Hotel> getHotelsByLocationId(String locationId) {
-        // Mock implementation - replace with actual database call
 
+        // Mock implementation - replace with actual database call
         List<Hotel> hotelMeta = List.of(
             new Hotel("101", "Grand Goa Resort", "A luxury seaside resort offering modern rooms, infinity pool, and beach access.", "GOA", "Candolim Beach Road, Goa, India", "https://cdn.example.com/101/thumb.jpg", 4.6, 4, List.of("wifi", "pool", "gym", "spa")),
             new Hotel("102", "Westin Resort", "Premium 5-star property featuring private beach, fine dining, and wellness spa.", "GOA", "Arpora Beach Road, Goa, India", "https://cdn.example.com/102/thumb.jpg", 4.7, 5, List.of("wifi", "pool", "private beach", "restaurant", "bar")),
@@ -29,6 +28,7 @@ public class HotelRepository {
         return hotelMeta.stream()
             .filter( hotel -> hotel.getLocationId().equals(locationId) )
             .toList();
+            
     }
 
 }

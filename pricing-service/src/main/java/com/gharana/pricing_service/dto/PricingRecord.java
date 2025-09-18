@@ -14,4 +14,9 @@ public class PricingRecord {
     private String roomTypeId;
     private LocalDate date;
     private double price;
+
+    @Override
+    public String toString() {
+        return "\nPricingRecord: [hotelId=" + hotelId + ", roomTypeId=" + roomTypeId + ", date=" + date + ", price=" + price + "]";
+    }
 }

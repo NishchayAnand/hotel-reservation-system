@@ -18,7 +18,7 @@ public class InventoryRecord {
 
     @Override
     public String toString() {
-        return "InventoryRecord [hotelId=" + hotelId + ", roomTypeId=" + roomTypeId + ", date=" + date + ", totalRooms="
+        return "\nInventoryRecord [hotelId=" + hotelId + ", roomTypeId=" + roomTypeId + ", date=" + date + ", totalRooms="
                 + totalRooms + ", reservedRooms=" + reservedRooms + "]";
     }
 }
