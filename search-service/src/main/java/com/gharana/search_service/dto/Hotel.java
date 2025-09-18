@@ -1,4 +1,4 @@
-package com.gharana.search_service.model;
+package com.gharana.search_service.dto;
 
 import java.util.List;
 
@@ -12,9 +12,11 @@ import lombok.Setter;
 public class Hotel {
     private String id;
     private String name;
+    private String description;
     private String locationId;
     private String address;
-    private String thumbnailURL;
-    private int rating;
+    private String thumbnailUrl;
+    private double customerRating;
+    private int starRating;
     private List<String> amenities;
 }

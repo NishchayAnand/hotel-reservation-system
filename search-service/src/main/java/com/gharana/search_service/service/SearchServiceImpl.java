@@ -7,16 +7,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.gharana.search_service.client.HotelServiceClient;
 import com.gharana.search_service.client.InventoryServiceClient;
 import com.gharana.search_service.client.PricingServiceClient;
 import com.gharana.search_service.dto.AvailableHotelSummary;
 import com.gharana.search_service.dto.AvailableRoomType;
+import com.gharana.search_service.dto.Hotel;
 import com.gharana.search_service.dto.InventoryQueryRequest;
 import com.gharana.search_service.dto.PricingQueryRequest;
-import com.gharana.search_service.model.Hotel;
 
+@Service
 public class SearchServiceImpl implements SearchService {
 
     @Autowired

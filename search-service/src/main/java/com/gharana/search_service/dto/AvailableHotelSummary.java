@@ -1,7 +1,5 @@
 package com.gharana.search_service.dto;
 
-import com.gharana.search_service.model.Hotel;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,8 +19,8 @@ public class AvailableHotelSummary {
         this.hotelId = hotel.getId();
         this.hotelName = hotel.getName();
         this.address = hotel.getAddress();
-        this.thumbnailURL = hotel.getThumbnailURL();
-        this.rating = hotel.getRating();
+        this.thumbnailURL = hotel.getThumbnailUrl();
+        this.rating = hotel.getStarRating();
         this.lowestPrice = Integer.MAX_VALUE;
     }
 }

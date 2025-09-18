@@ -21,7 +21,7 @@ public class HotelController {
         this.hotelService = hotelService;
     }
 
-    @GetMapping("/")
+    @GetMapping("")
     public List<Hotel> getHotelsByDestination(@RequestParam("destination") String destination) {
         // Validate input parameters
         return hotelService.getHotelsByDestination(destination);

@@ -4,12 +4,13 @@ import java.util.List;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import com.gharana.search_service.model.Hotel;
+import com.gharana.search_service.dto.Hotel;
 
 @FeignClient(name = "hotel-service", url = "http://localhost:8081/hotels")
 public interface HotelServiceClient {
 
-    @GetMapping("/")
-    List<Hotel> getHotelsByDestination(String destination);
+    @GetMapping("")
+    List<Hotel> getHotelsByDestination(@RequestParam("destination") String destination);
 }
