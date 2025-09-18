@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Check, ChevronDownIcon } from "lucide-react"
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,8 @@ export function SearchHotelForm() {
     const [isCheckInPopOpen, setIsCheckInPopOpen] = useState(false);
     const [isCheckOutPopOpen, setIsCheckOutPopOpen] = useState(false);
 
+    const router = useRouter();
+
     const form = useForm<FormValues>({
         defaultValues: {
             destination: "",
@@ -59,7 +62,13 @@ export function SearchHotelForm() {
             setIsCheckOutPopOpen(true);
             return;
         }
+        const query = new URLSearchParams({
+            destination: data.destination,
+            checkIn: data.checkInDate!.toISOString(),
+            checkOut: data.checkOutDate!.toISOString(),
+        }).toString();
 
+        router.push(`/search?${query}`);
         console.log(data.destination, data.checkInDate, data.checkOutDate);
     }
 
