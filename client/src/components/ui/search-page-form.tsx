@@ -23,12 +23,12 @@ const destinations = [
 
 // Interface for form values
 type FormValues = {
-    destination: string;
-    checkInDate: Date | undefined;
-    checkOutDate: Date | undefined;
+    destination?: string;
+    checkInDate?: Date | undefined;
+    checkOutDate?: Date | undefined;
 };
 
-export function SearchHotelForm(props: FormValues) {
+export function SearchHotelForm2(props: FormValues) {
     const [isDestPopOpen, setIsDestPopOpen] = useState(false);
     const [isCheckInPopOpen, setIsCheckInPopOpen] = useState(false);
     const [isCheckOutPopOpen, setIsCheckOutPopOpen] = useState(false);
@@ -83,7 +83,6 @@ export function SearchHotelForm(props: FormValues) {
                 control={form.control}
                 render={({ field }) => (
                     <FormItem className="flex flex-col gap-2">
-                        <FormLabel>Destination</FormLabel>
                         <FormControl>
                             <Popover open={isDestPopOpen} onOpenChange={setIsDestPopOpen}>
                                 <PopoverTrigger asChild>
@@ -137,7 +136,6 @@ export function SearchHotelForm(props: FormValues) {
                 control={form.control}
                 render={({ field}) => (
                     <FormItem className="flex flex-col gap-2">
-                        <FormLabel>Check-In Date</FormLabel>
                         <FormControl>
                             <Popover open={isCheckInPopOpen} onOpenChange={setIsCheckInPopOpen}>
                                 <PopoverTrigger asChild>
@@ -170,7 +168,6 @@ export function SearchHotelForm(props: FormValues) {
                 control={form.control}
                 render={({ field}) => (
                     <FormItem className="flex flex-col gap-2">
-                        <FormLabel>Check-Out Date</FormLabel>
                         <FormControl>
                             <Popover open={isCheckOutPopOpen} onOpenChange={setIsCheckOutPopOpen}>
                                 <PopoverTrigger asChild>

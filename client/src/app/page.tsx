@@ -1,6 +1,8 @@
+
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
 import { SearchHotelForm } from "@/components/ui/search-hotel-form";
 import Image from "next/image";
-import { Card } from "@/components/ui/card";
 
 export default function Home() {
   return (
@@ -19,14 +21,21 @@ export default function Home() {
           />
           {/* Search Hotel Form */}
           <div className="absolute left-1/2 -translate-x-1/2 bottom-1/2 translate-y-1/2 lg:w-[calc(100%-30rem)] lg:bottom-[-4rem] lg:translate-y-0">
-            <SearchHotelForm />
+            <Card>
+              <CardHeader>
+                  <CardTitle>Search Hotels</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SearchHotelForm />
+              </CardContent>
+            </Card>
           </div>
         </div>
 
       </section>
 
       {/* Popular Destination Section */}
-      <section className="w-full h-screen flex flex-col p-10">
+      <section className="w-full h-screen flex flex-col px-20 py-10">
 
           {/* Header */}
           <h1 className="text-xl font-bold">POPULAR DESTINATIONS</h1><br/>
@@ -105,7 +114,7 @@ export default function Home() {
           <source src="/videos/home-page-video.mp4"/>
         </video>
         <p className="text-sm leading-relaxed text-center py-10">
-          With us, every booking is simple, every stay is seamless, and every guest becomes part of our Gharana.
+          With us, every booking is simple, every stay is seamless, and every guest becomes part of our haven.
         </p>
       </section>
 

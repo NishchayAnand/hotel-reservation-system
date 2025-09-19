@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { SearchHotelForm2 } from "./search-page-form";
 
-export function Navbar() {
+export function Navbar2() {
     return (
         <nav className="fixed left-0 top-0 w-full z-100 h-[4rem] lg:bg-white flex items-center justify-between px-8">
 
             {/* Logo */}
             <Link href="/" className="text-lg font-bold">NIVARA</Link>
+
+            <SearchHotelForm2 />
 
             {/* Sign In Button */}
             <Button size="sm" asChild>
