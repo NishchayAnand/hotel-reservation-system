@@ -30,7 +30,7 @@ export default function RootLayout({
       >
         <Navbar />
         {children}
-        <footer role="contentinfo" className="mt-12 border-t pt-6 pb-8 text-center text-sm">
+        <footer role="contentinfo" className="pt-6 pb-8 text-center text-sm border-t">
           <div className="mx-auto max-w-4xl px-4">
             <p>© {new Date().getFullYear()} Hotel Reservation System. All rights reserved.</p>
             <p className="mt-2">
