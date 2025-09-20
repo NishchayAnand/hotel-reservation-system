@@ -9,7 +9,7 @@ export default function HotelCard() {
     return (
         <div className="h-60 flex rounded-2xl border cursor-pointer overflow-hidden">
             
-            <div id="thumbnail" className="relative w-1/4 h-full">
+            <div id="thumbnail" className="relative w-1/2 h-full">
               <Image
                 src="/images/johri-jaipur.jpg"
                 alt="thumbnail-image"
@@ -36,7 +36,7 @@ export default function HotelCard() {
                 </p>
             </div>
             
-            <div className="flex flex-col justify-end p-5">
+            <div className="flex flex-col w-1/4 justify-end p-5">
               <p className="text-lg font-semibold">₹4500</p>
             <p className="text-xs text-gray-600 whitespace-nowrap">for 2 night + Taxes</p>
             </div>
