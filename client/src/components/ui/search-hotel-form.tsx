@@ -14,11 +14,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 
 // Sample destinations
 const destinations = [
-    { label: "Manali", value: "manali" },
-    { label: "Jaipur", value: "jaipur" },
-    { label: "Udaipur", value: "udaipur" },
-    { label: "Mumbai", value: "mumbai" },
-    { label: "Kerala", value: "kerala" }
+    { label: "Manali", value: "Manali" },
+    { label: "Jaipur", value: "Jaipur" },
+    { label: "Udaipur", value: "Udaipur" },
+    { label: "Mumbai", value: "Mumbai" },
+    { label: "Kerala", value: "Kerala" }
 ];
 
 // Interface for form values
@@ -28,7 +28,7 @@ type FormValues = {
     checkOutDate: Date | undefined;
 };
 
-export function SearchHotelForm(props: FormValues) {
+export function SearchHotelForm() {
     const [isDestPopOpen, setIsDestPopOpen] = useState(false);
     const [isCheckInPopOpen, setIsCheckInPopOpen] = useState(false);
     const [isCheckOutPopOpen, setIsCheckOutPopOpen] = useState(false);
@@ -37,9 +37,9 @@ export function SearchHotelForm(props: FormValues) {
 
     const form = useForm<FormValues>({
         defaultValues: {
-            destination: props.destination ?? "",
-            checkInDate: props.checkInDate ?? undefined,
-            checkOutDate: props.checkOutDate ?? undefined
+            destination: "",
+            checkInDate: undefined,
+            checkOutDate: undefined
         }
     });
 

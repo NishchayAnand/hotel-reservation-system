@@ -14,11 +14,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 
 // Sample destinations
 const destinations = [
-    { label: "Manali", value: "manali" },
-    { label: "Jaipur", value: "jaipur" },
-    { label: "Udaipur", value: "udaipur" },
-    { label: "Mumbai", value: "mumbai" },
-    { label: "Kerala", value: "kerala" }
+    { label: "Manali", value: "Manali" },
+    { label: "Jaipur", value: "Maipur" },
+    { label: "Udaipur", value: "Udaipur" },
+    { label: "Mumbai", value: "Mumbai" },
+    { label: "Kerala", value: "Kerala" }
 ];
 
 // Interface for form values
@@ -28,12 +28,10 @@ type FormValues = {
     checkOutDate?: Date | undefined;
 };
 
-export function SearchHotelForm2(props: FormValues) {
+export function SearchHotelFormNavbar(props: FormValues) {
     const [isDestPopOpen, setIsDestPopOpen] = useState(false);
     const [isCheckInPopOpen, setIsCheckInPopOpen] = useState(false);
     const [isCheckOutPopOpen, setIsCheckOutPopOpen] = useState(false);
-
-    const router = useRouter();
 
     const form = useForm<FormValues>({
         defaultValues: {
@@ -67,7 +65,7 @@ export function SearchHotelForm2(props: FormValues) {
             checkOutDate: data.checkOutDate.toISOString().split("T")[0],
         }).toString();
 
-        router.push(`/search?${query}`);
+        // api call
     }
 
     return (

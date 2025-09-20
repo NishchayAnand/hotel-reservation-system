@@ -1,7 +1,8 @@
 "use client"
 
-import { SearchHotelForm2 } from "@/components/ui/search-page-form";
 import { useSearchParams } from "next/navigation";
+
+import HotelCard from "@/components/ui/hotel-card";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -13,8 +14,9 @@ export default function SearchPage() {
   return (
     <main>
 
-      <section className="w-full h-screen bg-amber-200">
-        <div className="text-gray-600 bg-amber-800">Hotels will be listed here after you search.</div>
+      <section className="w-full p-20 px-10">
+        <h1 className="text-lg font-semibold my-5">Stays near {destination}</h1>
+        <HotelCard />      
       </section>
 
     </main>

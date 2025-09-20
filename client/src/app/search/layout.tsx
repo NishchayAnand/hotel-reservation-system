@@ -1,5 +1,5 @@
 
-import { Navbar2 } from "@/components/ui/navbar2";
+import { SearchNavbar } from "@/components/ui/search-navbar";
 
 export default function SearchLayout({
   children,
@@ -8,7 +8,7 @@ export default function SearchLayout({
 }>) {
   return (
     <>
-        <Navbar2 />
+        <SearchNavbar />
         {children}
     </>
   );
