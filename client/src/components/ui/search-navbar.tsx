@@ -20,7 +20,7 @@ export function SearchNavbar() {
             <Link href="/" className="text-lg font-bold">NIVARA</Link>
             
             <SearchHotelFormNavbar
-                destination= {destination ?? ""}
+                destination={destination ?? ""}
                 checkInDate={checkInDate ? new Date(checkInDate) : undefined}
                 checkOutDate={checkOutDate ? new Date(checkOutDate) : undefined}
              />

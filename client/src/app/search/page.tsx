@@ -4,12 +4,39 @@ import { useSearchParams } from "next/navigation";
 
 import HotelCard from "@/components/ui/hotel-card";
 
+import type { Hotel } from "@/types/hotel";
+
+
 export default function SearchPage() {
   const searchParams = useSearchParams();
 
   const destination = searchParams.get("destination");
   const checkInDate = searchParams.get("checkInDate");
   const checkOutDate = searchParams.get("checkOutDate");
+
+  // typed placeholder data — replace with fetched data later
+  const hotels: Hotel[] = [
+    {
+      id: "101",
+      name: "The Johri",
+      address: "Jaipur, Rajasthan",
+      description: "A luxury seaside resort with modern amenities.",
+      thumbnailUrl: "/images/jaipur/the-johri/thumbnail.jpg",
+      rating: 4.6,
+      avgPricePerNight: 4500.0,
+      amenties: ["Free WiFi", "Swimming Pool", "Spa"]
+    },
+    {
+      id: "103",
+      name: "Jaipur House",
+      address: "Jaipur, Rajasthan",
+      description: "Charming hill-side hotel with valley views.",
+      thumbnailUrl: "/images/jaipur/jaipur-house/thumbnail.jpg",
+      rating: 4.4,
+      avgPricePerNight: 2000.0,
+      amenties: ["Free Parking", "Breakfast Included", "Mountain View"]
+    }
+  ];
 
   return (
     <main>
@@ -24,17 +51,9 @@ export default function SearchPage() {
 
           {/* Hotel Cards Section */}
           <div className="col-span-3">
-            <h1 className="text-lg font-semibold my-5">Stays near {destination}</h1>
-            {destination === "Jaipur" && (
-              <p className="text-sm text-gray-600 mb-10">
-                Jaipur, also known as the Pink City, is a vibrant destination known for its rich history, stunning architecture, and warm hospitality. Explore the majestic forts, colorful bazaars, and exquisite cuisine during your stay.
-              </p>
-            )}
-            {/* Render multiple HotelCard components */}
+            <h1 className="text-lg font-semibold my-5">Hotels near {destination}</h1>
             <div className="flex flex-col gap-5">
-              <HotelCard />
-              <HotelCard />
-              <HotelCard />
+              {hotels.map(hotel => <HotelCard key={hotel.id} {...hotel} />)}
             </div>
             
           </div>

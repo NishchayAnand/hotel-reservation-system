@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 // Sample destinations
 const destinations = [
     { label: "Manali", value: "Manali" },
-    { label: "Jaipur", value: "Maipur" },
+    { label: "Jaipur", value: "Jaipur" },
     { label: "Udaipur", value: "Udaipur" },
     { label: "Mumbai", value: "Mumbai" },
     { label: "Kerala", value: "Kerala" }
@@ -92,7 +92,7 @@ export function SearchHotelFormNavbar(props: FormValues) {
                                         <ChevronDownIcon />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                <PopoverContent className="w-auto overflow-hidden z-101 p-0" align="start">
                                     <Command>
                                         <CommandInput placeholder="Search Destination..." className="h-9" />
                                         <CommandList>
@@ -142,7 +142,7 @@ export function SearchHotelFormNavbar(props: FormValues) {
                                         <ChevronDownIcon />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                <PopoverContent className="w-auto overflow-hidden p-0 z-101" align="start">
                                     <Calendar
                                         mode="single"
                                         selected={field.value} 
@@ -174,7 +174,7 @@ export function SearchHotelFormNavbar(props: FormValues) {
                                         <ChevronDownIcon />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                <PopoverContent className="w-auto overflow-hidden p-0 z-101" align="start">
                                     <Calendar
                                         mode="single"
                                         selected={field.value}
