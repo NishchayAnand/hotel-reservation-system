@@ -199,7 +199,7 @@ export function SearchHotelFormNavbar(props: FormValues) {
             />
 
             {/* Search Button */}
-            <Button type="submit" className="w-48 mt-auto">Search</Button>
+            <Button type="submit" className="w-48 mt-auto cursor-pointer">Search</Button>
             
         </form>
     </Form>

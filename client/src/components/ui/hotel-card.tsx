@@ -2,8 +2,11 @@
 "use client"
 
 import Image from "next/image";
+import Link from "next/link";
+
 import {Separator} from "@/components/ui/separator";
 import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
 
 import type { Hotel } from "@/types/hotel";
 
@@ -35,7 +38,12 @@ export default function HotelCard(props: Hotel) {
             
             <div className="flex flex-col col-span-1 justify-end p-5">
               <p className="text-lg font-semibold">₹{props.avgPricePerNight}</p>
-            <p className="text-xs text-gray-600 whitespace-nowrap">for 2 night + Taxes</p>
+              <p className="text-xs text-gray-600 whitespace-nowrap mb-4">for 2 night + Taxes</p>
+              <Link href={`/hotels/${props.id}`}>
+                <Button className="w-full cursor-pointer font-semibold">
+                  View
+                </Button>
+              </Link>
             </div>
             
           </div>
