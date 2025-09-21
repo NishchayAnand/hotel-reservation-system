@@ -40,6 +40,16 @@ export default function HotelPage() {
                                 />
                             </div>
                         </CarouselItem>
+                        <CarouselItem>
+                            <div id="carousel-image" className="relative aspect-video rounded-2xl overflow-hidden">
+                                <Image
+                                    src="/images/jaipur/the-johri/photo1.jpg"
+                                    alt="image"
+                                    fill={true}
+                                    className="object-cover"
+                                />
+                            </div>
+                        </CarouselItem>
                     </CarouselContent>
                     <CarouselPrevious />
                     <CarouselNext />
