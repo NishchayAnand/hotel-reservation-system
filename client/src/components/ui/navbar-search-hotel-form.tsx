@@ -84,7 +84,7 @@ export function SearchHotelFormNavbar(props: FormValues) {
                         <FormControl>
                             <Popover open={isDestPopOpen} onOpenChange={setIsDestPopOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-48 justify-between font-normal">
+                                    <Button variant="outline" className="w-48 justify-between font-normal cursor-pointer">
                                         {field.value 
                                             ? destinations.find(dest => dest.value === field.value)?.label 
                                             : "Select destination"
@@ -137,7 +137,7 @@ export function SearchHotelFormNavbar(props: FormValues) {
                         <FormControl>
                             <Popover open={isCheckInPopOpen} onOpenChange={setIsCheckInPopOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-48 justify-between font-normal">
+                                    <Button variant="outline" className="w-48 justify-between font-normal cursor-pointer">
                                         { field.value ? field.value.toLocaleDateString() : "Select date"}
                                         <ChevronDownIcon />
                                     </Button>
@@ -169,7 +169,7 @@ export function SearchHotelFormNavbar(props: FormValues) {
                         <FormControl>
                             <Popover open={isCheckOutPopOpen} onOpenChange={setIsCheckOutPopOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-48 justify-between font-normal">
+                                    <Button variant="outline" className="w-48 justify-between font-normal cursor-pointer">
                                         { field.value ? field.value.toLocaleDateString() : "Select date"}
                                         <ChevronDownIcon />
                                     </Button>
