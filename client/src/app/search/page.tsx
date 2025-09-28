@@ -5,17 +5,11 @@ import { useSearchParams } from "next/navigation";
 import HotelCard from "@/components/ui/hotel-card";
 
 import type { Hotel } from "@/types/hotel";
+import { useEffect, useState } from "react";
 
-
-export default function SearchPage() {
-  const searchParams = useSearchParams();
-
-  const destination = searchParams.get("destination");
-  const checkInDate = searchParams.get("checkInDate");
-  const checkOutDate = searchParams.get("checkOutDate");
-
-  // typed placeholder data — replace with fetched data later
-  const hotels: Hotel[] = [
+// typed placeholder data — replace with fetched data later
+{/*
+const hotels: Hotel[] = [
     {
       id: "101",
       name: "The Johri",
@@ -36,8 +30,27 @@ export default function SearchPage() {
       avgPricePerNight: 2000.0,
       amenties: ["Free Parking", "Breakfast Included", "Mountain View"]
     }
-  ];
+];
+*/}
 
+
+export default function SearchPage() {
+  const searchParams = useSearchParams();
+
+  const destination = searchParams.get("destination");
+  // const checkInDate = searchParams.get("checkInDate");
+  // const checkOutDate = searchParams.get("checkOutDate");
+
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+
+  // fetch hotels from search-service
+  useEffect(() => {
+    const qs = searchParams.toString();
+    fetch(`http://localhost:8080/search/hotels?${qs}`)
+      .then((res) => res.json())
+      .then((data) => setHotels(data))
+  }, [searchParams]);
+  
   return (
     <main>
 

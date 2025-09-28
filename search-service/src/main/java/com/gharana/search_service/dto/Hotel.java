@@ -16,7 +16,6 @@ public class Hotel {
     private String locationId;
     private String address;
     private String thumbnailUrl;
-    private double customerRating;
-    private int starRating;
+    private String rating;
     private List<String> amenities;
 }

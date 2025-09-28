@@ -75,19 +75,19 @@ export function SearchHotelForm() {
     <Form {...form}>           
         <form
             onSubmit={form.handleSubmit(onSubmit)}   
-            className="flex flex-col justify-center items-center gap-6 lg:flex-row lg:flex-wrap"
+            className="flex flex-col gap-6 lg:flex-row lg:items-center"
         >                    
             {/* Destination */}
             <FormField
                 name="destination"
                 control={form.control}
                 render={({ field }) => (
-                    <FormItem className="flex flex-col gap-2">
+                    <FormItem className="flex-1">
                         <FormLabel>Destination</FormLabel>
                         <FormControl>
                             <Popover open={isDestPopOpen} onOpenChange={setIsDestPopOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-48 justify-between font-normal cursor-pointer">
+                                    <Button variant="outline" className="flex justify-between font-normal cursor-pointer">
                                         {field.value 
                                             ? destinations.find(dest => dest.value === field.value)?.label 
                                             : "Select destination"
@@ -95,7 +95,7 @@ export function SearchHotelForm() {
                                         <ChevronDownIcon />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                <PopoverContent className="w-auto overflow-hidden p-0 z-300" align="start">
                                     <Command>
                                         <CommandInput placeholder="Search Destination..." className="h-9" />
                                         <CommandList>
@@ -136,17 +136,17 @@ export function SearchHotelForm() {
                 name="checkInDate"
                 control={form.control}
                 render={({ field}) => (
-                    <FormItem className="flex flex-col gap-2">
+                    <FormItem className="flex-1">
                         <FormLabel>Check-In Date</FormLabel>
                         <FormControl>
                             <Popover open={isCheckInPopOpen} onOpenChange={setIsCheckInPopOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-48 justify-between font-normal cursor-pointer">
+                                    <Button variant="outline" className="flex justify-between font-normal cursor-pointer">
                                         { field.value ? field.value.toLocaleDateString() : "Select date"}
                                         <ChevronDownIcon />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                <PopoverContent className="w-auto overflow-hidden p-0 z-300" align="start">
                                     <Calendar
                                         mode="single"
                                         selected={field.value} 
@@ -169,17 +169,17 @@ export function SearchHotelForm() {
                 name="checkOutDate"
                 control={form.control}
                 render={({ field}) => (
-                    <FormItem className="flex flex-col gap-2">
+                    <FormItem className="flex-1">
                         <FormLabel>Check-Out Date</FormLabel>
                         <FormControl>
                             <Popover open={isCheckOutPopOpen} onOpenChange={setIsCheckOutPopOpen}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-48 justify-between font-normal cursor-pointer">
+                                    <Button variant="outline" className="flex justify-between font-normal cursor-pointer">
                                         { field.value ? field.value.toLocaleDateString() : "Select date"}
                                         <ChevronDownIcon />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                <PopoverContent className="w-auto overflow-hidden p-0 z-300" align="start">
                                     <Calendar
                                         mode="single"
                                         selected={field.value}
@@ -204,7 +204,7 @@ export function SearchHotelForm() {
             />
 
             {/* Search Button */}
-            <Button type="submit" className="w-48 mt-auto cursor-pointer">Search</Button>
+            <Button type="submit" className="flex-1 mt-auto cursor-pointer">Search</Button>
             
         </form>
     </Form>

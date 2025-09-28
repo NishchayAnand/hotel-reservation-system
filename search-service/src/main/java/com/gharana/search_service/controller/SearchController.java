@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gharana.search_service.dto.AvailableHotelSummary;
+import com.gharana.search_service.dto.Hotel;
 import com.gharana.search_service.service.SearchService;
 
 @RestController
@@ -24,7 +24,7 @@ public class SearchController {
     }
 
     @GetMapping("/hotels")
-    public List<AvailableHotelSummary> search(@RequestParam("destination") String destination, 
+    public List<Hotel> search(@RequestParam("destination") String destination, 
                                 @RequestParam("check-in-date") LocalDate checkInDate, 
                                 @RequestParam("check-out-date") LocalDate checkOutDate) {
         // Validate input parameters

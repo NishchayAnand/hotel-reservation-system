@@ -1,35 +1,57 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { SearchIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { SearchHotelForm } from "@/components/ui/search-hotel-form";
 import Image from "next/image";
 
 export default function Home() {
   return (
-    <main>
+    <main className="px-10">
 
       {/* Hero Section */}
-      <section className="w-full h-screen lg:px-10 lg:pt-20 lg:pb-10">
-        
-        <div className="relative w-full h-[90%]">
-          {/* Hero Image */}
+      <section className="w-full h-screen pt-20 pb-10">
+
+        <div className="relative w-full h-full lg:h-[90%]">
+
           <Image
             src="/images/home-page-hero-section.jpg"
             alt="Hero Image"
-            fill={true} // makes the image fill the parent container
-            className="object-cover lg:block rounded-2xl overflow-hidden"
+            fill={true}
+            className="object-cover rounded-2xl overflow-hidden"
           />
-          {/* Search Hotel Form */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-1/2 translate-y-1/2 lg:w-[calc(100%-30rem)] lg:bottom-[-4rem] lg:translate-y-0">
+
+          {/* Hotel search form for mobile and tablet screens */}
+          <div className="lg:hidden absolute bottom-0 w-full max-w-xl left-1/2 -translate-x-1/2 px-4 cursor-pointer">
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="flex justify-between items-center bg-white rounded-4xl m-3 p-3 ">
+                  <p className="text-gray-400 text-md ml-3">Search Hotels Here...</p>
+                  <Button className="rounded-4xl cursor-pointer">
+                    <SearchIcon/>
+                  </Button>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="z-200">
+                <SearchHotelForm />
+              </PopoverContent>
+            </Popover>
+          </div> 
+
+          {/* Search Hotel Form for large screens */}
+          <div className="hidden lg:block absolute lg:left-1/2 lg:-translate-x-1/2 lg:bottom-[-4rem] lg:translate-y-0 lg:w-[calc(100%-10rem)]">
             <Card>
               <CardHeader>
-                  <CardTitle>Search Hotels</CardTitle>
+                <CardTitle>Search Hotels</CardTitle>
               </CardHeader>
               <CardContent>
                 <SearchHotelForm />
               </CardContent>
             </Card>
           </div>
+
         </div>
 
       </section>
@@ -117,55 +139,6 @@ export default function Home() {
           With us, every booking is simple, every stay is seamless, and every guest becomes part of our haven.
         </p>
       </section>
-
-      {/*
-
-        Rooted in the spirit of India’s timeless tradition of “Atithi Devo Bhava”. Our platform blends modern convenience with heartfelt hospitality. 
-
-              <Image
-                src="/images/kashmir.jpg"
-                alt="Hotel 1"
-                fill={true}
-                className="object-cover"
-              />
-              <Image
-                src="/images/goa.jpg"
-                alt="Hotel 1"
-                fill={true}
-                className="object-cover"
-              />
-
-      <section className="w-full h-screen flex flex-col pl-10 pr-10 lg:px-10 lg:py-10">
-          <h1 className="text-xl font-bold">EXPERIENCES</h1><br/>
-          <div className="flex h-full gap-4">
-            <div className="relative w-1/3 h-full">
-              <Image
-                src="/images/kayaking.jpg"
-                alt="Hotel 1"
-                fill={true}
-                className="object-cover"
-              />
-            </div>
-            <div className="relative w-1/3 h-full">
-              <Image
-                src="/images/cycling.jpg"
-                alt="Hotel 1"
-                fill={true}
-                className="object-cover"
-              />
-            </div>
-            <div className="relative w-1/3 h-full">
-              <Image
-                src="/images/picnic.jpg"
-                alt="Hotel 1"
-                fill={true}
-                className="object-cover"
-              />
-            </div>
-          </div>
-      </section>
-
-      */}
 
     </main>
   );

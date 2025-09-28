@@ -38,9 +38,9 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<AvailableHotelSummary> search(String destination, LocalDate checkInDate, LocalDate checkOutDate) {
+    public List<Hotel> search(String destination, LocalDate checkInDate, LocalDate checkOutDate) {
 
-        List<AvailableHotelSummary> availableHotelSummaries = new ArrayList<>();
+        List<Hotel> availableHotels = new ArrayList<>();
         
         // Step 1: Query Hotel Service for hotel metadata
         List<Hotel> hotels = hotelServiceClient.getHotelsByDestination(destination);
@@ -62,10 +62,9 @@ public class SearchServiceImpl implements SearchService {
         // Step 5: For each available hotel, find the lowest per-night average price across among all available room types
         for(String hotelId : grouped.keySet()) {
             Hotel hotel = hotelById.get(hotelId);
-            AvailableHotelSummary hotelSummary = new AvailableHotelSummary(hotel);
             for(AvailableRoomType availableRoomType : grouped.get(hotelId) ) {
                 double price = pricingServiceClient.getAvgPricePerNight(availableRoomType.getHotelId(), availableRoomType.getRoomTypeId(), checkInDate, checkOutDate);
-                hotelSummary.setLowestPrice(Math.min(hotelSummary.getLowestPrice(), price));
+                hotel.setLowestPrice(Math.min(hotel.getLowestPrice(), price));
             }
             availableHotelSummaries.add(hotelSummary);
         }

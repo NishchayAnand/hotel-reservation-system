@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "@/components/ui/navbar";
+import { Footer } from "@/components/ui/footer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,16 +31,7 @@ export default function RootLayout({
       >
         <Navbar />
         {children}
-        <footer role="contentinfo" className="pt-6 pb-8 text-center text-sm border-t">
-          <div className="mx-auto max-w-4xl px-4">
-            <p>© {new Date().getFullYear()} Hotel Reservation System. All rights reserved.</p>
-            <p className="mt-2">
-              <a href="/privacy" className="underline hover:text-foreground">Privacy</a>
-              <span className="mx-2">·</span>
-              <a href="/terms" className="underline hover:text-foreground">Terms</a>
-            </p>
-          </div>
-        </footer>
+        <Footer />
       </body>
     </html>
   );
