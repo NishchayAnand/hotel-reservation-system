@@ -6,36 +6,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.gharana.search_service.client.HotelServiceClient;
 import com.gharana.search_service.client.InventoryServiceClient;
 import com.gharana.search_service.client.PricingServiceClient;
-import com.gharana.search_service.dto.AvailableHotelSummary;
 import com.gharana.search_service.dto.AvailableRoomType;
 import com.gharana.search_service.dto.Hotel;
 import com.gharana.search_service.dto.InventoryQueryRequest;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class SearchServiceImpl implements SearchService {
 
-    @Autowired
-    private HotelServiceClient hotelServiceClient;
-
-    @Autowired
-    private InventoryServiceClient inventoryServiceClient;
-
-    @Autowired 
-    PricingServiceClient pricingServiceClient;
-
-    public SearchServiceImpl(HotelServiceClient hotelServiceClient, 
-                                InventoryServiceClient inventoryServiceClient,
-                                PricingServiceClient pricingServiceClient) {
-        this.hotelServiceClient = hotelServiceClient;
-        this.inventoryServiceClient = inventoryServiceClient;
-        this.pricingServiceClient = pricingServiceClient;
-    }
+    private final HotelServiceClient hotelServiceClient;
+    private final InventoryServiceClient inventoryServiceClient;
+    private final PricingServiceClient pricingServiceClient;
 
     @Override
     public List<Hotel> search(String destination, LocalDate checkInDate, LocalDate checkOutDate) {
@@ -64,12 +52,12 @@ public class SearchServiceImpl implements SearchService {
             Hotel hotel = hotelById.get(hotelId);
             for(AvailableRoomType availableRoomType : grouped.get(hotelId) ) {
                 double price = pricingServiceClient.getAvgPricePerNight(availableRoomType.getHotelId(), availableRoomType.getRoomTypeId(), checkInDate, checkOutDate);
-                hotel.setLowestPrice(Math.min(hotel.getLowestPrice(), price));
+                //hotel.setLowestPrice(Math.min(hotel.getAvg(), price));
             }
-            availableHotelSummaries.add(hotelSummary);
+            availableHotels.add(hotel);
         }
 
-        return availableHotelSummaries;
+        return availableHotels;
     }
 
 }

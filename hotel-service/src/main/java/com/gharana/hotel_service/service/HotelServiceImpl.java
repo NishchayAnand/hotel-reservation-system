@@ -2,26 +2,20 @@ package com.gharana.hotel_service.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.gharana.hotel_service.dao.HotelRepository;
 import com.gharana.hotel_service.dao.LocationRepository;
 import com.gharana.hotel_service.model.Hotel;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class HotelServiceImpl implements HotelService { 
 
-    @Autowired
-    private LocationRepository locationRepository;
-
-    @Autowired
-    private HotelRepository hotelRepository;  
-
-    public HotelServiceImpl(LocationRepository locationRepository, HotelRepository hotelRepository) {
-        this.locationRepository = locationRepository;
-        this.hotelRepository = hotelRepository;
-    }
+    private final LocationRepository locationRepository;
+    private final HotelRepository hotelRepository;
 
 	@Override
 	public List<Hotel> getHotelsByDestination(String destination) {
@@ -29,4 +23,5 @@ public class HotelServiceImpl implements HotelService {
         List<Hotel> hotels = hotelRepository.getHotelsByLocationId(locationId);
         return hotels;
 	}
+    
 }
