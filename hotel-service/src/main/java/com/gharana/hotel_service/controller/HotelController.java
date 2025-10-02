@@ -1,5 +1,6 @@
 package com.gharana.hotel_service.controller;
 
+import com.gharana.hotel_service.dto.LocationDTO;
 import com.gharana.hotel_service.model.Hotel;
 import com.gharana.hotel_service.service.HotelService;
 
@@ -20,8 +21,8 @@ public class HotelController {
     private final HotelService hotelService;
 
     @GetMapping("")
-    public List<Hotel> getHotelsByDestination(@RequestParam("destination") String destination) {
+    public List<Hotel> getHotelsByDestination(@RequestParam("location") LocationDTO location) {
         // Validate input parameters
-        return hotelService.getHotelsByDestination(destination);
+        return hotelService.getHotelsByDestination(location);
     }
 }

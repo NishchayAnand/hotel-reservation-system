@@ -1,10 +1,10 @@
-package com.gharana.hotel_service.dao;
+package com.gharana.hotel_service.repository;
 
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
-import com.gharana.hotel_service.model.Hotel;
+import com.gharana.hotel_service.entity.Hotel;
 
 @Repository
 public class HotelRepository {

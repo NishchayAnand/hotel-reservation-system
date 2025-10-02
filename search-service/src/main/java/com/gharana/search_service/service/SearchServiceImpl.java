@@ -14,6 +14,7 @@ import com.gharana.search_service.client.PricingServiceClient;
 import com.gharana.search_service.dto.AvailableRoomType;
 import com.gharana.search_service.dto.Hotel;
 import com.gharana.search_service.dto.InventoryQueryRequest;
+import com.gharana.search_service.dto.Location;
 
 import lombok.AllArgsConstructor;
 
@@ -26,12 +27,12 @@ public class SearchServiceImpl implements SearchService {
     private final PricingServiceClient pricingServiceClient;
 
     @Override
-    public List<Hotel> search(String destination, LocalDate checkInDate, LocalDate checkOutDate) {
+    public List<Hotel> search(Location location, LocalDate checkInDate, LocalDate checkOutDate) {
 
         List<Hotel> availableHotels = new ArrayList<>();
         
         // Step 1: Query Hotel Service for hotel metadata
-        List<Hotel> hotels = hotelServiceClient.getHotelsByDestination(destination);
+        List<Hotel> hotels = hotelServiceClient.getHotelsByDestination(location);
 
         // Step 2: Query Inventory Service to get list of room types which have rooms available on every date in the [chekInDate, checkOutDate) date range.
         List<String> hotelIds = hotels.stream().map(Hotel::getId).toList();

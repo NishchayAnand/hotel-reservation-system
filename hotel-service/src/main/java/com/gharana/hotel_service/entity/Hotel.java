@@ -1,4 +1,4 @@
-package com.gharana.hotel_service.model;
+package com.gharana.hotel_service.entity;
 
 import java.util.List;
 

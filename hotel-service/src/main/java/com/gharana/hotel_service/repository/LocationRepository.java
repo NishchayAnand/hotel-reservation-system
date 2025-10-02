@@ -1,17 +1,20 @@
 package com.gharana.hotel_service.dao;
 
-import java.util.List;
-
 import org.springframework.stereotype.Repository;
 
-import com.gharana.hotel_service.model.Location;
+import com.gharana.hotel_service.dto.LocationDTO;
 
 @Repository
 public class LocationRepository {
 
-    public String getLocationId(String destination) {
-        // Mock Implementation - replace with actual database call
-         List<Location> locationMeta = List.of(
+    public String getLocationId(LocationDTO location) {
+        return null;
+
+    }
+
+    /*
+     *         // Mock Implementation - replace with actual database call
+        List<Location> locationMeta = List.of(
             new Location("GOA", "Goa"),
             new Location("MAN", "Manali"),
             new Location("JAI", "Jaipur"),
@@ -24,7 +27,7 @@ public class LocationRepository {
         .map(Location::getLocationId)
         .findFirst()
         .orElseThrow(() -> new IllegalArgumentException("Destination not found: " + destination));
-    }
-
+     * 
+    */
 
 }
