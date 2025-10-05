@@ -1,16 +1,15 @@
-package com.gharana.hotel_service.dao;
+package com.gharana.hotel_service.repository;
 
-import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
-import com.gharana.hotel_service.dto.LocationDTO;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-@Repository
-public class LocationRepository {
+import com.gharana.hotel_service.entity.Location;
 
-    public String getLocationId(LocationDTO location) {
-        return null;
+public interface LocationRepository extends JpaRepository<Location, Long> {
 
-    }
+    Optional<Location> findFirstByCityIgnoreCaseAndStateIgnoreCaseAndCountryIgnoreCase(
+        String city, String State, String country);
 
     /*
      *         // Mock Implementation - replace with actual database call

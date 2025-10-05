@@ -4,10 +4,11 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.gharana.hotel_service.dao.HotelRepository;
-import com.gharana.hotel_service.dao.LocationRepository;
 import com.gharana.hotel_service.dto.LocationDTO;
-import com.gharana.hotel_service.model.Hotel;
+import com.gharana.hotel_service.entity.Hotel;
+import com.gharana.hotel_service.entity.Location;
+import com.gharana.hotel_service.repository.HotelRepository;
+import com.gharana.hotel_service.repository.LocationRepository;
 
 import lombok.AllArgsConstructor;
 
@@ -20,8 +21,16 @@ public class HotelServiceImpl implements HotelService {
 
 	@Override
 	public List<Hotel> getHotelsByDestination(LocationDTO location) {
-		String locationId = locationRepository.getLocationId(location);
+		
+        // Step 1: Find location Id for the specified location
+        Long locationId = locationRepository
+            .findFirstByCityIgnoreCaseAndStateIgnoreCaseAndCountryIgnoreCase(location.getCity(), location.getState(), location.getCountry())
+            .map(Location::getId)
+            .orElse(null);
+        
+        // Step 2: Find hotels in the specified location
         List<Hotel> hotels = hotelRepository.getHotelsByLocationId(locationId);
+        
         return hotels;
 	}
     

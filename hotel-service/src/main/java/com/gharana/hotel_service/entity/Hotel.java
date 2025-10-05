@@ -1,22 +1,40 @@
 package com.gharana.hotel_service.entity;
 
-import java.util.List;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
-@AllArgsConstructor 
-@Setter 
-@Getter
+@Entity
+@Table(name = "hotels")
+@Data
 public class Hotel {
-    private String id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
     private String name;
-    private String description;
-    private String locationId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
+
     private String address;
+
+    private String description;
+
+    @Column(name = "thumbnail_url")
     private String thumbnailUrl;
-    private double customerRating;
-    private int starRating;
-    private List<String> amenities;
+
+    @Column(precision = 2, scale = 1)
+    private int rating;
+
 }
