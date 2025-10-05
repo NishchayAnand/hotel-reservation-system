@@ -7,7 +7,24 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SearchHotelForm } from "@/components/ui/search-hotel-form";
 import Image from "next/image";
 
-export default function Home() {
+interface Location {
+    id: number;
+    city: string;
+}
+
+export default async function Home() {
+
+  // server-side fetch
+  const res = await fetch("http:localhost:8081/locations");
+  const locations = res.ok ? await res.json() : [];
+
+  const destinations = Array.isArray(locations)
+    ? locations.map((loc: Location) => ({
+        label: loc.city,
+        value: String(loc.id)
+    }))
+    : [];
+
   return (
     <main className="px-10">
 
@@ -35,7 +52,7 @@ export default function Home() {
                 </div>
               </PopoverTrigger>
               <PopoverContent className="z-200">
-                <SearchHotelForm />
+                <SearchHotelForm destinations={destinations} />
               </PopoverContent>
             </Popover>
           </div> 
@@ -47,7 +64,7 @@ export default function Home() {
                 <CardTitle>Search Hotels</CardTitle>
               </CardHeader>
               <CardContent>
-                <SearchHotelForm />
+                <SearchHotelForm destinations={destinations} />
               </CardContent>
             </Card>
           </div>

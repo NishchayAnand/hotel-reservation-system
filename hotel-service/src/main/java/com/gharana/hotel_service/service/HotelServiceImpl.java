@@ -21,12 +21,10 @@ public class HotelServiceImpl implements HotelService {
 
 	@Override
     @Transactional(readOnly = true)
-	public List<HotelDTO> getHotelsByLocation(String city, String state, String country) {
+	public List<HotelDTO> getHotelsByCity(String city) {
 		
         // Step 1: Find location Id for the specified location
-        Location location = locationRepository
-            .findFirstByCityAndStateAndCountry(city, state, country)
-            .orElse(null);
+        Location location = locationRepository.findFirstByCity(city).orElse(null);
 
         if(location == null) return List.of();
         

@@ -5,5 +5,5 @@ import com.gharana.hotel_service.dto.HotelDTO;
 import java.util.List;
 
 public interface HotelService {
-    List<HotelDTO> getHotelsByLocation(String city, String state, String country);
+    List<HotelDTO> getHotelsByCity(String city);
 }

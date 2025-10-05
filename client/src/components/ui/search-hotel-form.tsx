@@ -12,14 +12,12 @@ import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import { Command, CommandList, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
-// Sample destinations
-const destinations = [
-    { label: "Manali", value: "Manali" },
-    { label: "Jaipur", value: "Jaipur" },
-    { label: "Udaipur", value: "Udaipur" },
-    { label: "Mumbai", value: "Mumbai" },
-    { label: "Kerala", value: "Kerala" }
-];
+// Interface for Destination
+interface Destination {
+    label: string;
+    value: string;
+}
+
 
 // Interface for form values
 type FormValues = {
@@ -28,7 +26,7 @@ type FormValues = {
     checkOutDate: Date | undefined;
 };
 
-export function SearchHotelForm() {
+export function SearchHotelForm( {destinations} : {destinations: Destination[]} ) {
     const [isDestPopOpen, setIsDestPopOpen] = useState(false);
     const [isCheckInPopOpen, setIsCheckInPopOpen] = useState(false);
     const [isCheckOutPopOpen, setIsCheckOutPopOpen] = useState(false);

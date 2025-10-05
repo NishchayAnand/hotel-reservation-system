@@ -21,14 +21,8 @@ public class Location {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String city;
-
-    @Column(nullable = false)
-    private String state;
-
-    @Column(nullable = false)
-    private String country;
 
     @OneToMany(mappedBy = "location", fetch = FetchType.LAZY)
     private List<Hotel> hotels;

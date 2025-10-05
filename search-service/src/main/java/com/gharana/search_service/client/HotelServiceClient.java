@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.gharana.search_service.dto.Hotel;
 
-@FeignClient(name = "hotel-service", url = "http://localhost:8081/hotels")
+@FeignClient(name = "hotel-service", url = "http://localhost:8081")
 public interface HotelServiceClient {
 
-    @GetMapping("")
-    List<Hotel> getHotelsByDestination(@RequestParam String city, @RequestParam String state, @RequestParam String country);
+    @GetMapping("/hotels")
+    List<Hotel> getHotelsByDestination(@RequestParam String city);
 }
