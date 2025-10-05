@@ -46,8 +46,8 @@ public class HotelServiceImpl implements HotelService {
             .description(hotel.getDescription())
             .thumbnailUrl(hotel.getThumbnailUrl())
             .rating(hotel.getRating())
+            .amenities(hotel.getAmenities())
             .build();
-
     }
     
 }

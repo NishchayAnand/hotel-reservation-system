@@ -32,7 +32,7 @@ public class SearchServiceImpl implements SearchService {
         List<Hotel> availableHotels = new ArrayList<>();
         
         // Step 1: Query Hotel Service for hotel metadata
-        List<Hotel> hotels = hotelServiceClient.getHotelsByDestination(location);
+        List<Hotel> hotels = hotelServiceClient.getHotelsByDestination(location.getCity(), location.getState(), location.getCountry());
 
         // Step 2: Query Inventory Service to get list of room types which have rooms available on every date in the [chekInDate, checkOutDate) date range.
         List<String> hotelIds = hotels.stream().map(Hotel::getId).toList();

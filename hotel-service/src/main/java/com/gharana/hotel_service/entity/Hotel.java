@@ -1,6 +1,7 @@
 package com.gharana.hotel_service.entity;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +10,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -38,5 +41,13 @@ public class Hotel {
 
     @Column(precision = 2, scale = 1)
     private BigDecimal rating;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name="hotel_amenities",
+        joinColumns = @JoinColumn(name = "hotel_id"),
+        inverseJoinColumns = @JoinColumn(name = "amenity_id")
+    )
+    private Set<Amenity> amenities;
 
 }
