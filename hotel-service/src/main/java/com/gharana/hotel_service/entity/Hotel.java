@@ -1,5 +1,7 @@
 package com.gharana.hotel_service.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,6 +37,6 @@ public class Hotel {
     private String thumbnailUrl;
 
     @Column(precision = 2, scale = 1)
-    private int rating;
+    private BigDecimal rating;
 
 }

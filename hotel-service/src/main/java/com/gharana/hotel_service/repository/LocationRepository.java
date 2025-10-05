@@ -8,8 +8,7 @@ import com.gharana.hotel_service.entity.Location;
 
 public interface LocationRepository extends JpaRepository<Location, Long> {
 
-    Optional<Location> findFirstByCityIgnoreCaseAndStateIgnoreCaseAndCountryIgnoreCase(
-        String city, String State, String country);
+    Optional<Location> findFirstByCityAndStateAndCountry(String city, String State, String country);
 
     /*
      *         // Mock Implementation - replace with actual database call
