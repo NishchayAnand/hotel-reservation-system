@@ -18,7 +18,6 @@ interface Destination {
     value: string;
 }
 
-
 // Interface for form values
 type FormValues = {
     destination: string;

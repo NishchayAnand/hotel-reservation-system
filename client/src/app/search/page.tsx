@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 
 import HotelCard from "@/components/ui/hotel-card";
+import SkeletonCard from "@/components/ui/skeleton-card";
 
 import type { Hotel } from "@/types/hotel";
 import { useEffect, useState } from "react";
@@ -35,64 +36,68 @@ const hotels: Hotel[] = [
 
 
 export default function SearchPage() {
+
   const searchParams = useSearchParams();
-
-  const destination = searchParams.get("destination");
-  // const checkInDate = searchParams.get("checkInDate");
-  // const checkOutDate = searchParams.get("checkOutDate");
-
   const [hotels, setHotels] = useState<Hotel[]>([]);
-
+  const [loading, setLoading] = useState<boolean>(true);
+  
   // fetch hotels from search-service
   useEffect(() => {
+    
     const qs = searchParams.toString();
-    fetch(`http://localhost:8080/search/hotels?${qs}`)
-      .then((res) => res.json())
-      .then((data) => setHotels(data))
+
+    const fetchHotels = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`http://localhost:8080/api/search?${qs}`);
+        if(!res.ok) {
+          setHotels([]);
+          return;
+        }
+        const data = await res.json();
+        console.log(data);
+        setHotels(Array.isArray(data) ? data : []);
+      } catch(err: any) {
+        console.error("Failed to fetch hotels", err);
+        setHotels([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchHotels();
+
   }, [searchParams]);
+
+  const renderSkeletons = (count = 3) => {
+    return Array.from({ length : count }).map((_, i) => (
+      <SkeletonCard key={i}/>
+    ));
+  };
   
   return (
-    <main>
-
-      <section className="w-full pt-20 pb-10 px-10">
+    <main className="w-full h-screen pt-20 pb-10 px-10">
         
-        <div className="grid grid-cols-4 gap-6">
-          {/* Filters Section */}
-          <div className="col-span-1 border-r">
-            
-          </div>
-
-          {/* Hotel Cards Section */}
-          <div className="col-span-3">
-            <h1 className="text-lg font-semibold my-5">Hotels near {destination}</h1>
-            <div className="flex flex-col gap-5">
-              {hotels.map(hotel => <HotelCard key={hotel.id} {...hotel} />)}
-            </div>
-            
-          </div>
-
-        </div>     
-      </section>
-
-      {/*
-      
-      <div className="p-4 border rounded-lg shadow">
-              <h2 className="text-md font-semibold mb-4">Filters</h2>
-              <div>
-                <label className="block text-sm font-medium mb-2">Price Range</label>
-                <input type="range" className="w-full" />
-              </div>
-              <div className="mt-4">
-                <label className="block text-sm font-medium mb-2">Rating</label>
-                <select className="w-full border rounded p-2">
-                  <option value="any">Any</option>
-                  <option value="4">4+ Stars</option>
-                  <option value="3">3+ Stars</option>
-                </select>
-              </div>
-            </div>
-      
+      {/* 
+        Use a fixed inner height so only the right column scrolls.
+        pt-20 (5rem) + pb-10 (2.5rem) are accounted for below:
+        available height = 100vh - 7.5rem
       */}
+      <div className="w-full h-[calc(100vh-7.5rem)] grid grid-cols-4 gap-6">
+        
+        {/* Filters Section - remains visible (does not scroll) */}
+        <div id="filter-section" className="col-span-1 border-r h-full">
+          {/* put filters here; this column stays fixed while the right column scrolls */}
+        </div>
+
+        {/* Hotel Cards Section - scrolls within available viewport height */}
+        <div id="hotel-card-container" className="col-span-3 h-full overflow-y-auto hide-scrollbar">
+          <div className="flex flex-col gap-5 p-4">
+            {loading ? renderSkeletons(4) : hotels.map(hotel => <HotelCard key={hotel.id} {...hotel} />)}
+          </div>
+        </div>
+
+      </div>     
 
     </main>
   );

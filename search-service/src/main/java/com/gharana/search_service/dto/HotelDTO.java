@@ -2,20 +2,16 @@ package com.gharana.search_service.dto;
 
 import java.util.List;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@AllArgsConstructor
-@Getter
-@Setter
-public class Hotel {
+@Data
+public class HotelDTO {
     private String id;
     private String name;
-    private String description;
     private String locationId;
     private String address;
+    private String description;
     private String thumbnailUrl;
     private String rating;
-    private List<String> amenities;
+    private List<AmenityDTO> amenities;
 }

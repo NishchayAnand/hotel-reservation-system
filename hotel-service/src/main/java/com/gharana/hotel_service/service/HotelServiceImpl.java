@@ -1,15 +1,11 @@
 package com.gharana.hotel_service.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.gharana.hotel_service.dto.HotelDTO;
 import com.gharana.hotel_service.entity.Hotel;
-import com.gharana.hotel_service.entity.Location;
-import com.gharana.hotel_service.repository.LocationRepository;
+import com.gharana.hotel_service.repository.HotelRepository;
 
 import lombok.AllArgsConstructor;
 
@@ -17,35 +13,11 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class HotelServiceImpl implements HotelService { 
 
-    private final LocationRepository locationRepository;
+    private final HotelRepository hotelRepository;
 
 	@Override
-    @Transactional(readOnly = true)
-	public List<HotelDTO> getHotelsByCity(String city) {
-		
-        // Step 1: Find location Id for the specified location
-        Location location = locationRepository.findFirstByCity(city).orElse(null);
-
-        if(location == null) return List.of();
-        
-        // Step 2: Find hotels in the specified location
-        List<Hotel> hotels = location.getHotels();
-        
-        return hotels.stream()
-            .map(this::toDto)
-            .collect(Collectors.toList());
+	public List<Hotel> getHotelsByLocationId(Long locationId) {  
+        return hotelRepository.findByLocationId(locationId);
 	}
-
-    private HotelDTO toDto(Hotel hotel) {
-        return HotelDTO.builder()
-            .id(hotel.getId())
-            .name(hotel.getName())
-            .address(hotel.getAddress())
-            .description(hotel.getDescription())
-            .thumbnailUrl(hotel.getThumbnailUrl())
-            .rating(hotel.getRating())
-            .amenities(hotel.getAmenities())
-            .build();
-    }
     
 }

@@ -8,7 +8,7 @@ export default function SearchLayout({
 }>) {
   return (
     <>
-        <SearchNavbar />
+        {/*<SearchNavbar />*/}
         {children}
     </>
   );
