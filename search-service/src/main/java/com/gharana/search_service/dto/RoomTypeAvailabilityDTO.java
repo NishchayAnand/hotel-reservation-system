@@ -8,8 +8,8 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class InventoryQueryRequest {
-    private List<String> hotelIds;
-    private LocalDate checkInDate;
-    private LocalDate checkOutDate;
+public class RoomTypeAvailabilityDTO {
+    private String hotelId;
+    private String roomTypeId;
+    private List<LocalDate> availableDates;
 }
