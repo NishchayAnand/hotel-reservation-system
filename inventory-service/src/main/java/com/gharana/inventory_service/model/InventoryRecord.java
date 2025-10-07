@@ -2,23 +2,37 @@ package com.gharana.inventory_service.model;
 
 import java.time.LocalDate;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
 
-@AllArgsConstructor
-@Getter
-@Setter
+
+@Data
+@Entity
+@Table(name = "room_type_inventory")
 public class InventoryRecord {
-    private String hotelId;
-    private String roomTypeId;
-    private LocalDate date;
-    private int totalRooms;
-    private int reservedRooms;
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Override
-    public String toString() {
-        return "\nInventoryRecord [hotelId=" + hotelId + ", roomTypeId=" + roomTypeId + ", date=" + date + ", totalRooms="
-                + totalRooms + ", reservedRooms=" + reservedRooms + "]";
-    }
+    @Column(name = "hotel_id", nullable = false)
+    private String hotelId;
+
+    @Column(name = "room_type_id", nullable = false)
+    private String roomTypeId;
+
+    @Column(name = "reservation_date", nullable = false)
+    private LocalDate date;
+
+    @Column(name = "total_count")
+    private int totalCount;
+
+    @Column(name = "reserved_count")
+    private int reservedCount;
+    
 }

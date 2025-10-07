@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Setter
 @Getter
-public class InventoryQueryRequest {
+public class RoomAvailabilityRequest {
     private List<String> hotelIds;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;

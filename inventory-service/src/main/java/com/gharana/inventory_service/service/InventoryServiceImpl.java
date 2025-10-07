@@ -1,18 +1,15 @@
 package com.gharana.inventory_service.service;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.gharana.inventory_service.dao.InventoryRepository;
-import com.gharana.inventory_service.dto.AvailableRoomType;
+import com.gharana.inventory_service.dto.RoomTypeDTO;
 import com.gharana.inventory_service.model.InventoryRecord;
+import com.gharana.inventory_service.repository.InventoryRepository;
 
 @Service
 public class InventoryServiceImpl implements InventoryService {
@@ -25,14 +22,27 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public List<AvailableRoomType> getAvailableRoomTypes(List<String> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) {
-
-        List<AvailableRoomType> availableRoomTypes = new ArrayList<>();
-        
+    public List<RoomTypeDTO> queryRoomAvailability(List<String> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) { 
         // Step 1: Fetch inventory records for the given hotels that fall within the [checkInDate, checkOutDate) range  
-        List<InventoryRecord> records = inventoryRepository.findAvailableRoomTypeByHotelIdAndDateRange(hotelIds, checkInDate, checkOutDate);
-        
-        // Step 2: Group records by hotelId and roomTypeId
+        List<InventoryRecord> records = inventoryRepository.findAvailableRoomTypesForHotels(hotelIds, checkInDate, checkOutDate);
+        return records.stream()
+            .map(this::toRoomTypeDTO)
+            .collect(Collectors.toList()); 
+    }
+
+    private RoomTypeDTO toRoomTypeDTO(InventoryRecord record) {
+        return RoomTypeDTO.builder()
+            .hotelId(record.getHotelId())
+            .roomTypeId(record.getRoomTypeId())
+            .build();
+    }
+
+    /*
+
+
+        List<RoomTypeDTO> availableRoomTypes = new ArrayList<>();
+     * 
+     * // Step 2: Group records by hotelId and roomTypeId
         Map<String, Map<String, List<InventoryRecord>>> grouped = records.stream()
             .collect(Collectors.groupingBy(InventoryRecord::getHotelId, 
                      Collectors.groupingBy(InventoryRecord::getRoomTypeId)));
@@ -50,13 +60,9 @@ public class InventoryServiceImpl implements InventoryService {
         }
 
         return availableRoomTypes;  
-    }
-
-    public static void main(String[] args) {
-        InventoryRepository repo = new InventoryRepository();
-        InventoryService service = new InventoryServiceImpl(repo);
-        List<String> hotelIds = List.of("101");
-        System.out.println(service.getAvailableRoomTypes(hotelIds, LocalDate.now(), LocalDate.now().plusDays(3)));
-    }
+     * 
+     * 
+     * 
+    */
 
 }
