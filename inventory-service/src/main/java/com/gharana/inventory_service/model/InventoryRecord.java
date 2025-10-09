@@ -27,7 +27,7 @@ public class InventoryRecord {
     private String roomTypeId;
 
     @Column(name = "reservation_date", nullable = false)
-    private LocalDate date;
+    private LocalDate reservationDate;
 
     @Column(name = "total_count")
     private int totalCount;

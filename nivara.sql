@@ -215,4 +215,36 @@ CREATE TABLE room_type_inventory (
     reserved_count integer NOT NULL DEFAULT 0
 );
 
+INSERT INTO room_type_inventory (hotel_id, room_type_id, reservation_date, total_count, reserved_count)
+VALUES
+  -- Hotel 1
+  (1, 1, CURRENT_DATE, 10, 2),
+  (1, 2, CURRENT_DATE,  5, 1),
+  (1, 3, CURRENT_DATE,  2, 0),
+
+  -- Hotel 2
+  (2, 4, CURRENT_DATE,  8, 3),
+  (2, 5, CURRENT_DATE,  3, 1),
+  (2, 6, CURRENT_DATE,  4, 2),
+
+  -- Hotel 3
+  (3, 7, CURRENT_DATE,  6, 2),
+  (3, 8, CURRENT_DATE, 10, 4),
+  (3, 9, CURRENT_DATE,  2, 0),
+
+  -- Hotel 4
+  (4,10, CURRENT_DATE,   5, 1),
+  (4,11, CURRENT_DATE,   2, 0),
+  (4,12, CURRENT_DATE,   1, 0),
+
+  -- Hotel 5
+  (5,13, CURRENT_DATE,  12, 6),
+  (5,14, CURRENT_DATE,   6, 2),
+  (5,15, CURRENT_DATE,   2, 0),
+
+  -- Hotel 6
+  (6,16, CURRENT_DATE,   3, 1),
+  (6,17, CURRENT_DATE,   4, 1),
+  (6,18, CURRENT_DATE,   2, 0);
+
 */
