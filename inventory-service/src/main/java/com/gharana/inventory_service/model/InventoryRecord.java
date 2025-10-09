@@ -21,10 +21,10 @@ public class InventoryRecord {
     private Long id;
 
     @Column(name = "hotel_id", nullable = false)
-    private String hotelId;
+    private Long hotelId;
 
     @Column(name = "room_type_id", nullable = false)
-    private String roomTypeId;
+    private Long roomTypeId;
 
     @Column(name = "reservation_date", nullable = false)
     private LocalDate reservationDate;

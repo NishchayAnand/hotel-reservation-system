@@ -1,0 +1,17 @@
+spring:
+    application:
+      name: hotel-service
+    datasource:
+      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54602}/${DB_NAME:inventorydb}
+      username: ${DB_USERNAME:postgres}
+      password: ${DB_PASSWORD:postgres}
+    jpa:
+      properties:
+        hibernate:
+          hbm2dll.auto: validate
+          format_sql: true
+          show-sql: true
+          highlight_sql: true
+      
+server:
+    port: 8082

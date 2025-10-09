@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.gharana.inventory_service.dto.AvailableRoomTypeDTO;
 import com.gharana.inventory_service.model.InventoryRecord;
 
 
@@ -15,12 +14,12 @@ public interface InventoryRepository extends JpaRepository<InventoryRecord, Long
     @Query("SELECT ir.hotelId, ir.roomTypeId " + 
         "FROM InventoryRecord ir " +
         "WHERE ir.hotelId IN :hotelIds " +
-        "   AND ir.reservationDate >= :checkInDate " +
-        "   AND ir.reservationDate < :checkOutDate " +
-        "   AND ir.reservedCount < ir.totalCount " +
-        "GROUPBY ir.hotelId, ir.roomTypeId " +
-        "HAVING COUNT(ir.reservation_date) =:nights"
+           "  AND ir.reservationDate >= :checkInDate " +
+           "  AND ir.reservationDate < :checkOutDate " +
+           "  AND ir.reservedCount < ir.totalCount " +
+        "GROUP BY ir.hotelId, ir.roomTypeId " + 
+        "HAVING COUNT(ir.reservationDate) = :nights"
     )
-    public List<AvailableRoomTypeDTO> findAvailableRoomTypesForHotels(List<String> hotelIds, LocalDate checkInDate, LocalDate checkOutDate, long nights);
+    public List<Object[]> findAvailableRoomTypesForHotels(List<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate, long nights);
 
 }

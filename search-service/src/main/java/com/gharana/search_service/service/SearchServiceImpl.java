@@ -28,11 +28,11 @@ public class SearchServiceImpl implements SearchService {
     public List<HotelDTO> search(Long locationId, LocalDate checkInDate, LocalDate checkOutDate) {
 
         List<HotelDTO> availableHotels = new ArrayList<>();
-        if(hotels.isEmpty()) return List.of();
         
         // Step 1: Query Hotel Service for hotel metadata
         List<HotelDTO> hotels = hotelServiceClient.getHotelsByLocationId(locationId);
-
+        if(hotels.isEmpty()) return List.of();
+        
         // Step 2: Query Inventory Service to get list of room types which have rooms available on every date in the [chekInDate, checkOutDate) date range.
         List<String> hotelIds = hotels.stream().map(HotelDTO::getId).toList();
         List<RoomTypeAvailabilityDTO> roomTypeAvailabilities = inventoryServiceClient

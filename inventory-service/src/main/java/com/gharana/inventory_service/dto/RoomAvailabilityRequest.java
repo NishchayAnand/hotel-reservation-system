@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class RoomAvailabilityRequest {
-    private List<String> hotelIds;
+    private List<Long> hotelIds;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
 }

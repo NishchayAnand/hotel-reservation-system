@@ -18,7 +18,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class InventoryController {
 
-    private InventoryService inventoryService;
+    private final InventoryService inventoryService;
 
     @PostMapping("/query")
     public List<AvailableRoomTypeDTO> queryRoomAvailability(@RequestBody RoomAvailabilityRequest request) {
