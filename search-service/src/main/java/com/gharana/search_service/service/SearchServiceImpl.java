@@ -9,10 +9,9 @@ import org.springframework.stereotype.Service;
 import com.gharana.search_service.client.HotelServiceClient;
 import com.gharana.search_service.client.InventoryServiceClient;
 import com.gharana.search_service.client.PricingServiceClient;
-import com.gharana.search_service.dto.AvailableRoomType;
+import com.gharana.search_service.dto.AvailableRoomTypeDTO;
 import com.gharana.search_service.dto.HotelDTO;
-import com.gharana.search_service.dto.InventoryQueryRequest;
-import com.gharana.search_service.dto.RoomTypeAvailabilityDTO;
+import com.gharana.search_service.dto.RoomAvailabilityRequest;
 
 import lombok.AllArgsConstructor;
 
@@ -32,15 +31,16 @@ public class SearchServiceImpl implements SearchService {
         // Step 1: Query Hotel Service for hotel metadata
         List<HotelDTO> hotels = hotelServiceClient.getHotelsByLocationId(locationId);
         if(hotels.isEmpty()) return List.of();
-        
+
         // Step 2: Query Inventory Service to get list of room types which have rooms available on every date in the [chekInDate, checkOutDate) date range.
         List<String> hotelIds = hotels.stream().map(HotelDTO::getId).toList();
-        List<RoomTypeAvailabilityDTO> roomTypeAvailabilities = inventoryServiceClient
-            .getAvailableRoomTypes(new InventoryQueryRequest(hotelIds, checkInDate, checkOutDate));
+        List<AvailableRoomTypeDTO> availableRoomTypes = inventoryServiceClient
+            .queryRoomAvailability(new RoomAvailabilityRequest(hotelIds, checkInDate, checkOutDate));
+        
+        // Step 3: 
+        // Step 3: for each availableRoomType, we would the avg price per night - suggest the best flow to get this detail considering we have a pricingService which interacts with the pricing
         /* 
         
-        
-
         // List<PricingRecord> pricingRecords = pricingServiceClient.getPricingByRoomTypes(List<AvailableRoomTypes>, checkInDate, checkOutDate);
 
         // Step 3: Build a map of Hotel metadata for easy lookup
