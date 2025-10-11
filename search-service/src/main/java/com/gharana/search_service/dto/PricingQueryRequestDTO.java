@@ -1,17 +1,15 @@
 package com.gharana.search_service.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
+@Data
 @AllArgsConstructor
-@Setter
-@Getter
-public class PricingQueryRequest {
-    private String hotelId;
-    private String roomTypeId;
+public class PricingQueryRequestDTO {
+    List<AvailableRoomTypeDTO> availableRoomTypes;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
 }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gharana.search_service.dto.HotelDTO;
+import com.gharana.search_service.dto.AvailableHotelDTO;
 import com.gharana.search_service.service.SearchService;
 
 import lombok.AllArgsConstructor;
@@ -23,11 +23,11 @@ public class MainController {
     private final SearchService searchService;
 
     @GetMapping("")
-    public List<HotelDTO> search(@RequestParam Long destination, 
+    public List<AvailableHotelDTO> search(@RequestParam Long locationId, 
                                 @RequestParam LocalDate checkInDate, 
                                 @RequestParam LocalDate checkOutDate) {
         // Validate input parameters
-        return searchService.search(destination, checkInDate, checkOutDate);   
+        return searchService.search(locationId, checkInDate, checkOutDate);   
     }
 
 }

@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.gharana.hotel_service.entity.Location;
 
 public interface LocationRepository extends JpaRepository<Location, Long> {
+    
     Optional<Location> findFirstByCity(String city);
+
+    @SuppressWarnings("null")
     List<Location> findAll();
+    
 }
