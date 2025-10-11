@@ -2,6 +2,7 @@ package com.gharana.inventory_service.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +22,8 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @PostMapping("/query")
-    public List<AvailableRoomTypeDTO> queryRoomAvailability(@RequestBody RoomAvailabilityRequest request) {
-            return inventoryService.queryRoomAvailability(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate());
+    public ResponseEntity<List<AvailableRoomTypeDTO>> queryRoomAvailability(@RequestBody RoomAvailabilityRequest request) {
+            return ResponseEntity.ok().body(inventoryService.queryRoomAvailability(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate()));
     }
 
 }
