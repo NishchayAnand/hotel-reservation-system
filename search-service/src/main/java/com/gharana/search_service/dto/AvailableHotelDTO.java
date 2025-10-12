@@ -18,5 +18,6 @@ public class AvailableHotelDTO {
     private String thumbnailUrl;
     private String rating;
     private List<AmenityDTO> amenities;
+    private long nights;
     private BigDecimal avgRatePerNight; 
 }

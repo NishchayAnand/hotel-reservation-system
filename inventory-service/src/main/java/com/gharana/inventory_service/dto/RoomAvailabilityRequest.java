@@ -1,7 +1,7 @@
 package com.gharana.inventory_service.dto;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class RoomAvailabilityRequest {
-    private List<Long> hotelIds;
+    private Set<Long> hotelIds;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
 }

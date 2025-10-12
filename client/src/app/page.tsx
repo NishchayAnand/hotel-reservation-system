@@ -74,16 +74,18 @@ export default async function Home() {
 
       </section>
 
-      {/* Popular Destination Section */}
+    </main>
+  );
+}
+
+/*
+
       <section className="w-full h-screen flex flex-col px-20 py-10">
 
-          {/* Header */}
           <h1 className="text-xl font-bold">POPULAR DESTINATIONS</h1><br/>
 
-          {/* Destination Card Container */}
           <div className="w-full flex flex-grow gap-4">
 
-            {/* Jaipur */}
             <div id="destination-card" className="flex-1 rounded-2xl overflow-hidden">
               <div id="image-card-holder" className="relative w-full h-full group">
                 <div id="overlay" className="absolute inset-0 z-10 flex flex-col justify-center items-center bg-black text-white opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-70">
@@ -101,7 +103,6 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Kashmir */}
             <div id="destination-card" className="flex-1 rounded-2xl overflow-hidden">
               <div id="image-card-holder" className="relative w-full h-full group">
                 <div id="overlay" className="absolute inset-0 z-10 flex flex-col justify-center items-center bg-black text-white opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-70">
@@ -119,7 +120,6 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Goa */}
             <div id="destination-card" className="flex-1 rounded-2xl overflow-hidden">
               <div id="image-card-holder" className="relative w-full h-full group">
                 <div id="overlay" className="absolute inset-0 z-10 flex flex-col justify-center items-center bg-black text-white opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-70">
@@ -158,6 +158,4 @@ export default async function Home() {
         </p>
       </section>
 
-    </main>
-  );
-}
+*/

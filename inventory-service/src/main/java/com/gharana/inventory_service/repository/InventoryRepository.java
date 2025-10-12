@@ -2,6 +2,7 @@ package com.gharana.inventory_service.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,6 +21,6 @@ public interface InventoryRepository extends JpaRepository<InventoryRecord, Long
         "GROUP BY ir.hotelId, ir.roomTypeId " + 
         "HAVING COUNT(ir.reservationDate) = :nights"
     )
-    public List<Object[]> findAvailableRoomTypesForHotels(List<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate, long nights);
+    public List<Object[]> findAvailableRoomTypesForHotels(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate, long nights);
 
 }

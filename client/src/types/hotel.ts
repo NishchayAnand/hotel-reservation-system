@@ -14,4 +14,6 @@ export interface Hotel {
   thumbnailUrl: string;
   rating: number;
   amenities: Amenity[];
+  nights: number
+  avgRatePerNight: number
 };

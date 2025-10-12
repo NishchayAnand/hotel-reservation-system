@@ -215,6 +215,10 @@ CREATE TABLE room_type_inventory (
     reserved_count integer NOT NULL DEFAULT 0
 );
 
+ALTER TABLE room_type_inventory
+ADD CONSTRAINT uq_room_type_inventory_unique
+UNIQUE (hotel_id, room_type_id, reservation_date);
+
 INSERT INTO room_type_inventory (hotel_id, room_type_id, reservation_date, total_count, reserved_count)
 VALUES
   -- Hotel 1
@@ -260,6 +264,10 @@ CREATE TABLE room_type_rate (
     reservation_date date NOT NULL,
     rate numeric(10,2) NOT NULL
 );
+
+ALTER TABLE room_type_rate
+ADD CONSTRAINT room_type_rate_unique
+UNIQUE (hotel_id, room_type_id, reservation_date);
 
 INSERT INTO room_type_rate (hotel_id, room_type_id, reservation_date, rate)
 VALUES

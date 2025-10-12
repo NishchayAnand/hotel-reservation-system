@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class RoomAvailabilityRequest {
+public class InventoryQueryRequest {
     private Set<Long> hotelIds;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;

@@ -8,33 +8,6 @@ import SkeletonCard from "@/components/ui/skeleton-card";
 import type { Hotel } from "@/types/hotel";
 import { useEffect, useState } from "react";
 
-// typed placeholder data — replace with fetched data later
-{/*
-const hotels: Hotel[] = [
-    {
-      id: "101",
-      name: "The Johri",
-      address: "Jaipur, Rajasthan",
-      description: "A luxury seaside resort with modern amenities.",
-      thumbnailUrl: "/images/jaipur/the-johri/thumbnail.jpg",
-      rating: 4.6,
-      avgPricePerNight: 4500.0,
-      amenties: ["Free WiFi", "Swimming Pool", "Spa"]
-    },
-    {
-      id: "103",
-      name: "Jaipur House",
-      address: "Jaipur, Rajasthan",
-      description: "Charming hill-side hotel with valley views.",
-      thumbnailUrl: "/images/jaipur/jaipur-house/thumbnail.jpg",
-      rating: 4.4,
-      avgPricePerNight: 2000.0,
-      amenties: ["Free Parking", "Breakfast Included", "Mountain View"]
-    }
-];
-*/}
-
-
 export default function SearchPage() {
 
   const searchParams = useSearchParams();

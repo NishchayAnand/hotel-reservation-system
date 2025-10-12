@@ -1,6 +1,7 @@
 package com.gharana.search_service.service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,9 +15,9 @@ import com.gharana.search_service.client.PricingServiceClient;
 import com.gharana.search_service.dto.AvailableHotelDTO;
 import com.gharana.search_service.dto.AvailableRoomTypeDTO;
 import com.gharana.search_service.dto.HotelDTO;
-import com.gharana.search_service.dto.PriceQuoteDTO;
+import com.gharana.search_service.dto.InventoryQueryRequest;
+import com.gharana.search_service.dto.MinPriceQuoteDTO;
 import com.gharana.search_service.dto.PricingQueryRequestDTO;
-import com.gharana.search_service.dto.RoomAvailabilityRequest;
 
 import lombok.AllArgsConstructor;
 
@@ -42,12 +43,13 @@ public class SearchServiceImpl implements SearchService {
 
         // Step 3: Query Inventory Service to get list of room types which have rooms available on every date in the [chekInDate, checkOutDate) date range.
         List<AvailableRoomTypeDTO> availableRoomTypes = inventoryServiceClient
-            .queryRoomAvailability(new RoomAvailabilityRequest(hotelById.keySet(), checkInDate, checkOutDate));
+            .queryRoomAvailability(new InventoryQueryRequest(hotelById.keySet(), checkInDate, checkOutDate));
         
         // Step 4: for each availableRoomType, get avg rate per night
-        List<PriceQuoteDTO> priceQuotes = pricingServiceClient.getAvgPricePerNight(new PricingQueryRequestDTO(availableRoomTypes, checkInDate, checkOutDate));
+        List<MinPriceQuoteDTO> priceQuotes = pricingServiceClient.getMinPricePerNight(new PricingQueryRequestDTO(availableRoomTypes, checkInDate, checkOutDate));
 
-        for(PriceQuoteDTO priceQuote: priceQuotes) {
+        long nights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
+        for(MinPriceQuoteDTO priceQuote: priceQuotes) {
             HotelDTO hotel = hotelById.get(priceQuote.getHotelId());
             availableHotels.add(
                 AvailableHotelDTO.builder()
@@ -58,7 +60,8 @@ public class SearchServiceImpl implements SearchService {
                     .thumbnailUrl(hotel.getThumbnailUrl())
                     .rating(hotel.getRating())
                     .amenities(hotel.getAmenities())
-                    .avgRatePerNight(priceQuote.getAvgRatePerNight())
+                    .nights(nights)
+                    .avgRatePerNight(priceQuote.getMinRatePerNight())
                     .build()
             );
         }

@@ -25,6 +25,14 @@ type FormValues = {
     checkOutDate: Date | undefined;
 };
 
+function pad(n: number) {
+    return String(n).padStart(2,"0"); // pads the current string n with '0' until it reaches the specified length (here, 2).
+}
+
+function formatDateLocal(d: Date) {
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
 export function SearchHotelForm( {destinations} : {destinations: Destination[]} ) {
     const [isDestPopOpen, setIsDestPopOpen] = useState(false);
     const [isCheckInPopOpen, setIsCheckInPopOpen] = useState(false);
@@ -59,12 +67,12 @@ export function SearchHotelForm( {destinations} : {destinations: Destination[]} 
             return;
         }
         const query = new URLSearchParams({
-            destination: data.destination,
-            checkInDate: data.checkInDate.toISOString().split("T")[0],
-            checkOutDate: data.checkOutDate.toISOString().split("T")[0],
+            locationId: data.destination,
+            checkInDate: formatDateLocal(data.checkInDate),
+            checkOutDate: formatDateLocal(data.checkOutDate),
         }).toString();
 
-        router.push(`/search?${query}`);
+        router.push(`/hotel-listings?${query}`);
     }
 
     return (

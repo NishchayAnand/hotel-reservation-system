@@ -15,7 +15,7 @@ import com.gharana.inventory_service.service.InventoryService;
 import lombok.AllArgsConstructor;
 
 @RestController
-@RequestMapping("/inventory")
+@RequestMapping("api/inventory")
 @AllArgsConstructor
 public class InventoryController {
 
