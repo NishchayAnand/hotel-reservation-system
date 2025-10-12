@@ -50,7 +50,7 @@ export default function HotelCard(hotel: Hotel) {
       <div className="flex flex-col col-span-1 justify-end p-5">
         <p className="text-lg font-semibold">₹{avgRatePerNight}</p>
         <p className="text-xs text-gray-600 whitespace-nowrap mb-4">for {nights} night + Taxes</p>
-        <Link href={`/hotels/${id}`}>
+        <Link href={`/hotel-details/${id}`}>
           <Button className="w-full cursor-pointer font-semibold">View</Button>
         </Link>
       </div>
