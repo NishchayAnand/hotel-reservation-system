@@ -16,7 +16,7 @@ export default function HotelCard(hotel: Hotel) {
     id,
     name = "Untitled Hotel",
     address = "Address not available",
-    description = "No description available",
+    shortDescription = "No description available",
     thumbnailUrl,
     rating,
     amenities = [],
@@ -40,11 +40,11 @@ export default function HotelCard(hotel: Hotel) {
         <h3 id="name" className="text-lg font-semibold">{name}</h3>
         <p className="mb-4 text-sm text-gray-500">{address} | {rating} of 5</p> 
         <Separator />
-        <div className="py-2 flex gap-2">
+        <div className="py-2 flex flex-wrap gap-2">
           {amenities.map(amentiy => <Badge key={amentiy.id}>{amentiy.description}</Badge>)}
         </div>
         <div className="mt-auto"></div>
-        <p className="text-sm text-gray-600">{description}</p>
+        <p className="text-sm text-gray-600">{shortDescription}</p>
       </div>
             
       <div className="flex flex-col col-span-1 justify-end p-5">

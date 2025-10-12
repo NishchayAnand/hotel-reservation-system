@@ -12,20 +12,31 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
-import { Calendar } from "@/components/ui/calendar";
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import { Check, ChevronDownIcon } from "lucide-react";
+import { Hotel } from "@/types/hotel";
 
 // static image list for the carousel
-const carouselImages = [
+const DEFAULT_CAROUSEL = [
     "/images/jaipur/the-johri/carousel/photo1.jpg",
     "/images/jaipur/the-johri/carousel/photo2.jpg"
 ];
 
-export default function HotelPage() {
+export default async function HotelPage({ params }: { 
+    params: Promise<{ id: string }>
+}) {
+
+    const { id } = await params;
+
+    const res = await fetch(`http://localhost:8081/api/hotels/${id}`);
+    const {
+        name = "Untitled Hotel",
+        address = "Address not available",
+        shortDescription = "No short description available",
+        longDescription = "No long description available",
+        rating,
+        amenities = [],
+    } = await res.json() as Hotel;
+
     return (
         <main>
             
@@ -33,12 +44,12 @@ export default function HotelPage() {
             <section id="photo-gallery" className="w-full h-screen p-20">
                 <Carousel>
                     <CarouselContent>
-                        {carouselImages.map((src, idx) => (
+                        {DEFAULT_CAROUSEL.map((src, idx) => (
                             <CarouselItem key={idx}>
                                 <div id="carousel-image" className="relative aspect-video rounded-2xl overflow-hidden">
                                     <Image
                                         src={src}
-                                        alt={`hotel photo ${idx + 1}`}
+                                        alt={`${name} photo ${idx + 1}`}
                                         fill={true}
                                         className="object-cover"
                                     />
@@ -58,32 +69,22 @@ export default function HotelPage() {
                 <div id="main-content" className="col-span-2 pr-10">
                     
                     {/* Hotel Details */}
-                    <article id="hotel-details-container" className="bg-amber-300">
-                        <h1 className="text-2xl font-semibold">The Johri</h1>
-                        <p className="text-md my-4 font-semibold">Jaipur, Rajasthan</p>
+                    <article id="hotel-details" className="bg-amber-300">
+                        <h1 className="text-2xl font-semibold">{name}</h1>
+                        <p className="text-md my-4 font-semibold">{address}</p>
                         <Separator />
-                        <div className="flex gap-2 my-5">
-                            <Badge className="px-2">Wifi</Badge>
-                            <Badge>Gym</Badge>
-                            <Badge>Swimming Pool</Badge>
-                            <Badge>Spa</Badge>
-                            <Badge>Restaurant</Badge>
-                            <Badge>Bar</Badge>
-                            <Badge>Parking</Badge>
-                            <Badge>Pet Friendly</Badge>
-                            <Badge>Air Conditioning</Badge>
-                            <Badge>Room Service</Badge>
+                        <div className="flex flex-wrap gap-2 my-5">
+                            {amenities.map((amenity, idx) => (
+                                <Badge key={idx}>{amenity.name}</Badge>
+                            ))}
                         </div>
                         <Separator />
                         <p className="mt-10 text-gray-600">
-                            Nestled in the heart of Jaipur, The Johri offers a luxurious stay with world-class amenities and exceptional service. 
-                            Experience the rich culture and heritage of Rajasthan while enjoying modern comforts in a serene environment.
+                           {shortDescription}
                         </p>
                         <br />
                         <p className="text-gray-600 mb-10">
-                            The hotel features elegantly designed rooms, each equipped with state-of-the-art facilities to ensure a comfortable and memorable stay. 
-                            Guests can indulge in a variety of culinary delights at the on-site restaurant, unwind at the spa, or take a refreshing dip in the swimming pool. 
-                            Whether you're visiting for leisure or business, The Johri promises an unparalleled experience that blends tradition with modernity.
+                            {longDescription}
                         </p>
                     </article>
                     
@@ -91,7 +92,7 @@ export default function HotelPage() {
                     <Separator className="mb-5"/>
                     
                     {/* Room Type Details */}
-                    <article id="room-type-details-container" className="flex flex-col gap-4">
+                    <article id="room-type-details" className="flex flex-col gap-4">
                         <h2 className="text-md font-semibold">Select Rooms</h2>
                         <RoomTypeCard />
                         <RoomTypeCard />

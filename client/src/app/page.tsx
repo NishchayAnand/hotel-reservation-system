@@ -17,7 +17,6 @@ export default async function Home() {
   // server-side fetch
   const res = await fetch("http:localhost:8081/api/locations");
   const locations = res.ok ? await res.json() : [];
-  console.log(locations);
 
   const destinations = Array.isArray(locations)
     ? locations.map((loc: Location) => ({

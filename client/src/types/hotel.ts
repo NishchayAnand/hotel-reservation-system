@@ -8,12 +8,12 @@ export interface Amenity {
 export interface Hotel {
   id: string;
   name: string;
-  locationId: string;
   address: string;
-  description: string;
+  shortDescription: string;
+  longDescription: string;
   thumbnailUrl: string;
-  rating: number;
+  rating: string;
   amenities: Amenity[];
-  nights: number
-  avgRatePerNight: number
+  nights: string;
+  avgRatePerNight: string
 };
