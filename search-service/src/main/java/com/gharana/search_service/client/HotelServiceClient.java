@@ -5,12 +5,19 @@ import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.gharana.search_service.dto.HotelDTO;
+import com.gharana.search_service.dto.RoomTypeDTO;
 
-@FeignClient(name = "hotel-service", url = "http://localhost:8081/api")
+@FeignClient(name = "hotel-service", url = "http://localhost:8081/api/hotels")
 public interface HotelServiceClient {
 
-    @GetMapping("/locations/{locationId}/hotels")
-    List<HotelDTO> getHotelsByLocationId(@PathVariable Long locationId);
+    @GetMapping("")
+    List<HotelDTO> getHotelsByLocationId(@RequestParam Long locationId);
+
+    @GetMapping("{hotelId}/room-types")
+    List<RoomTypeDTO> getRoomTypesByHotelId(@PathVariable Long hotelId);
+
+
 }

@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PricingQueryRequestDTO {
-    List<AvailableRoomTypeDTO> availableRoomTypes;
+    List<InventoryRecordDTO> availableRoomTypes;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
 }
