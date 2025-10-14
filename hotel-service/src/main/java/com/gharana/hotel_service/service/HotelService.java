@@ -1,9 +1,9 @@
 package com.gharana.hotel_service.service;
 
-import com.gharana.hotel_service.entity.Hotel;
+import com.gharana.hotel_service.dto.HotelDTO;
 
 import java.util.List;
 
 public interface HotelService {
-    List<Hotel> getHotelsByLocationId(Long locationId);
+    List<HotelDTO> getHotelsByLocation(Long locationId);
 }

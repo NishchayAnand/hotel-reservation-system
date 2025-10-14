@@ -12,7 +12,7 @@ import com.gharana.inventory_service.model.InventoryRecord;
 
 public interface InventoryRepository extends JpaRepository<InventoryRecord, Long> {
 
-    @Query("SELECT ir.hotelId, ir.roomTypeId " + 
+    @Query("SELECT ir.hotelId, ir.roomTypeId, MIN(ir.totalCount - ir.reservedCount) " + 
         "FROM InventoryRecord ir " +
         "WHERE ir.hotelId IN :hotelIds " +
            "  AND ir.reservationDate >= :checkInDate " +

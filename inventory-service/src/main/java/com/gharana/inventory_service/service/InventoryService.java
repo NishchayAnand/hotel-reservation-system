@@ -7,5 +7,5 @@ import java.util.Set;
 import com.gharana.inventory_service.dto.AvailableRoomTypeDTO;
 
 public interface InventoryService {
-    List<AvailableRoomTypeDTO> queryRoomAvailability(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate);
+    List<AvailableRoomTypeDTO> getRoomAvailability(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate);
 }

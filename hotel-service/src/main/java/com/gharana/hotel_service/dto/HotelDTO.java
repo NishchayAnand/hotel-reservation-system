@@ -14,7 +14,8 @@ public class HotelDTO {
     private Long id;
     private String name;
     private String address;
-    private String description;
+    private String shortDescription;
+    private String longDescription;
     private String thumbnailUrl;
     private BigDecimal rating;
     private Set<Amenity> amenities;

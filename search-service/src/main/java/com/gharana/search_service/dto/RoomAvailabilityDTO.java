@@ -5,10 +5,8 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class InventoryRecordDTO {
-    private Long id;
+public class RoomAvailabilityDTO {
     private Long hotelId;
     private Long roomTypeId;
-    private int totalCount;
-    private int reservedCount;
+    private int availableCount;
 }

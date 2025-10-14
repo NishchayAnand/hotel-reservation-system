@@ -31,7 +31,11 @@ public class Hotel {
 
     private String address;
 
-    private String description;
+    @Column(name = "short_description")
+    private String shortDescription;
+
+    @Column(name = "long_description")
+    private String longDescription;
 
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
@@ -43,8 +47,7 @@ public class Hotel {
     @JoinTable(
         name="hotel_amenities",
         joinColumns = @JoinColumn(name = "hotel_id"),
-        inverseJoinColumns = @JoinColumn(name = "amenity_id")
-    )
+        inverseJoinColumns = @JoinColumn(name = "amenity_id"))
     private Set<Amenity> amenities;
 
 }

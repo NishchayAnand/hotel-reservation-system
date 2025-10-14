@@ -21,9 +21,9 @@ public class InventoryController {
 
     private final InventoryService inventoryService;
 
-    @PostMapping("/query")
-    public ResponseEntity<List<AvailableRoomTypeDTO>> queryRoomAvailability(@RequestBody RoomAvailabilityRequest request) {
-            return ResponseEntity.ok().body(inventoryService.queryRoomAvailability(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate()));
+    @PostMapping("/get-availability")
+    public ResponseEntity<List<AvailableRoomTypeDTO>> getRoomAvailability(@RequestBody RoomAvailabilityRequest request) {
+            return ResponseEntity.ok().body(inventoryService.getRoomAvailability(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate()));
     }
 
 }

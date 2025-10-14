@@ -20,14 +20,15 @@ public class InventoryServiceImpl implements InventoryService {
     private InventoryRepository inventoryRepository;
 
     @Override
-    public List<AvailableRoomTypeDTO> queryRoomAvailability(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) { 
+    public List<AvailableRoomTypeDTO> getRoomAvailability(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) { 
         // Fetch room types for the given hotels that have availability across the entire [checkInDate, checkOutDate) range.  
         long nights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
-        List<Object[]> rows = inventoryRepository.findAvailableRoomTypesForHotels(hotelIds, checkInDate, checkOutDate, nights);
+        List<Object[]> rows = inventoryRepository.findAvailableRoomTypesForHotels(hotelIds, checkInDate, checkOutDate, nights); 
         return rows.stream()
-            .map(row -> new AvailableRoomTypeDTO(
+            .map(row -> new AvailableRoomTypeDTO( // row[0] => hotelId, row[1] => roomTypeId, row[2] => availableCount
                 (Long) row[0], 
-                (Long) row[1])) // row[0] => hotelId, row[1] => roomTypeId
+                (Long) row[1],
+                (int) row[2])) 
             .collect(Collectors.toList());
     }
 

@@ -15,10 +15,10 @@ import com.gharana.search_service.client.PricingServiceClient;
 import com.gharana.search_service.dto.AvailableHotelDTO;
 import com.gharana.search_service.dto.AvailableRoomTypeDTO;
 import com.gharana.search_service.dto.HotelDTO;
-import com.gharana.search_service.dto.InventoryQueryRequest;
-import com.gharana.search_service.dto.InventoryRecordDTO;
+import com.gharana.search_service.dto.RoomAvailabilityRequest;
 import com.gharana.search_service.dto.MinPriceQuoteDTO;
 import com.gharana.search_service.dto.PricingQueryRequestDTO;
+import com.gharana.search_service.dto.RoomAvailabilityDTO;
 import com.gharana.search_service.dto.RoomTypeDTO;
 
 import lombok.AllArgsConstructor;
@@ -32,10 +32,10 @@ public class SearchServiceImpl implements SearchService {
     private final PricingServiceClient pricingServiceClient;
 
     @Override
-    public List<AvailableHotelDTO> getAvailableHotels(Long locationId, LocalDate checkInDate, LocalDate checkOutDate) {
+    public List<AvailableHotelDTO> getAvailableHotelsByLocation(Long locationId, LocalDate checkInDate, LocalDate checkOutDate) {
         
         // Step 1: Query Hotel Service for hotel metadata
-        List<HotelDTO> hotels = hotelServiceClient.getHotelsByLocationId(locationId);
+        List<HotelDTO> hotels = hotelServiceClient.getHotelsByLocation(locationId);
         if(hotels.isEmpty()) return List.of();
 
         // Step 2: Build a map of Hotel metadata for easy lookup
@@ -43,8 +43,8 @@ public class SearchServiceImpl implements SearchService {
 
         // Step 3: Query Inventory Service to get list of room types which have rooms available on every date in the [chekInDate, checkOutDate) date range.
         // only need [hotelId, roomTypeId] --> application of graphQL API
-        List<InventoryRecordDTO> availableRoomInventory = inventoryServiceClient
-            .queryRoomAvailability(new InventoryQueryRequest(hotelById.keySet(), checkInDate, checkOutDate));
+        List<RoomAvailabilityDTO> availableRoomInventory = inventoryServiceClient
+            .getRoomAvailability(new RoomAvailabilityRequest(hotelById.keySet(), checkInDate, checkOutDate));
         
         // Step 4: for each availableRoomType, get avg rate per night
         List<MinPriceQuoteDTO> priceQuotes = pricingServiceClient.getMinPricePerNight(new PricingQueryRequestDTO(availableRoomInventory, checkInDate, checkOutDate));
@@ -68,18 +68,22 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<AvailableRoomTypeDTO> getAvailableRoomTypes(Long hotelId, LocalDate checkInDate,
+    public List<AvailableRoomTypeDTO> getAvailableRoomTypesByHotel(Long hotelId, LocalDate checkInDate,
             LocalDate checkOutDate) {
 
         List<AvailableRoomTypeDTO> result = new ArrayList<>();
 
         // Step 1: Query inventory service to fetch inventory details for all available room types associated with the specified hotelId.
         // only need [roomTypeId, availableCount (totalCount - reservedCount)] --> application of GraphQL API
-        List<InventoryRecordDTO> availableRoomInventory = inventoryServiceClient
-            .getAvailableRoomInventory(hotelId, checkInDate, checkOutDate);
+        List<RoomAvailabilityDTO> availableRoomInventory = inventoryServiceClient
+            .getRoomAvailability(new RoomAvailabilityRequest(Set.of(hotelId), checkInDate, checkOutDate));
 
-        // Step 2: Query hotel service to fetch room type details for each available room type.
-        List<RoomTypeDTO> roomTypes = hotelServiceClient.getRoomTypesByHotelId(hotelId);
+        // Step 2: Build a map of room type IDs to their availability count for the specified hotel for easy lookup.
+        Map<Long, Integer> availabilityByRoomType = availableRoomInventory.stream()
+                .collect(Collectors.toMap(RoomAvailabilityDTO::getRoomTypeId, RoomAvailabilityDTO::getAvailableCount));
+
+        // Step 3: Query hotel service to fetch room type details for each available room type.
+        List<RoomTypeDTO> roomTypes = hotelServiceClient.getRoomTypes(availabilityByRoomType.keySet());
 
 
 

@@ -8,4 +8,5 @@ import lombok.Data;
 public class AvailableRoomTypeDTO {
     private Long hotelId;
     private Long roomTypeId;
+    private int availableCount;
 }
