@@ -10,5 +10,5 @@ import lombok.Data;
 public class AvgRoomTypePriceQuoteDTO {
     private Long hotelId;
     private Long roomTypeId;
-    private BigDecimal avgRoomTypePricePerNight;
+    private BigDecimal avgPricePerNight;
 }

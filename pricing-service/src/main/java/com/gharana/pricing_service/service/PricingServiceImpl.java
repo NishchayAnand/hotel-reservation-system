@@ -43,14 +43,17 @@ public class PricingServiceImpl implements PricingService {
     public List<AvgRoomTypePriceQuoteDTO> getAvgRoomTypePricePerNight(List<AvailableRoomTypeDTO> availableRoomTypes,
             LocalDate checkInDate, LocalDate checkOutDate) {
         
-        List<Object[]> rows = pricingRepository.getAvgRateByHotelAndRoomType(availableRoomTypes, checkInDate, checkOutDate); // row: [hotel_id, room_type_id, min_price_per_night]
-        
-        return rows.stream()
+        List<Object[]> rows = pricingRepository.getAvgRateByHotelAndRoomType(availableRoomTypes, checkInDate, checkOutDate); // row: [hotel_id, room_type_id, avg_price_per_night]
+
+        List<AvgRoomTypePriceQuoteDTO> avgPriceQuotes = rows.stream()
             .map(row -> new AvgRoomTypePriceQuoteDTO(
-                (Long) row[0], 
-                (Long) row[1], 
-                (BigDecimal) row[2]))
+            (Long) row[0], // hotelId
+            (Long) row[1], // roomTypeId
+            (BigDecimal) row[2] // avgPricePerNight
+            ))
             .collect(Collectors.toList());
+
+        return avgPriceQuotes;
 
     }
 

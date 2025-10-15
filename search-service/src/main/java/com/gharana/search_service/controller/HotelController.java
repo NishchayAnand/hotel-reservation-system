@@ -25,17 +25,17 @@ public class HotelController {
     private final SearchService searchService;
 
     @GetMapping("/hotel-listing")
-    public ResponseEntity<List<AvailableHotelDTO>> getAvailableHotelsByLocation(@RequestParam Long locationId, 
+    public ResponseEntity<List<AvailableHotelDTO>> getAvailableHotelsByLocationId(@RequestParam Long locationId, 
                                 @RequestParam LocalDate checkInDate, 
                                 @RequestParam LocalDate checkOutDate) {
-        return ResponseEntity.ok().body(searchService.getAvailableHotelsByLocation(locationId, checkInDate, checkOutDate));   
+        return ResponseEntity.ok().body(searchService.getAvailableHotelsByLocationId(locationId, checkInDate, checkOutDate));   
     }
 
     @GetMapping("/hotel-details")
-    public ResponseEntity<List<AvailableRoomTypeDTO>> getAvailableRoomTypesByHotel(@RequestParam Long hotelId,
+    public ResponseEntity<List<AvailableRoomTypeDTO>> getAvailableRoomTypesByHotelId(@RequestParam Long hotelId,
         @RequestParam LocalDate checkInDate,
         @RequestParam LocalDate checkOutDate) {
-            return ResponseEntity.ok().body(searchService.getAvailableRoomTypesByHotel(hotelId, checkInDate, checkOutDate));
+            return ResponseEntity.ok().body(searchService.getAvailableRoomTypesByHotelId(hotelId, checkInDate, checkOutDate));
         }
 
 

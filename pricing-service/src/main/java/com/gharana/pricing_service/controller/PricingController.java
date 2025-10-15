@@ -29,8 +29,9 @@ public class PricingController {
     }
 
     @PostMapping("/room-types")
-    List<AvgRoomTypePriceQuoteDTO> getAvgRoomTypePricePerNight(@RequestBody PricingQueryRequestDTO req) {
-        return null;
+    public ResponseEntity<List<AvgRoomTypePriceQuoteDTO>> getAvgRoomTypePricePerNight(@RequestBody PricingQueryRequestDTO req) {
+        List<AvgRoomTypePriceQuoteDTO> avgPriceQuotes = pricingService.getAvgRoomTypePricePerNight(req.getAvailableRoomTypes(), req.getCheckInDate(), req.getCheckOutDate());
+        return ResponseEntity.ok().body(avgPriceQuotes);
     }
 
 

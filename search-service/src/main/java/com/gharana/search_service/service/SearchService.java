@@ -7,6 +7,6 @@ import com.gharana.search_service.dto.AvailableHotelDTO;
 import com.gharana.search_service.dto.AvailableRoomTypeDTO;
 
 public interface SearchService {
-    List<AvailableHotelDTO> getAvailableHotelsByLocation(Long locationId, LocalDate checkInDate, LocalDate checkOutDate);
-    List<AvailableRoomTypeDTO> getAvailableRoomTypesByHotel(Long hotelId, LocalDate checkInDate, LocalDate checkOutDate);
+    List<AvailableHotelDTO> getAvailableHotelsByLocationId(Long locationId, LocalDate checkInDate, LocalDate checkOutDate);
+    List<AvailableRoomTypeDTO> getAvailableRoomTypesByHotelId(Long hotelId, LocalDate checkInDate, LocalDate checkOutDate);
 }

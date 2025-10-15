@@ -33,7 +33,7 @@ public class SearchServiceImpl implements SearchService {
     private final PricingServiceClient pricingServiceClient;
 
     @Override
-    public List<AvailableHotelDTO> getAvailableHotelsByLocation(Long locationId, LocalDate checkInDate, LocalDate checkOutDate) {
+    public List<AvailableHotelDTO> getAvailableHotelsByLocationId(Long locationId, LocalDate checkInDate, LocalDate checkOutDate) {
         
         // Step 1: Query Hotel Service for hotel metadata
         List<HotelDTO> hotels = hotelServiceClient.getHotelsByLocationId(locationId);
@@ -69,7 +69,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<AvailableRoomTypeDTO> getAvailableRoomTypesByHotel(Long hotelId, LocalDate checkInDate,
+    public List<AvailableRoomTypeDTO> getAvailableRoomTypesByHotelId(Long hotelId, LocalDate checkInDate,
             LocalDate checkOutDate) {
 
         // Step 1: Query inventory service to fetch inventory details for all available room types associated with the specified hotelId.

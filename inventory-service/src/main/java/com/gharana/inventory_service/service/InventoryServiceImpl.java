@@ -25,7 +25,7 @@ public class InventoryServiceImpl implements InventoryService {
         long nights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
         List<Object[]> rows = inventoryRepository.findAvailableRoomTypesForHotels(hotelIds, checkInDate, checkOutDate, nights); 
         return rows.stream()
-            .map(row -> new AvailableRoomTypeDTO( // row[0] => hotelId, row[1] => roomTypeId, row[2] => availableCount
+            .map(row -> new AvailableRoomTypeDTO( // row[0] => hotelId, row[1] => roomTypeId, row[2] => availableRoomCount
                 (Long) row[0], 
                 (Long) row[1],
                 (int) row[2])) 
