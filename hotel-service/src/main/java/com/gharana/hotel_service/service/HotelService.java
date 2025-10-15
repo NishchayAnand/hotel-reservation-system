@@ -9,5 +9,5 @@ import java.util.Set;
 public interface HotelService {
     List<HotelDTO> getHotelsByLocationId(Long locationId);
     HotelDTO getHotelById(Long hotelId);
-    List<RoomTypeDTO> getRoomTypesByIds(Set<Long> roomTypeIds);
+    List<RoomTypeDTO> getRoomTypesByIds(Long hotelId, Set<Long> roomTypeIds);
 }

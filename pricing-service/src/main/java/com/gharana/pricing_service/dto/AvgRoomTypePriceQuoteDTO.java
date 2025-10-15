@@ -7,7 +7,8 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class MinPriceQuoteDTO {
+public class AvgRoomTypePriceQuoteDTO {
     private Long hotelId;
-    private BigDecimal minRatePerNight;
+    private Long roomTypeId;
+    private BigDecimal avgRoomTypePricePerNight;
 }

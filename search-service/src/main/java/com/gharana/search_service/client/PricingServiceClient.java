@@ -6,13 +6,18 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.gharana.search_service.dto.MinPriceQuoteDTO;
+import com.gharana.search_service.dto.AvgRoomTypePriceQuoteDTO;
+import com.gharana.search_service.dto.MinHotelPriceQuoteDTO;
 import com.gharana.search_service.dto.PricingQueryRequestDTO;
 
 @FeignClient(name="pricing-service", url="http://localhost:8083/api/pricing")
 public interface PricingServiceClient {
 
-    @PostMapping("/query")
-    List<MinPriceQuoteDTO> getMinPricePerNight(@RequestBody PricingQueryRequestDTO req);
+    @PostMapping("/hotels")
+    List<MinHotelPriceQuoteDTO> getMinHotelPricePerNight(@RequestBody PricingQueryRequestDTO req);
+
+    @PostMapping("/room-types")
+    List<AvgRoomTypePriceQuoteDTO> getAvgRoomTypePricePerNight(@RequestBody PricingQueryRequestDTO req);
+    
 
 }

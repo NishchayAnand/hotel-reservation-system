@@ -1,20 +1,21 @@
 package com.gharana.search_service.dto;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Set;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
+@Builder
 public class AvailableRoomTypeDTO {
     private Long id;
     private String name;
-    private int capacity;
-    private int rating;
+    private String description;
+    private String bedType;
+    private int bedCount;
     private String thumbnailUrl;
-    private int availableCount;
-    private BigDecimal avgRatePerNight;
-    private List<AmenityDTO> amenities;
+    private Integer availableRoomCount;
+    private BigDecimal avgPricePerNight;
+    private Set<AmenityDTO> amenities;
 }

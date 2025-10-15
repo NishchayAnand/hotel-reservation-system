@@ -37,7 +37,7 @@ public class HotelController {
 
     @PostMapping("/{hotelId}/room-types")
     public ResponseEntity<List<RoomTypeDTO>> getRoomTypesByIds(@PathVariable Long hotelId, @RequestBody Set<Long> roomTypeIds) {
-        return ResponseEntity.ok().body(hotelService.getRoomTypesByIds(roomTypeIds));
+        return ResponseEntity.ok().body(hotelService.getRoomTypesByIds(hotelId, roomTypeIds));
     }
 
 }

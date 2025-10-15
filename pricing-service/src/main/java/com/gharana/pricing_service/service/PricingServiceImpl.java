@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 
 import com.gharana.pricing_service.Repository.PricingRepository;
 import com.gharana.pricing_service.dto.AvailableRoomTypeDTO;
-import com.gharana.pricing_service.dto.MinPriceQuoteDTO;
+import com.gharana.pricing_service.dto.AvgRoomTypePriceQuoteDTO;
+import com.gharana.pricing_service.dto.MinHotelPriceQuoteDTO;
 
 import lombok.AllArgsConstructor;
 
@@ -21,21 +22,36 @@ public class PricingServiceImpl implements PricingService {
     private final PricingRepository pricingRepository;
 
     @Override
-    public List<MinPriceQuoteDTO> getMinRatePerNight(List<AvailableRoomTypeDTO> availableRoomTypes, LocalDate checkInDate, LocalDate checkOutDate) {
+    public List<MinHotelPriceQuoteDTO> getMinHotelRatePerNight(List<AvailableRoomTypeDTO> availableRoomTypes, LocalDate checkInDate, LocalDate checkOutDate) {
         
-        List<Object[]> rows = pricingRepository.getAvgRateByHotelAndRoomType(availableRoomTypes, checkInDate, checkOutDate); // row: [hotel_id, room_type_id, avg_rate_per_night]
+        List<Object[]> rows = pricingRepository.getAvgRateByHotelAndRoomType(availableRoomTypes, checkInDate, checkOutDate); // row: [hotel_id, room_type_id, avg_price_per_night]
         
         Map<Long, BigDecimal> minByHotel = rows.stream()
             .collect(Collectors.toMap(
             row -> (Long) row[0], // hotelId
             row -> (BigDecimal) row[2], // avgRate
             (a, b) -> a.compareTo(b) <= 0 ? a : b // merge function: keep the smaller value
-            ));
+        ));
 
         return minByHotel.entrySet().stream()
-            .map(e -> new MinPriceQuoteDTO(e.getKey(), e.getValue()))
+            .map(e -> new MinHotelPriceQuoteDTO(e.getKey(), e.getValue()))
             .collect(Collectors.toList());
         
+    }
+
+    @Override
+    public List<AvgRoomTypePriceQuoteDTO> getAvgRoomTypePricePerNight(List<AvailableRoomTypeDTO> availableRoomTypes,
+            LocalDate checkInDate, LocalDate checkOutDate) {
+        
+        List<Object[]> rows = pricingRepository.getAvgRateByHotelAndRoomType(availableRoomTypes, checkInDate, checkOutDate); // row: [hotel_id, room_type_id, min_price_per_night]
+        
+        return rows.stream()
+            .map(row -> new AvgRoomTypePriceQuoteDTO(
+                (Long) row[0], 
+                (Long) row[1], 
+                (BigDecimal) row[2]))
+            .collect(Collectors.toList());
+
     }
 
 }

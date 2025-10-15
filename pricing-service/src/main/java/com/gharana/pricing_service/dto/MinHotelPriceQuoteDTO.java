@@ -1,4 +1,4 @@
-package com.gharana.search_service.dto;
+package com.gharana.pricing_service.dto;
 
 import java.math.BigDecimal;
 
@@ -7,8 +7,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class MinPriceQuoteDTO {
+public class MinHotelPriceQuoteDTO {
     private Long hotelId;
-    private BigDecimal minRatePerNight;
-
+    private BigDecimal minHotelRatePerNight;
 }

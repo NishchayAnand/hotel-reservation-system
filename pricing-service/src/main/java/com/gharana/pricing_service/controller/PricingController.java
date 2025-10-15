@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gharana.pricing_service.dto.PricingQueryRequestDTO;
-import com.gharana.pricing_service.dto.MinPriceQuoteDTO;
+import com.gharana.pricing_service.dto.AvgRoomTypePriceQuoteDTO;
+import com.gharana.pricing_service.dto.MinHotelPriceQuoteDTO;
 import com.gharana.pricing_service.service.PricingService;
 
 import lombok.AllArgsConstructor;
@@ -21,10 +22,16 @@ public class PricingController {
 
     private final PricingService pricingService;
 
-    @PostMapping("/query")
-    public ResponseEntity<List<MinPriceQuoteDTO>> getMinPricePerNight(@RequestBody PricingQueryRequestDTO req) {
+    @PostMapping("/hotels")
+    public ResponseEntity<List<MinHotelPriceQuoteDTO>> getMinHotelPricePerNight(@RequestBody PricingQueryRequestDTO req) {
         // return average price per night for each available room type for the selected [checkInDate, checkOutDate) daterange.
-        return ResponseEntity.ok().body(pricingService.getMinRatePerNight(req.getAvailableRoomTypes(), req.getCheckInDate(), req.getCheckOutDate()));
+        return ResponseEntity.ok().body(pricingService.getMinHotelRatePerNight(req.getAvailableRoomTypes(), req.getCheckInDate(), req.getCheckOutDate()));
     }
+
+    @PostMapping("/room-types")
+    List<AvgRoomTypePriceQuoteDTO> getAvgRoomTypePricePerNight(@RequestBody PricingQueryRequestDTO req) {
+        return null;
+    }
+
 
 }

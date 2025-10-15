@@ -37,8 +37,8 @@ public class HotelServiceImpl implements HotelService {
 	}
 
 	@Override
-	public List<RoomTypeDTO> getRoomTypesByIds(Set<Long> roomTypeIds) {
-		return roomTypeRepository.findByIdIn(roomTypeIds).stream()
+	public List<RoomTypeDTO> getRoomTypesByIds(Long hotelId, Set<Long> roomTypeIds) {
+		return roomTypeRepository.findByHotelIdAndIdIn(hotelId, roomTypeIds).stream()
 			.map(RoomTypeMapper::toDto)
 			.collect(Collectors.toList());
 	}

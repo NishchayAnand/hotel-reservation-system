@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.gharana.hotel_service.entity.RoomType;
 
 public interface RoomTypeRepository extends JpaRepository<RoomType, Long> {
-    List<RoomType> findByIdIn(Set<Long> roomTypeIds);
+    List<RoomType> findByHotelIdAndIdIn(Long hotelId, Set<Long> roomTypeIds);
 }

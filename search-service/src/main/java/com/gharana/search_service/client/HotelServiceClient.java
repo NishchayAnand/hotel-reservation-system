@@ -16,10 +16,10 @@ import com.gharana.search_service.dto.RoomTypeDTO;
 public interface HotelServiceClient {
 
     @GetMapping("")
-    List<HotelDTO> getHotelsByLocation(@RequestParam Long locationId);
+    List<HotelDTO> getHotelsByLocationId(@RequestParam Long locationId);
 
-    @GetMapping("/room-types")
-    List<RoomTypeDTO> getRoomTypes(@RequestBody Set<Long> roomTypeIds);
+    @GetMapping("/{hotelId}room-types")
+    List<RoomTypeDTO> getRoomTypesByIds(@PathVariable Long hotelId, @RequestBody Set<Long> roomTypeIds);
 
 
 }
