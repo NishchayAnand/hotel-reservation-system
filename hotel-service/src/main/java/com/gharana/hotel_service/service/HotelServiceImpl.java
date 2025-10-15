@@ -1,13 +1,17 @@
 package com.gharana.hotel_service.service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.gharana.hotel_service.dto.HotelDTO;
-import com.gharana.hotel_service.entity.Hotel;
+import com.gharana.hotel_service.dto.RoomTypeDTO;
+import com.gharana.hotel_service.mapper.HotelMapper;
+import com.gharana.hotel_service.mapper.RoomTypeMapper;
 import com.gharana.hotel_service.repository.HotelRepository;
+import com.gharana.hotel_service.repository.RoomTypeRepository;
 
 import lombok.AllArgsConstructor;
 
@@ -16,25 +20,27 @@ import lombok.AllArgsConstructor;
 public class HotelServiceImpl implements HotelService { 
 
     private final HotelRepository hotelRepository;
+	private final RoomTypeRepository roomTypeRepository;
 
 	@Override
-	public List<HotelDTO> getHotelsByLocation(Long locationId) {  
+	public List<HotelDTO> getHotelsByLocationId(Long locationId) {  
         return hotelRepository.findByLocationId(locationId).stream()
-			.map(this::toDto)
+			.map(HotelMapper::toDto)
 			.collect(Collectors.toList());
 	}
 
-	private HotelDTO toDto(Hotel hotel) {
-		return HotelDTO.builder()
-			.id(hotel.getId())
-			.name(hotel.getName())
-			.address(hotel.getAddress())
-			.shortDescription(hotel.getShortDescription())
-			.longDescription(hotel.getLongDescription())
-			.thumbnailUrl(hotel.getThumbnailUrl())
-			.rating(hotel.getRating())
-			.amenities(hotel.getAmenities())
-			.build();	
+	@Override
+	public HotelDTO getHotelById(Long hotelId) {
+		return hotelRepository.findById(hotelId)
+			.map(HotelMapper::toDto)
+			.orElse(null);
+	}
+
+	@Override
+	public List<RoomTypeDTO> getRoomTypesByIds(Set<Long> roomTypeIds) {
+		return roomTypeRepository.findByIdIn(roomTypeIds).stream()
+			.map(RoomTypeMapper::toDto)
+			.collect(Collectors.toList());
 	}
     
 }
