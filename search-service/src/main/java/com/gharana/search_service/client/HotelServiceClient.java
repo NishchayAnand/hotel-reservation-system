@@ -18,7 +18,7 @@ public interface HotelServiceClient {
     @GetMapping("")
     List<HotelDTO> getHotelsByLocationId(@RequestParam Long locationId);
 
-    @GetMapping("/{hotelId}room-types")
+    @GetMapping("/{hotelId}/room-types")
     List<RoomTypeDTO> getRoomTypesByIds(@PathVariable Long hotelId, @RequestBody Set<Long> roomTypeIds);
 
 
