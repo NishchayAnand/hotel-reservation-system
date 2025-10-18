@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,8 +32,8 @@ public class HotelController {
         return ResponseEntity.ok().body(searchService.getAvailableHotelsByLocationId(locationId, checkInDate, checkOutDate));   
     }
 
-    @GetMapping("/hotel-details")
-    public ResponseEntity<List<AvailableRoomTypeDTO>> getAvailableRoomTypesByHotelId(@RequestParam Long hotelId,
+    @GetMapping("/hotel-details/{hotelId}")
+    public ResponseEntity<List<AvailableRoomTypeDTO>> getAvailableRoomTypesByHotelId(@PathVariable Long hotelId,
         @RequestParam LocalDate checkInDate,
         @RequestParam LocalDate checkOutDate) {
             return ResponseEntity.ok().body(searchService.getAvailableRoomTypesByHotelId(hotelId, checkInDate, checkOutDate));

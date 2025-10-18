@@ -20,8 +20,7 @@ export default function HotelCard(hotel: Hotel) {
     thumbnailUrl,
     rating,
     amenities = [],
-    nights,
-    avgRatePerNight
+    minAvgRatePerNight
   } = hotel as Hotel;
 
   return (
@@ -48,8 +47,8 @@ export default function HotelCard(hotel: Hotel) {
       </div>
             
       <div className="flex flex-col col-span-1 justify-end p-5">
-        <p className="text-lg font-semibold">₹{avgRatePerNight}</p>
-        <p className="text-xs text-gray-600 whitespace-nowrap mb-4">for {nights} night + Taxes</p>
+        <p className="text-lg font-semibold">₹{minAvgRatePerNight}</p>
+        <p className="text-xs text-gray-600 whitespace-nowrap mb-4">per night + Taxes</p>
         <Link href={`/hotel-details/${id}`}>
           <Button className="w-full cursor-pointer font-semibold">View</Button>
         </Link>

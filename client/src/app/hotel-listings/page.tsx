@@ -22,7 +22,7 @@ export default function SearchPage() {
     const fetchHotels = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:8080/api/search?${qs}`);
+        const res = await fetch(`http://localhost:8080/api/hotels/hotel-listing?${qs}`);
         if(!res.ok) {
           setHotels([]);
           return;

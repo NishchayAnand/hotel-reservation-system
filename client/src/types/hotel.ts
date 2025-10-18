@@ -15,5 +15,5 @@ export interface Hotel {
   rating: string;
   amenities: Amenity[];
   nights: string;
-  avgRatePerNight: string
+  minAvgRatePerNight: string
 };

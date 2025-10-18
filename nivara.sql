@@ -48,6 +48,21 @@ VALUES
 TRUNCATE TABLE hotels RESTART IDENTITY;
 
 SELECT * FROM hotels;
+
+ALTER TABLE hotels RENAME COLUMN description TO short_description;
+ALTER TABLE hotels ADD COLUMN long_description TEXT;
+
+UPDATE hotels
+SET long_description = CASE id
+  WHEN 1 THEN 'A heritage-style property near the City Palace offering traditional Rajasthani decor, spacious suites, an on-site restaurant serving local cuisine, guided cultural tours, and modern amenities for a comfortable stay.'
+  WHEN 2 THEN 'Comfortable, well-appointed suites close to Amber Fort with panoramic views, complimentary breakfast, high-speed Wi‑Fi, and concierge services tailored for sightseeing and family stays.'
+  WHEN 3 THEN 'Sea-facing rooms along Marine Drive with modern furnishings, easy access to the promenade, business-friendly amenities, in-house dining, and quick transport links to the city center.'
+  WHEN 4 THEN 'Business-focused hotel in the financial district offering meeting rooms, express check-in/out, reliable Wi‑Fi, airport transfer options, and compact executive suites.'
+  WHEN 5 THEN 'Beachfront resort at Baga with private beach access, outdoor pool, spa services, beach activities, family-friendly facilities, and dining options featuring regional seafood.'
+  WHEN 6 THEN 'Quiet seaside retreat near Palolem beach with cottage-style accommodation, relaxed atmosphere, local excursions, pet-friendly options, and personalized hospitality.'
+  ELSE long_description
+END;
+
 */
 
 /*
@@ -236,6 +251,40 @@ VALUES
   (6,17, CURRENT_DATE,   4, 1),
   (6,18, CURRENT_DATE,   2, 0);
 
+
+WITH combos AS (
+  SELECT DISTINCT hotel_id, room_type_id
+  FROM public.room_type_inventory
+),
+dates AS (
+  SELECT generate_series(
+           current_date,
+           (current_date + INTERVAL '2 months') - INTERVAL '1 day',
+           INTERVAL '1 day'
+         )::date AS reservation_date
+),
+to_insert AS (
+  SELECT
+    c.hotel_id,
+    c.room_type_id,
+    d.reservation_date,
+    COALESCE(latest.total_count, 0) AS total_count
+  FROM combos c
+  CROSS JOIN dates d
+  LEFT JOIN LATERAL (
+    SELECT total_count
+    FROM public.room_type_inventory i
+    WHERE i.hotel_id = c.hotel_id
+      AND i.room_type_id = c.room_type_id
+    ORDER BY i.reservation_date DESC
+    LIMIT 1
+  ) latest ON true
+)
+INSERT INTO public.room_type_inventory
+  (hotel_id, room_type_id, reservation_date, total_count, reserved_count)
+SELECT hotel_id, room_type_id, reservation_date, total_count, 0
+FROM to_insert;
+
 */
 
 /* PRICING DB */
@@ -286,5 +335,39 @@ VALUES
     (6,	16, DATE '2025-10-07', 3500),
     (6,	17, DATE '2025-10-07', 5000),
     (6,	18, DATE '2025-10-07', 7800);
+
+WITH combos AS (
+    SELECT DISTINCT hotel_id, room_type_id
+    FROM room_type_rate
+),
+dates AS (
+    SELECT generate_series(
+        CURRENT_DATE,
+        (CURRENT_DATE + INTERVAL '2 months') - INTERVAL '1 day',
+        INTERVAL '1 day'
+    )::date AS reservation_date
+),
+to_insert AS (
+    SELECT
+        c.hotel_id,
+        c.room_type_id,
+        d.reservation_date,
+        COALESCE(latest.rate, 0) AS rate 
+    FROM 
+        combos c 
+    CROSS JOIN 
+        dates d
+    LEFT JOIN LATERAL (
+        SELECT rate 
+        FROM room_type_rate r
+        WHERE r.hotel_id = c.hotel_id
+            AND r.room_type_id = c.room_type_id
+        ORDER BY r.reservation_date DESC
+        LIMIT 1
+    ) latest ON TRUE
+)
+INSERT INTO room_type_rate (hotel_id, room_type_id, reservation_date, rate)
+SELECT hotel_id, room_type_id, reservation_date, rate
+FROM to_insert;
 
 */
