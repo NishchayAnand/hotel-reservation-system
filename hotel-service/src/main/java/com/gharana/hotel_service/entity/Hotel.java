@@ -1,6 +1,5 @@
 package com.gharana.hotel_service.entity;
 
-import java.math.BigDecimal;
 import java.util.Set;
 
 import jakarta.persistence.Column;
@@ -41,7 +40,7 @@ public class Hotel {
     private String thumbnailUrl;
 
     @Column(precision = 2, scale = 1)
-    private BigDecimal rating;
+    private Integer rating;
 
     @ManyToMany
     @JoinTable(

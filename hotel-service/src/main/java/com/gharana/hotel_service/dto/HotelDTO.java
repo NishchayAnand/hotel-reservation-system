@@ -1,6 +1,5 @@
 package com.gharana.hotel_service.dto;
 
-import java.math.BigDecimal;
 import java.util.Set;
 
 import com.gharana.hotel_service.entity.Amenity;
@@ -17,6 +16,6 @@ public class HotelDTO {
     private String shortDescription;
     private String longDescription;
     private String thumbnailUrl;
-    private BigDecimal rating;
+    private Integer rating;
     private Set<Amenity> amenities;
 }

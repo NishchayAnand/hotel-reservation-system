@@ -57,11 +57,11 @@ public class SearchServiceImpl implements SearchService {
                 .id(hotel.getId())
                 .name(hotel.getName())
                 .address(hotel.getAddress())
-                .description(hotel.getDescription())
+                .shortDescription(hotel.getShortDescription())
                 .thumbnailUrl(hotel.getThumbnailUrl())
                 .rating(hotel.getRating())
                 .amenities(hotel.getAmenities())
-                .avgRatePerNight(priceQuote.getMinRatePerNight())
+                .minAvgRatePerNight(priceQuote.getMinAvgRatePerNight())
                 .build();
             })
             .collect(Collectors.toList());

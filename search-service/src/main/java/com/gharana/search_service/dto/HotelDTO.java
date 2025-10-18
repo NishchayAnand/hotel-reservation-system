@@ -10,10 +10,10 @@ import lombok.Data;
 public class HotelDTO {
     private Long id;
     private String name;
-    private String locationId;
     private String address;
-    private String description;
+    private String shortDescription;
+    private String longDescription;
     private String thumbnailUrl;
-    private String rating;
+    private Integer rating;
     private List<AmenityDTO> amenities;
 }

@@ -74,9 +74,7 @@ export default function SearchPage() {
                 key={hotel.id} 
                 hotel={hotel}
                 checkInDate={checkInDate}
-                checkOutDate={checkOutDate} 
-              />
-            ))}
+                checkOutDate={checkOutDate} />))}
           </div>
         </div>
 

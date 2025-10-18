@@ -69,13 +69,13 @@ export default async function HotelPage({ params }: {
                 <div id="main-content" className="col-span-2 pr-10">
                     
                     {/* Hotel Details */}
-                    <article id="hotel-details" className="bg-amber-300">
+                    <article id="hotel-details">
                         <h1 className="text-2xl font-semibold">{name}</h1>
                         <p className="text-md my-4 font-semibold">{address}</p>
                         <Separator />
                         <div className="flex flex-wrap gap-2 my-5">
-                            {amenities.map((amenity, idx) => (
-                                <Badge key={idx}>{amenity.name}</Badge>
+                            {amenities.map((amenity) => (
+                                <Badge key={amenity.id}>{amenity.description}</Badge>
                             ))}
                         </div>
                         <Separator />

@@ -10,7 +10,7 @@ export default function RoomTypeCard() {
             
             <div id="thumbnail" className="relative col-span-2 h-full">
               <Image
-                src="/images/jaipur/the-johri/thumbnail.jpg"
+                src="/images/jaipur/the-johri/thumbnail/photo1.jpg"
                 alt="room type image"
                 fill={true}
                 className="object-cover overflow-hidden"

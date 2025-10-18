@@ -72,7 +72,7 @@ export function SearchHotelForm( {destinations} : {destinations: Destination[]} 
             checkOutDate: formatDateLocal(data.checkOutDate),
         }).toString();
 
-        router.push(`/hotel-listings?${query}`);
+        router.push(`/hotels/hotel-listings?${query}`);
     }
 
     return (

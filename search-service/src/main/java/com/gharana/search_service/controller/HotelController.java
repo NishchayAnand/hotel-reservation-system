@@ -32,7 +32,7 @@ public class HotelController {
         return ResponseEntity.ok().body(searchService.getAvailableHotelsByLocationId(locationId, checkInDate, checkOutDate));   
     }
 
-    @GetMapping("/hotel-details/{hotelId}")
+    @GetMapping("/hotel-details/{hotelId}/room-types")
     public ResponseEntity<List<AvailableRoomTypeDTO>> getAvailableRoomTypesByHotelId(@PathVariable Long hotelId,
         @RequestParam LocalDate checkInDate,
         @RequestParam LocalDate checkOutDate) {
