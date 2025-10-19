@@ -43,7 +43,7 @@ export default function SearchPage() {
     
     fetchHotels();
 
-  }, [searchParams]);
+  }, []);
 
   const renderSkeletons = (count = 3) => {
     return Array.from({ length : count }).map((_, i) => (
