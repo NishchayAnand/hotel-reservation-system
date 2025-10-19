@@ -1,9 +1,4 @@
-
-export interface Amenity {
-  id: string;
-  name: string;
-  description: string;
-}
+import { Amenity } from "./amenity";
 
 export interface Hotel {
   id: string;

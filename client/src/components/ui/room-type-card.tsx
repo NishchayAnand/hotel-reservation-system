@@ -4,7 +4,10 @@ import {Separator} from "@/components/ui/separator";
 import {Badge} from "@/components/ui/badge";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 
-export default function RoomTypeCard() {
+import { RoomType } from "@/types/roomType";
+
+export default function RoomTypeCard(roomType : RoomType) {
+
     return (
         <div className="h-40 grid grid-cols-7 rounded-2xl border cursor-pointer overflow-hidden">
             
@@ -18,29 +21,28 @@ export default function RoomTypeCard() {
             </div>
 
             <div className="flex col-span-3 flex-col border-r p-5"> 
-                <h3 id="name" className="text-lg font-semibold">Deluxe Room</h3>
+                <h3 id="name" className="text-lg font-semibold">{roomType.name}</h3>
                 <Separator />
                 <div className="py-2 flex flex-wrap gap-2">
-                    <Badge className="px-2">Breakfast Included</Badge>
-                    <Badge>Minibar</Badge>
-                    <Badge>Study Room</Badge>
-                    <Badge>Kettel</Badge>
-                    <Badge>Water Heater</Badge>
+                    {(roomType?.amenities ?? []).map((amenity) => (
+                        <Badge key={amenity.id}>{amenity.description}</Badge>
+                    ))}
                 </div>  
             </div>
             
             <div className="flex flex-col col-span-2 justify-end p-5">
-                <p className="text-lg font-semibold">₹4500</p>
-                <p className="text-xs text-gray-600 whitespace-nowrap mb-4">for 2 night + Taxes</p>
+                <p className="text-lg font-semibold">₹{roomType.avgPricePerNight}</p>
+                <p className="text-xs text-gray-600 whitespace-nowrap mb-4">per night + Taxes</p>
                 <Select>
                     <SelectTrigger className="w-full">
-                        <SelectValue placeholder="For 1 Room" />
+                        <SelectValue placeholder="1 Room" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2">2</SelectItem>
-                        <SelectItem value="3">3</SelectItem>
-                        <SelectItem value="4">4</SelectItem>
+                        {Array.from({ length: roomType.availableRoomCount }, (_, i) => i + 1)
+                            .map(n => (
+                                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                            ))
+                        }
                     </SelectContent>
                 </Select>
             </div>
