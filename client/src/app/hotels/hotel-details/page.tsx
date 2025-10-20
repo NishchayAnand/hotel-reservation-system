@@ -10,6 +10,9 @@ import RoomTypeCard from "@/components/ui/room-type-card";
 import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
@@ -215,61 +218,60 @@ export default function HotelPage() {
                 {/* Booking Summary - improved UI */}
                 <aside id="booking-summary" className="col-span-1">
                   <div className="sticky top-24">
-                    <Card className="w-full shadow-sm">
+                    <Card className="w-full shadow-none">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-semibold">Booking Summary</CardTitle>
+                            <CardDescription>
+                                <div className="text-xs text-gray-500">
+                                    {nights > 0 ? `${nights} night${nights > 1 ? "s" : ""}` : "Dates"}
+                                    {" • "}
+                                    {checkInDate || "—"} → {checkOutDate || "—"}
+                                </div>
+                            </CardDescription>
+                        </CardHeader>
                       <CardContent>
                         <div className="flex flex-col gap-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="text-lg font-semibold">Booking Summary</h3>
-                              <div className="text-xs text-gray-500">
-                                {nights > 0 ? `${nights} night${nights > 1 ? "s" : ""}` : "Dates"}
-                                {" • "}
-                                {checkInDate || "—"} → {checkOutDate || "—"}
-                              </div>
-                            </div>
-                          </div>
-
                           {breakdown.items.length === 0 ? (
                             <div className="p-4 bg-gray-50 rounded-md text-sm text-gray-600">
                               No rooms selected
                             </div>
                           ) : (
                             <div className="space-y-3">
-                              <div id="pricing-breakdown" className="text-sm">
-                                {breakdown.items.map(it => (
-                                  <div key={it.id} className="flex items-center justify-between">
-                                    <div>
-                                      <div className="font-medium">{it.name}</div>
-                                      <div className="text-xs text-gray-500">
-                                        {it.qty} x {formatCurrency(it.rate)} per night
-                                      </div>
+                                <div id="pricing-breakdown" className="text-sm">
+                                    {breakdown.items.map(it => (
+                                    <div key={it.id} className="flex items-center justify-between mb-2">
+                                        <div>
+                                        <div className="font-medium">{it.name}</div>
+                                        <div className="text-xs text-gray-500">
+                                            {it.qty} x {formatCurrency(it.rate)} per night
+                                        </div>
+                                        </div>
+                                        <div className="text-right">
+                                        <div className="font-semibold">{formatCurrency(it.subtotal)}</div>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                      <div className="font-semibold">{formatCurrency(it.subtotal)}</div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
+                                    ))}
+                                </div>
 
-                              <div className="border-t border-gray-200 pt-3 text-sm space-y-2">
-                                <div className="flex justify-between text-gray-600">
-                                  <span>Subtotal</span>
-                                  <span>{formatCurrency(breakdown.total)}</span>
+                                <div className="border-t border-gray-200 pt-3 text-sm space-y-2">
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Subtotal</span>
+                                        <span>{formatCurrency(breakdown.total)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Taxes (est.)</span>
+                                        <span>{formatCurrency(taxes)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>Service fee</span>
+                                        <span>{formatCurrency(serviceFee)}</span>
+                                    </div>
+                                    <div className="flex justify-between font-semibold text-gray-900">
+                                        <span>Total</span>
+                                        <span>{formatCurrency(grandTotal)}</span>
+                                    </div>
+                                    <div className="text-xs text-gray-500">Final price may vary during checkout</div>
                                 </div>
-                                <div className="flex justify-between text-gray-600">
-                                  <span>Taxes (est.)</span>
-                                  <span>{formatCurrency(taxes)}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-600">
-                                  <span>Service fee</span>
-                                  <span>{formatCurrency(serviceFee)}</span>
-                                </div>
-                                <div className="flex justify-between font-semibold text-gray-900">
-                                  <span>Total</span>
-                                  <span>{formatCurrency(grandTotal)}</span>
-                                </div>
-                                <div className="text-xs text-gray-500">Final price may vary during checkout</div>
-                              </div>
                             </div>
                           )}
                         </div>
