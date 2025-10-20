@@ -7,14 +7,19 @@ import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import RoomTypeCard from "@/components/ui/room-type-card";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 
 import { Hotel } from "@/types/hotel";
 import { RoomType } from "@/types/roomType";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import SkeletonCard from "@/components/ui/skeleton-card";
 import HotelDetailsSkeleton from "@/components/ui/hotel-details-skeleton";
 import HotelFaqs from "@/components/ui/hotel-faqs";
-import BookingSummary from "@/components/ui/booking-summary";
 
 // static image list for the carousel
 const DEFAULT_CAROUSEL = [
@@ -34,7 +39,7 @@ export default function HotelPage() {
     const [loading, setLoading] = useState<boolean>(true);
 
     // selections map: roomTypeId -> quantity
-    const [selectionsMap, setSelectionsMap] = useState<Record<string, number>>({});
+    const [selections, setSelections] = useState<Record<string, number>>({});
 
     useEffect(() => {
         let isMounted = true; // 👈 flag to track if component is still mounted
@@ -82,11 +87,42 @@ export default function HotelPage() {
         
     }, []);
 
+    const handleQuantityChange = (roomTypeId: string, qty: number) => {
+        setSelections(prev => {
+            const copy = {... prev};
+            copy[roomTypeId] = qty;
+            return copy;
+        });
+    };
+
     const renderSkeletons = (count = 3) => {
         return Array.from({ length : count }).map((_, i) => (
           <SkeletonCard key={i}/>
         ));
     };
+
+    // compute number of nights from checkOutDate - checkInDate
+    const nights = useMemo(() => {
+        const checkIn = new Date(checkInDate);
+        const checkOut = new Date(checkOutDate);
+        const ms = checkOut.getTime() - checkIn.getTime();
+        return Math.round(ms / (1000 * 60 * 60 * 24));
+    }, [checkInDate, checkOutDate]);
+
+    // breakdown selection pricing and total
+    const breakdown = useMemo(() => {
+        const items: {id: string, name: string, qty: number, rate: number, subtotal: number}[] = [];
+        let total = 0;
+        for(const [id, qty] of Object.entries(selections)) {
+            const rt = roomTypes.find(roomType => roomType.id === id);
+            if (!rt) continue;
+            const rate = rt.avgPricePerNight ?? 0;
+            const subtotal = qty * rate * nights;
+            items.push({id, name: rt.name, qty, rate, subtotal});
+            total += subtotal;
+        }
+        return { items, total };
+    }, [selections, roomTypes, nights]);
 
     return (
         <main>
@@ -150,7 +186,12 @@ export default function HotelPage() {
                         <h2 className="text-md font-semibold mb-4">Select Rooms</h2>
                         {loading ? renderSkeletons(2) : (
                             roomTypes.map(roomType => (
-                                <RoomTypeCard key={roomType.id} {...roomType} />
+                                <RoomTypeCard 
+                                    key={roomType.id} 
+                                    roomType={roomType}
+                                    selectedQty={selections[roomType.id] ?? 0}
+                                    onQuantityChange={handleQuantityChange}
+                                 />
                             ))
                         )}   
                     </article>
@@ -164,7 +205,48 @@ export default function HotelPage() {
                 
                 {/* Booking Summary - pricing breakdown */}
                 <aside id="booking-summary"className="col-span-1">
-                    <BookingSummary />
+                    <Card className="w-full shadow-none">
+                        <CardContent>
+                            <div className="flex flex-col p-4 bg-gray-50 rounded-lg">
+                                <h3 className="text-md font-semibold mb-5">Booking Summary</h3>
+                                {breakdown.items.length === 0 ? (
+                                    <p className="text-sm">No rooms selected</p>
+                                ) : (
+                                    <div>
+                                        <div id="pricing-breakdown" className="text-sm">
+                                            {breakdown.items.map(it => (
+                                                <div key={it.id} className="flex justify-between">
+                                                    <div>
+                                                        <div>{it.name}</div>
+                                                        <div>₹{it.rate} x {it.qty} x {nights} nights</div>
+                                                    </div>
+                                                    <div>₹{it.subtotal}</div>
+                                                </div>
+                                            ))}
+                                            <div >
+                                                <span>2 Deluxe Room</span>
+                                                <span>₹4500 x 2 = ₹9000</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>1 Suite</span>
+                                                <span>₹6000 x 1 = ₹6000</span>
+                                            </div>
+                                        </div>
+                                        <div id="total-cost">
+                                            <div className="border-t border-gray-300 mt-2 pt-2 flex justify-between font-semibold">
+                                                <span>Total</span>
+                                                <span>₹15,000</span>
+                                            </div>
+                                            <p className="text-xs text-gray-600 mt-1 text-right">for 2 nights + Taxes</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Button type="submit" className="w-full">Book Now</Button>
+                        </CardFooter>
+                    </Card>
                 </aside>
 
             </section>

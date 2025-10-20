@@ -6,7 +6,17 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/c
 
 import { RoomType } from "@/types/roomType";
 
-export default function RoomTypeCard(roomType : RoomType) {
+type RoomTypeCardProps = {
+    roomType: RoomType;
+    selectedQty: number;
+    onQuantityChange: (roomTypeId: string, qty: number) => void;
+};
+
+export default function RoomTypeCard({roomType, selectedQty, onQuantityChange} : RoomTypeCardProps) {
+
+    const handleSelect = (qty: number) => {
+        onQuantityChange(roomType.id, qty);
+    };
 
     return (
         <div className="h-40 grid grid-cols-7 rounded-2xl border cursor-pointer overflow-hidden">
@@ -35,12 +45,14 @@ export default function RoomTypeCard(roomType : RoomType) {
                 <p className="text-xs text-gray-600 whitespace-nowrap mb-4">per night + Taxes</p>
                 <Select>
                     <SelectTrigger className="w-full">
-                        <SelectValue placeholder="1 Room" />
+                        <SelectValue placeholder={selectedQty} />
                     </SelectTrigger>
                     <SelectContent>
                         {Array.from({ length: roomType.availableRoomCount }, (_, i) => i + 1)
                             .map(n => (
-                                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                                <SelectItem key={n} value={String(n)} onChange={() => handleSelect(n)}>
+                                    {n}
+                                </SelectItem>
                             ))
                         }
                     </SelectContent>
