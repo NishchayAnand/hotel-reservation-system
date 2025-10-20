@@ -1,5 +1,7 @@
+"use client"
 
 import Image from "next/image";
+import { useState, useEffect } from "react";
 import {Separator} from "@/components/ui/separator";
 import {Badge} from "@/components/ui/badge";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
@@ -13,10 +15,22 @@ type RoomTypeCardProps = {
 };
 
 export default function RoomTypeCard({roomType, selectedQty, onQuantityChange} : RoomTypeCardProps) {
+    // keep controlled selection state (string because Select works with string values)
+    const [selected, setSelected] = useState<string>(selectedQty > 0 ? String(selectedQty) : "");
 
-    const handleSelect = (qty: number) => {
+    useEffect(() => {
+        // keep local state in sync when parent selectedQty changes
+        setSelected(selectedQty > 0 ? String(selectedQty) : "");
+    }, [selectedQty]);
+
+    const handleValueChange = (val: string) => {
+        setSelected(val);
+        const qty = Number(val);
         onQuantityChange(roomType.id, qty);
     };
+
+    const max = Math.max(0, roomType.availableRoomCount ?? 0);
+    const options = Array.from({ length: max }, (_, i) => i + 1);
 
     return (
         <div className="h-40 grid grid-cols-7 rounded-2xl border cursor-pointer overflow-hidden">
@@ -43,18 +57,17 @@ export default function RoomTypeCard({roomType, selectedQty, onQuantityChange} :
             <div className="flex flex-col col-span-2 justify-end p-5">
                 <p className="text-lg font-semibold">₹{roomType.avgPricePerNight}</p>
                 <p className="text-xs text-gray-600 whitespace-nowrap mb-4">per night + Taxes</p>
-                <Select>
+                <Select value={selected} onValueChange={handleValueChange}>
                     <SelectTrigger className="w-full">
-                        <SelectValue placeholder={selectedQty} />
+                        {/* placeholder shown when selected === "" */}
+                        <SelectValue placeholder="0" />
                     </SelectTrigger>
                     <SelectContent>
-                        {Array.from({ length: roomType.availableRoomCount }, (_, i) => i + 1)
-                            .map(n => (
-                                <SelectItem key={n} value={String(n)} onChange={() => handleSelect(n)}>
-                                    {n}
-                                </SelectItem>
-                            ))
-                        }
+                        {options.map(n => (
+                            <SelectItem key={n} value={String(n)}>
+                                {n}
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
             </div>
