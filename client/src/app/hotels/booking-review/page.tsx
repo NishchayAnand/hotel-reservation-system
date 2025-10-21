@@ -14,23 +14,49 @@ export default function ReviewPage() {
         <section id="hero-section" className="col-span-2 space-y-4">
 
           {/* Booking Summary */}
-          <div id="booking-summary" className="flex gap-4 p-4 border rounded-lg shadow-sm bg-white">
+          <div
+            id="booking-summary"
+            className="p-5 border rounded-lg shadow-sm bg-white flex flex-col sm:flex-row gap-4 items-start"
+          >
             <img
               src="/images/jaipur/the-johri/thumbnail/photo1.jpg"
               alt="Hotel thumbnail"
-              className="w-28 h-20 rounded-md object-cover"
+              className="w-full sm:w-28 h-20 rounded-md object-cover flex-shrink-0"
             />
-            <div className="flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-medium">Rajasthan Heritage Hotel</h2>
-                  <p className="text-xs text-gray-500 mt-1">Fort area, Jaipur • 4.4 ⭐</p>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h2 className="text-lg font-semibold truncate">Rajasthan Heritage Hotel</h2>
+                  <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+                    <span className="inline-flex items-center gap-2">
+                      <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7l3-7z" />
+                      </svg>
+                      Fort area, Jaipur
+                    </span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-800">
+                      4.4 ★
+                    </span>
+                    <span className="inline-flex items-center text-xs text-gray-400">Free Wi‑Fi</span>
+                  </div>
                 </div>
-                <div className="text-right">
+
+                <div className="text-right flex-shrink-0">
                   <div className="text-sm text-gray-500">Dates</div>
                   <div className="font-medium">21 Oct 2025 → 22 Oct 2025</div>
-                  <div className="text-xs text-gray-400">1 night</div>
+                  <div className="text-xs text-gray-400 mt-1">1 night</div>
                 </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <div className="text-sm text-gray-600">
+                  <div className="inline-flex items-center gap-2 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">
+                    Flexible dates
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">Breakfast not included</div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -72,7 +98,7 @@ export default function ReviewPage() {
               </div>
               <div>
                 <button
-                  className="text-sm text-indigo-600 hover:underline"
+                  className="text-sm text-black hover:underline"
                   aria-label="Edit guest details"
                 >
                   Edit
@@ -128,23 +154,31 @@ export default function ReviewPage() {
               </div>
             </div>
 
-            <div className="border-t pt-3 mb-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-gray-500">Total</div>
-                  <div className="text-xl font-semibold">₹3,640</div>
-                  <div className="text-xs text-gray-400">Includes estimated taxes & fees</div>
-                </div>
+            <div className="border-t pt-3 mb-4" role="region" aria-label="Price summary">
+              <div className="flex justify-between items-start gap-4">
+              <div>
+                <div className="text-sm text-gray-500">Total (incl. taxes & fees)</div>
+                <div className="text-xl my-2 font-semibold text-gray-900">₹3,640</div>
+                <div className="text-xs text-gray-400">Includes estimated taxes & fees</div>
               </div>
+
+              <div className="text-right">
+                <span className="inline-flex items-center gap-2 text-xs text-gray-500">
+                <svg className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                  <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 2v6m0 8v6M4 12h16" />
+                </svg>
+                <span className="sr-only">Secure payment</span>
+                <span>Secure payment</span>
+                </span>
+              </div>
+              </div>
+              <div aria-live="polite" className="sr-only">Total payable is ₹3,640</div>
             </div>
 
             <button className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 bg-black text-white rounded-md shadow-sm">
               Proceed to payment
             </button>
 
-            <p className="text-xs text-gray-400 mt-3">
-              This is a static preview. Payment integrations and confirmation flows will be enabled in a later iteration.
-            </p>
           </div>
         </aside>
       </div>
