@@ -44,7 +44,7 @@ export default function ReviewPage() {
 
                 <div className="text-right flex-shrink-0">
                   <div className="text-sm text-gray-500">Dates</div>
-                  <div className="font-medium">21 Oct 2025 → 22 Oct 2025</div>
+                  <div className="text-sm my-1 font-medium">21 Oct 2025 → 22 Oct 2025</div>
                   <div className="text-xs text-gray-400 mt-1">1 night</div>
                 </div>
               </div>
