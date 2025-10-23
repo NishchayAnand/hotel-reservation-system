@@ -6,11 +6,10 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class InitiateReservationRequest {
+public class InitiateReservationRequestDTO {
+    private final String idempotencyKey;
     private final Long hotelId;
     private final LocalDate checkInDate;
     private final LocalDate checkOutDate;
-    private final List<ReservationItem> reservationItems;
-    private final long total;
-    private final String paymentMethod;
+    private final List<ReservationItemDTO> reservationItems;
 }
