@@ -8,7 +8,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.gharana.inventory_service.dto.AvailableRoomTypeDTO;
+import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
+import com.gharana.inventory_service.model.dto.HoldDTO;
+import com.gharana.inventory_service.model.dto.SelectedRoomTypeInventoryDTO;
 import com.gharana.inventory_service.repository.InventoryRepository;
 
 import lombok.AllArgsConstructor;
@@ -30,6 +32,14 @@ public class InventoryServiceImpl implements InventoryService {
                 (Long) row[1],
                 (int) row[2])) 
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public HoldDTO holdInventory(String requestId, Long hotelId, LocalDate checkInDate, LocalDate checkOutDate,
+            List<SelectedRoomTypeInventoryDTO> selectedRooms) {
+        
+        return null;
+
     }
 
 }

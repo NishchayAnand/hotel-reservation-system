@@ -3,6 +3,7 @@ package com.nivara.reservation_service.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,21 +21,7 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
-    @PostMapping("/initiate")
-    public ResponseEntity<InitiateReservationResponseDTO> initiateReservation(@RequestBody InitiateReservationRequestDTO req) {
-        // idempotent lookup
-        Reservation existing = reservationService.findByIdempotencyKey(req.getIdempotencyKey());
-        if(existing != null) {
-            var resp = InitiateReservationResponseDTO.builder()
-                .reservationId(existing.getId())
-                .status(existing.getStatus())
-                .message("Duplicate request")
-                .build();
-            return ResponseEntity.status(409).body(resp);
-        }
-        //Reservation r = reservationService.initiate(req);
-        return null;
-    }
+    
 
     @PostMapping("/finalize")
     public String finalizeReservation() {

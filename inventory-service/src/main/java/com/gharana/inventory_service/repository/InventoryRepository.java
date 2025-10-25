@@ -7,7 +7,7 @@ import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.gharana.inventory_service.model.InventoryRecord;
+import com.gharana.inventory_service.model.entity.InventoryRecord;
 
 
 public interface InventoryRepository extends JpaRepository<InventoryRecord, Long> {

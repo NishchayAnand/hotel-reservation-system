@@ -1,4 +1,4 @@
-package com.gharana.inventory_service.dto;
+package com.gharana.inventory_service.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

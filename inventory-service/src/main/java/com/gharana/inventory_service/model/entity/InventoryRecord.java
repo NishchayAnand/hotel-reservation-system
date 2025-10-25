@@ -1,4 +1,4 @@
-package com.gharana.inventory_service.model;
+package com.gharana.inventory_service.model.entity;
 
 import java.time.LocalDate;
 
