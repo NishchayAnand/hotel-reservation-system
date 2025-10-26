@@ -14,11 +14,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Data;
 
 @Entity
 @Table(name = "holds")
 @Data
+@Builder
 public class Hold {
 
     @Id
@@ -35,6 +37,6 @@ public class Hold {
     private LocalDateTime expiresAt;
 
     @OneToMany(mappedBy = "hold", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<HoldItem> heldRoomSelections;
+    private List<HoldItem> heldItems;
     
 }

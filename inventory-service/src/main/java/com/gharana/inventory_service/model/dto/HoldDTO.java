@@ -9,8 +9,8 @@ import lombok.Data;
 @Builder
 public class HoldDTO {
     private Long holdId;
-    private Boolean success;
-    private Boolean created; // true if a new hold was created, false if existing active hold was returned
+    private boolean success;
+    private boolean created; // true if a new hold was created, false if existing active hold was returned
     private LocalDateTime expiresAt;
     private String message;
 }

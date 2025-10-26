@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class SelectedInventoryDTO {
     private final Long roomTypeId;
-    private final int qty;
+    private final int count;
 }

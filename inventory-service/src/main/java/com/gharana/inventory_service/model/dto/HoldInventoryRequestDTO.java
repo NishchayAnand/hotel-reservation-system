@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 public class HoldInventoryRequestDTO {
-    private final Long hotel_id;
+    private final Long hotelId;
     private final LocalDate checkInDate;
     private final LocalDate checkOutDate;
     private List<SelectedInventoryDTO> selectedInventory;
