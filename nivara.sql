@@ -285,6 +285,22 @@ INSERT INTO public.room_type_inventory
 SELECT hotel_id, room_type_id, reservation_date, total_count, 0
 FROM to_insert;
 
+CREATE TABLE holds (
+    id BIGSERIAL PRIMARY KEY,
+    request_id TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE hold_items (
+    id BIGSERIAL PRIMARY KEY,
+    hold_id BIGINT NOT NULL REFERENCES holds(id) ON DELETE CASCADE,
+    hotel_id BIGINT NOT NULL,
+    room_type_id BIGINT NOT NULL,
+    check_in_date DATE NOT NULL,
+    check_out_date DATE NOT NULL,
+    held_count INTEGER NOT NULL
+);
+
 */
 
 /* PRICING DB */

@@ -9,10 +9,13 @@ import com.gharana.inventory_service.model.dto.HoldDTO;
 import com.gharana.inventory_service.model.dto.SelectedRoomTypeInventoryDTO;
 
 public interface InventoryService {
-    List<AvailableRoomTypeDTO> getRoomAvailability(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate);
-    HoldDTO holdInventory(String requestId, 
+    
+    List<AvailableRoomTypeDTO> getAvailableRoomTypes(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate);
+    
+    HoldDTO createInventoryHold(String requestId, 
         Long hotelId, 
         LocalDate checkInDate, 
         LocalDate checkOutDate, 
         List<SelectedRoomTypeInventoryDTO> selectedRooms);
+        
 }

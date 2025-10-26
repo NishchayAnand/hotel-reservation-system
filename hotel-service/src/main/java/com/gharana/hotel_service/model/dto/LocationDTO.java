@@ -1,4 +1,4 @@
-package com.gharana.hotel_service.dto;
+package com.gharana.hotel_service.model.dto;
 
 import lombok.Builder;
 import lombok.Data;

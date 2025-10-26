@@ -5,8 +5,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.gharana.hotel_service.dto.LocationDTO;
-import com.gharana.hotel_service.entity.Location;
+import com.gharana.hotel_service.model.dto.LocationDTO;
+import com.gharana.hotel_service.model.entity.Location;
 import com.gharana.hotel_service.repository.LocationRepository;
 
 import lombok.AllArgsConstructor;

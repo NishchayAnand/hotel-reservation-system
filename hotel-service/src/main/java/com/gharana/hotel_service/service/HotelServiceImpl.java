@@ -6,10 +6,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.gharana.hotel_service.dto.HotelDTO;
-import com.gharana.hotel_service.dto.RoomTypeDTO;
-import com.gharana.hotel_service.mapper.HotelMapper;
-import com.gharana.hotel_service.mapper.RoomTypeMapper;
+import com.gharana.hotel_service.model.dto.HotelDTO;
+import com.gharana.hotel_service.model.dto.RoomTypeDTO;
+import com.gharana.hotel_service.model.mapper.HotelMapper;
+import com.gharana.hotel_service.model.mapper.RoomTypeMapper;
 import com.gharana.hotel_service.repository.HotelRepository;
 import com.gharana.hotel_service.repository.RoomTypeRepository;
 

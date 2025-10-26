@@ -1,9 +1,9 @@
-package com.gharana.hotel_service.dto;
+package com.gharana.hotel_service.model.dto;
 
 import java.util.Set;
 
-import com.gharana.hotel_service.entity.Amenity;
-import com.gharana.hotel_service.entity.BedType;
+import com.gharana.hotel_service.model.entity.Amenity;
+import com.gharana.hotel_service.model.enums.BedType;
 
 import lombok.Builder;
 import lombok.Data;

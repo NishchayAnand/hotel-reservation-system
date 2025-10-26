@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gharana.hotel_service.dto.HotelDTO;
-import com.gharana.hotel_service.dto.RoomTypeDTO;
+import com.gharana.hotel_service.model.dto.HotelDTO;
+import com.gharana.hotel_service.model.dto.RoomTypeDTO;
 import com.gharana.hotel_service.service.HotelService;
 
 import lombok.AllArgsConstructor;

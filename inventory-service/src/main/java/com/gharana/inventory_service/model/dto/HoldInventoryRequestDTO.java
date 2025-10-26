@@ -10,5 +10,5 @@ public class HoldInventoryRequestDTO {
     private final Long hotel_id;
     private final LocalDate checkInDate;
     private final LocalDate checkOutDate;
-    private List<SelectedRoomTypeInventoryDTO> selectedRooms;
+    private List<SelectedRoomTypeInventoryDTO> selectedInventory;
 }

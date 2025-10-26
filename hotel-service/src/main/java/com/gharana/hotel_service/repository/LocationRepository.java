@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.gharana.hotel_service.entity.Location;
+import com.gharana.hotel_service.model.entity.Location;
 
 public interface LocationRepository extends JpaRepository<Location, Long> {
     

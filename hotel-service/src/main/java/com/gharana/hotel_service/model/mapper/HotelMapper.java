@@ -1,7 +1,7 @@
-package com.gharana.hotel_service.mapper;
+package com.gharana.hotel_service.model.mapper;
 
-import com.gharana.hotel_service.dto.HotelDTO;
-import com.gharana.hotel_service.entity.Hotel;
+import com.gharana.hotel_service.model.dto.HotelDTO;
+import com.gharana.hotel_service.model.entity.Hotel;
 
 public class HotelMapper {
 

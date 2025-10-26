@@ -27,19 +27,19 @@ public class InventoryController {
 
     @PostMapping("/get-availability")
     public ResponseEntity<List<AvailableRoomTypeDTO>> getRoomAvailability(@RequestBody RoomAvailabilityRequestDTO request) {
-            return ResponseEntity.ok().body(inventoryService.getRoomAvailability(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate()));
+            return ResponseEntity.ok().body(inventoryService.getAvailableRoomTypes(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate()));
     }
 
     @PostMapping("/hold")
-    public ResponseEntity<HoldDTO> holdInventory(
+    public ResponseEntity<HoldDTO> holdSelectedInventory(
         @RequestHeader(value = "X-Request-ID") String requestId,
         @RequestBody HoldInventoryRequestDTO req) {
 
-        HoldDTO hold = inventoryService.holdInventory(requestId, 
+        HoldDTO hold = inventoryService.createInventoryHold(requestId, 
             req.getHotel_id(), 
             req.getCheckInDate(), 
             req.getCheckOutDate(),
-            req.getSelectedRooms());
+            req.getSelectedInventory());
         return hold.isCreated() ? ResponseEntity.status(HttpStatus.CREATED).body(hold) : ResponseEntity.ok().body(hold);
     
     }

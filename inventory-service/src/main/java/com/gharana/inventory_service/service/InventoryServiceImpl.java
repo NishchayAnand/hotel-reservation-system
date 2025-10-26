@@ -26,7 +26,7 @@ public class InventoryServiceImpl implements InventoryService {
     private HoldRepository holdRepository;
 
     @Override
-    public List<AvailableRoomTypeDTO> getRoomAvailability(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) { 
+    public List<AvailableRoomTypeDTO> getAvailableRoomTypes(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) { 
         // Fetch room types for the given hotels that have availability across the entire [checkInDate, checkOutDate) range.  
         long nights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
         List<Object[]> rows = inventoryRepository.findAvailableRoomTypesForHotels(hotelIds, checkInDate, checkOutDate, nights); 
@@ -39,7 +39,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public HoldDTO holdInventory(String requestId, Long hotelId, LocalDate checkInDate, LocalDate checkOutDate,
+    public HoldDTO createInventoryHold(String requestId, Long hotelId, LocalDate checkInDate, LocalDate checkOutDate,
             List<SelectedRoomTypeInventoryDTO> selectedRooms) {
 
         for(SelectedRoomTypeInventoryDTO selection: selectedRooms) {

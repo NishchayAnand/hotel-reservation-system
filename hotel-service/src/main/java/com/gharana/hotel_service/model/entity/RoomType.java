@@ -1,6 +1,8 @@
-package com.gharana.hotel_service.entity;
+package com.gharana.hotel_service.model.entity;
 
 import java.util.Set;
+
+import com.gharana.hotel_service.model.enums.BedType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
