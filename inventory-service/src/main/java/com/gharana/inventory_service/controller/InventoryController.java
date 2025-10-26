@@ -2,7 +2,6 @@ package com.gharana.inventory_service.controller;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,12 +34,7 @@ public class InventoryController {
         @RequestHeader(value = "X-Request-ID") String requestId,
         @RequestBody HoldInventoryRequestDTO req) {
 
-        HoldDTO hold = inventoryService.createInventoryHold(requestId, 
-            req.getHotel_id(), 
-            req.getCheckInDate(), 
-            req.getCheckOutDate(),
-            req.getSelectedInventory());
-        return hold.isCreated() ? ResponseEntity.status(HttpStatus.CREATED).body(hold) : ResponseEntity.ok().body(hold);
+        return null;
     
     }
 

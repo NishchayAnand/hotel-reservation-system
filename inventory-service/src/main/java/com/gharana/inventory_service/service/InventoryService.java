@@ -6,7 +6,7 @@ import java.util.Set;
 
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
 import com.gharana.inventory_service.model.dto.HoldDTO;
-import com.gharana.inventory_service.model.dto.SelectedRoomTypeInventoryDTO;
+import com.gharana.inventory_service.model.dto.SelectedInventoryDTO;
 
 public interface InventoryService {
     
@@ -16,6 +16,6 @@ public interface InventoryService {
         Long hotelId, 
         LocalDate checkInDate, 
         LocalDate checkOutDate, 
-        List<SelectedRoomTypeInventoryDTO> selectedRooms);
-        
+        List<SelectedInventoryDTO> selectedRooms);
+
 }
