@@ -1,9 +1,8 @@
 package com.gharana.inventory_service.controller;
 
-import java.net.URI;
 import java.util.List;
 
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,11 +31,12 @@ public class InventoryController {
     }
 
     @PostMapping("/holds")
-    public ResponseEntity<String> holdSelectedInventory(
+    public ResponseEntity<HoldDTO> holdSelectedInventory(
         @RequestHeader(value = "X-Request-ID") String requestId,
         @RequestBody HoldInventoryRequestDTO req) {
         
         try {
+
             HoldDTO resp = inventoryService.createInventoryHold(requestId, 
                 req.getHotelId(), 
                 req.getCheckInDate(), 
@@ -45,17 +45,17 @@ public class InventoryController {
 
             if(!resp.isSuccess()) {
                 // business failure -> insufficient inventory -> 409 Conflict
-                return ResponseEntity.status(409).body(resp.getMessage());
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(resp);
             }
 
-            URI location = URI.create("api/inventory/holds/" + resp.getHoldId());
             if(resp.isCreated()) {
-                return ResponseEntity.created(location).body(resp.getMessage());
+                return ResponseEntity.status(HttpStatus.CREATED).body(resp);
             }
 
-            return ResponseEntity.ok().header(HttpHeaders.LOCATION, location.toString()).body(resp.getMessage());   
+            return ResponseEntity.ok().body(resp);   
+
         } catch (Exception ex) {
-            return ResponseEntity.status(502).body("error occurred");
+            return ResponseEntity.status(502).body(null);
         }
     
     }
