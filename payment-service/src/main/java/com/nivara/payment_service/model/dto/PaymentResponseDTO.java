@@ -2,11 +2,12 @@ package com.nivara.payment_service.model.dto;
 
 import com.nivara.payment_service.model.enums.PaymentStatus;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
+@Builder
 public class PaymentResponseDTO {
     private PaymentStatus status;
+    private String message;
 }
