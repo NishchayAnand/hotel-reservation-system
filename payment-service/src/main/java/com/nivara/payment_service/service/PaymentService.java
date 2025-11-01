@@ -5,6 +5,6 @@ import com.nivara.payment_service.model.dto.PaymentResponseDTO;
 
 public interface PaymentService {
 
-    public PaymentResponseDTO processPayment(String requestId, PaymentRequestDTO requestBody);    
+    public PaymentResponseDTO createPayment(String requestId, PaymentRequestDTO requestBody);    
 
 }

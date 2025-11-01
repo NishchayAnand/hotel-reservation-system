@@ -8,6 +8,9 @@ import lombok.Data;
 @Data
 @Builder
 public class PaymentResponseDTO {
+    private Long paymentId;
+    private boolean success;
+    private String providerOrderId;
     private PaymentStatus status;
     private String message;
 }
