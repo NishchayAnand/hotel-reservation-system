@@ -3,22 +3,58 @@ package com.nivara.reservation_service.model.entity;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.nivara.reservation_service.model.dto.ReservationItemDTO;
 import com.nivara.reservation_service.model.enums.ReservationStatus;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Data;
 
+@Data
+@Builder
 @Entity
 @Table(name = "reservations")
-@Data
 public class Reservation {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "request_id")
     private String requestId;
+
     private Long hotelId;
+
     private LocalDate checkInDate;
+
     private LocalDate checkOutDate;
-    List<ReservationItemDTO> reservationItems;
+
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
+    private List<ReservationItem> reservationItems;
+
+    private long amount;
+
+    private String currency;
+
+
+
+    @Column(name = "hold_id")
+    private Long holdId;
+
+    @Column(name = "order_id")
+    private String orderId;
+
     private ReservationStatus status;
+
+    @Column(name = "created_at")
+    private String createdAt;
+
+    @Column(name = "expires_at")
+    private String expiresAt;
 }

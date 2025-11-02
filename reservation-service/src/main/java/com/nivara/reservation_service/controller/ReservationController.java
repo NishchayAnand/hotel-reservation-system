@@ -1,8 +1,15 @@
 package com.nivara.reservation_service.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.nivara.reservation_service.model.dto.CreateReservationRequest;
+import com.nivara.reservation_service.model.dto.CreateReservationResponse;
+import com.nivara.reservation_service.service.ReservationService;
 
 import lombok.AllArgsConstructor;
 
@@ -11,9 +18,16 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ReservationController {
 
-    @PostMapping("/finalize")
-    public String finalizeReservation() {
-        return null;
+    private final ReservationService reservationService;
+
+    @PostMapping
+    public ResponseEntity<CreateReservationResponse> createReservation(
+        @RequestHeader(value = "X-Request-ID") String requestId,
+        @RequestBody CreateReservationRequest requestBody
+    ) {
+        CreateReservationResponse resp = reservationService.createReservation(requestId, requestBody);
+
+        return ResponseEntity.status(201).body(resp);
     }
 
 }
