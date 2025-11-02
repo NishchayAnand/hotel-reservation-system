@@ -22,10 +22,11 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("")
-    public ResponseEntity<PaymentResponseDTO> createPayment(
+    @PostMapping("/create-order")
+    public ResponseEntity<PaymentResponseDTO> createOrder(
         @RequestHeader(value = "X-Request-ID") String requestId,
-        @RequestBody PaymentRequestDTO req) {
+        @RequestBody PaymentRequestDTO req) 
+    {
 
         PaymentResponseDTO resp = paymentService.createPayment(requestId, req);
         
@@ -37,6 +38,15 @@ public class PaymentController {
         return ResponseEntity.created(location).body(resp);
         
     }
+
+    @PostMapping("/verify")
+    public ResponseEntity<String> verifyPayment(
+        @RequestHeader("X-Razorpay-Signature") String signatureHeader
+    ) {
+        return null;
+    }
+
+
 
 
 
