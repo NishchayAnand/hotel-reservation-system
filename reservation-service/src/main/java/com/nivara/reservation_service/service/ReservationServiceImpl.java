@@ -2,11 +2,16 @@ package com.nivara.reservation_service.service;
 
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.nivara.reservation_service.client.InventoryServiceClient;
+import com.nivara.reservation_service.client.PaymentServiceClient;
 import com.nivara.reservation_service.model.dto.CreateHoldRequest;
 import com.nivara.reservation_service.model.dto.CreateHoldResponse;
+import com.nivara.reservation_service.model.dto.CreateOrderRequest;
+import com.nivara.reservation_service.model.dto.CreateOrderResponse;
 import com.nivara.reservation_service.model.dto.CreateReservationRequest;
 import com.nivara.reservation_service.model.dto.CreateReservationResponse;
 import com.nivara.reservation_service.model.entity.Reservation;
@@ -20,8 +25,11 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
+
     private final ReservationRepository reservationRepository;
     private final InventoryServiceClient inventoryServiceClient;
+    private final PaymentServiceClient paymentServiceClient;
 
     @Override
     @Transactional
@@ -63,15 +71,45 @@ public class ReservationServiceImpl implements ReservationService {
         try {
             holdResp = inventoryServiceClient.createHold(requestId, holdReq);  
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create inventory hold", e);
+            log.error("inventory.createHold failed for reservationId={}", reservation.getId(), e);
+            reservation.setStatus(ReservationStatus.FAILED);
+            reservationRepository.save(reservation);
+            throw new RuntimeException("Failed to create inventory hold: ", e);
         }
 
+        // 4. Persist Hold info and set HOLD_CREATED
+        reservation.setHoldId(holdResp.holdId());
+        reservation.setExpiresAt(holdResp.expiresAt());
+        reservation.setStatus(ReservationStatus.HOLD_CREATED);
+        reservationRepository.save(reservation);
+        log.info("Hold created {} for reservation {}", holdResp.holdId(), reservation.getId());
 
+        // 5. Call payment-service to create Payment Order
+        CreateOrderRequest order = new CreateOrderRequest(
+            holdReq.hotelId(),
+            holdResp.lockedAmount(),
+            requestBody.currency()
+        );
 
+        CreateOrderResponse orderResp;
+        try {
+            orderResp = paymentServiceClient.createOrder(requestId, order);
+        } catch (Exception e) {
+            // compensation & scheduling
+            throw new RuntimeException("Failed to create payment order", e);
+        }
 
+        reservation.setOrderId(orderResp.orderId());
+        reservation.setStatus(ReservationStatus.ORDER_CREATED);
+        reservationRepository.save(reservation);
 
-        
-        return null;
+        return new CreateReservationResponse(
+            reservation.getId(),
+            reservation.getStatus().toString(),
+            reservation.getHoldId(),
+            reservation.getOrderId(),
+            reservation.getExpiresAt()
+        );
 
     }
 

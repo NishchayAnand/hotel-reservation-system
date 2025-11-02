@@ -2,6 +2,8 @@ package com.nivara.reservation_service.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import com.nivara.reservation_service.model.dto.CreateHoldRequest;
 import com.nivara.reservation_service.model.dto.CreateHoldResponse;
@@ -10,6 +12,8 @@ import com.nivara.reservation_service.model.dto.CreateHoldResponse;
 public interface InventoryServiceClient {
 
     @PostMapping("create-hold")
-    public CreateHoldResponse createHold(String requestId, CreateHoldRequest requestBody);
+    public CreateHoldResponse createHold(
+        @RequestHeader(value = "X-Request-ID") String requestId, 
+        @RequestBody CreateHoldRequest requestBody);
 
 }

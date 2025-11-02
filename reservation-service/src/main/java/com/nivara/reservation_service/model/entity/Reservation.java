@@ -1,5 +1,6 @@
 package com.nivara.reservation_service.model.entity;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -42,19 +43,17 @@ public class Reservation {
 
     private String currency;
 
-
-
     @Column(name = "hold_id")
     private Long holdId;
 
     @Column(name = "order_id")
     private String orderId;
 
+    @Column(name = "expires_at")
+    private Instant expiresAt; // tells your system: If payment hasn’t been completed by expiresAt, this reservation can no longer be confirmed because the inventory lock has expired.
+
     private ReservationStatus status;
 
     @Column(name = "created_at")
     private String createdAt;
-
-    @Column(name = "expires_at")
-    private String expiresAt;
 }
