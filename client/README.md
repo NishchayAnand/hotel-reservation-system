@@ -9,6 +9,8 @@ when user clicks on search from the home-page, (locationId, checkInDate, checkOu
 
 hotel-listing page contains list of hotel-card. When a user clicks on a hotel-card, we need to navigate to the hotel-details page where we need (checkInDate, checkOutDate) details. Hence, we need to flow (checkInDate, checkOutDate) from hotel-listing to hotel-details via hotel-card (hotel-listing -> hotel-card -> hotel-details).
 
+> NOTE: Can use Redux to flow hotel details from `Book Now` page to `Pay Now` page. This will help us avoid fetching same details in the `Pay Now` page. 
+
 **We want the users selections in the room-type-card component to be shared to its sibling bookg-summary component. What is the best approach to achieve this?**
 
 Answer: keep the simple lifted-state + prop approach. UseContext (Redux) adds value when many nested descendants need read/write access or the selection logic becomes shared across unrelated components.

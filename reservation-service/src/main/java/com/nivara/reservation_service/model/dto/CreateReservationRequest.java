@@ -8,6 +8,8 @@ public record CreateReservationRequest(
     LocalDate checkInDate,
     LocalDate checkOutDate,
     List<ReservationItemDTO> reservationItems,
-    Long amount,
+    Long subtotal,
+    Long taxes,
+    Long total,
     String currency
 ) {}

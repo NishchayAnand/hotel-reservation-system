@@ -1,6 +1,9 @@
 package com.nivara.reservation_service.service;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +18,7 @@ import com.nivara.reservation_service.model.dto.CreateOrderResponse;
 import com.nivara.reservation_service.model.dto.CreateReservationRequest;
 import com.nivara.reservation_service.model.dto.CreateReservationResponse;
 import com.nivara.reservation_service.model.entity.Reservation;
+import com.nivara.reservation_service.model.entity.ReservationItem;
 import com.nivara.reservation_service.model.enums.ReservationStatus;
 import com.nivara.reservation_service.repository.ReservationRepository;
 
@@ -35,31 +39,38 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     public CreateReservationResponse createReservation(String requestId, CreateReservationRequest requestBody) {
 
-        // 1. Idempotency Check: If a reservation already exists with this requestId, return it
+        // Step 1. Idempotency Check: If a reservation already exists with this requestId, return it
         Optional<Reservation> existing = reservationRepository.findByRequestId(requestId);
         if(existing.isPresent()) {
             Reservation reservation = existing.get();
-            return new CreateReservationResponse(
-                reservation.getId(), 
-                reservation.getStatus().toString(),
-                reservation.getHoldId(),
-                reservation.getOrderId(),
-                reservation.getExpiresAt()
-            );
+            return CreateReservationResponse.from(reservation);
         } 
 
-        // 2. Perist reservation
+        // Step 2. Perist reservation row with status = PENDING
         Reservation reservation = Reservation.builder()
             .requestId(requestId)
             .hotelId(requestBody.hotelId())
             .checkInDate(requestBody.checkInDate())
             .checkOutDate(requestBody.checkOutDate())
-            .status(ReservationStatus.INIT)
-            .createdAt("")
+            .status(ReservationStatus.PENDING)
+            .createdAt(Instant.now())
+            .updatedAt(Instant.now())
             .build();
+
+        List<ReservationItem> items = requestBody.reservationItems().stream()
+            .map(item -> ReservationItem.builder()
+                .roomTypeId(item.roomTypeId())
+                .qty(item.qty())
+                .rate(item.rate())
+                .reservation(reservation)
+                .build()
+            )
+            .collect(Collectors.toList());
+
+        reservation.setReservationItems(items);
         reservationRepository.save(reservation);
 
-        // 3. Call inventory-service to create hold
+        // Step 3. Call inventory-service to create hold
         CreateHoldRequest holdReq = new CreateHoldRequest(
             requestBody.hotelId(),
             requestBody.checkInDate(),
@@ -72,7 +83,7 @@ public class ReservationServiceImpl implements ReservationService {
             holdResp = inventoryServiceClient.createHold(requestId, holdReq);  
         } catch (Exception e) {
             log.error("inventory.createHold failed for reservationId={}", reservation.getId(), e);
-            reservation.setStatus(ReservationStatus.FAILED);
+            reservation.setStatus(ReservationStatus.CANCELLED);
             reservationRepository.save(reservation);
             throw new RuntimeException("Failed to create inventory hold: ", e);
         }
@@ -99,15 +110,15 @@ public class ReservationServiceImpl implements ReservationService {
             throw new RuntimeException("Failed to create payment order", e);
         }
 
-        reservation.setOrderId(orderResp.orderId());
-        reservation.setStatus(ReservationStatus.ORDER_CREATED);
+        reservation.setPaymentOrderId(orderResp.orderId());
+        reservation.setStatus(ReservationStatus.AWAITING_PAYMENT);
         reservationRepository.save(reservation);
 
         return new CreateReservationResponse(
             reservation.getId(),
             reservation.getStatus().toString(),
             reservation.getHoldId(),
-            reservation.getOrderId(),
+            reservation.getPaymentOrderId(),
             reservation.getExpiresAt()
         );
 
