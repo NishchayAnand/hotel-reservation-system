@@ -4,10 +4,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record CreateHoldRequest(
+    Long reservationId,
     Long hotelId,
     LocalDate checkInDate,
     LocalDate checkOutDate,
     List<ReservationItemDTO> reservationItems
-) {
-
-}
+) {}

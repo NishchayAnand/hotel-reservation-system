@@ -45,7 +45,7 @@ public class Reservation {
     )
     private List<ReservationItem> reservationItems;
 
-    private long amount;
+    private Long amount;
 
     private String currency;
 

@@ -1,8 +1,22 @@
 package com.nivara.reservation_service.service;
 
-import com.nivara.reservation_service.model.dto.CreateReservationRequest;
-import com.nivara.reservation_service.model.dto.CreateReservationResponse;
+import java.time.LocalDate;
+import java.util.List;
+
+import com.nivara.reservation_service.model.dto.ReservationItemDTO;
+import com.nivara.reservation_service.model.entity.Reservation;
 
 public interface ReservationService {
-    public CreateReservationResponse createReservation(String requestId, CreateReservationRequest requestBody);
+
+    public Reservation createReservation(
+        String requestId, 
+        Long hotelId, 
+        LocalDate checkInDate,
+        LocalDate checkOutDate,
+        List<ReservationItemDTO> reservationItems,
+        Long subtotal,
+        Long taxes,
+        Long total,
+        String currency
+    );
 }

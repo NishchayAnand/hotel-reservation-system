@@ -9,7 +9,7 @@ import com.nivara.reservation_service.model.dto.CreateOrderRequest;
 import com.nivara.reservation_service.model.dto.CreateOrderResponse;
 
 @FeignClient(name = "payment-service", url = "http://localhost:8083/api/payments")
-public interface PaymentServiceClient {
+public interface PaymentClient {
 
     @PostMapping("create-order")
     CreateOrderResponse createOrder(

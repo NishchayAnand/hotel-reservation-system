@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.nivara.reservation_service.model.dto.CreateReservationRequest;
 import com.nivara.reservation_service.model.dto.CreateReservationResponse;
+import com.nivara.reservation_service.model.entity.Reservation;
 import com.nivara.reservation_service.service.ReservationService;
 
 import lombok.AllArgsConstructor;
@@ -25,9 +26,18 @@ public class ReservationController {
         @RequestHeader(value = "X-Request-ID") String requestId,
         @RequestBody CreateReservationRequest requestBody
     ) {
-        CreateReservationResponse resp = reservationService.createReservation(requestId, requestBody);
+        Reservation reservation = reservationService.createReservation(
+            requestId, 
+            requestBody.hotelId(),
+            requestBody.checkInDate(),
+            requestBody.checkOutDate(),
+            requestBody.reservationItems(),
+            requestBody.subtotal(),
+            requestBody.taxes(),
+            requestBody.total(),
+            requestBody.currency());
 
-        return ResponseEntity.status(201).body(resp);
+        return ResponseEntity.status(201).body(CreateReservationResponse.from(reservation));
     }
 
 }

@@ -1,28 +1,28 @@
 package com.nivara.reservation_service.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import com.nivara.reservation_service.client.InventoryServiceClient;
-import com.nivara.reservation_service.client.PaymentServiceClient;
+import com.nivara.reservation_service.client.InventoryClient;
+import com.nivara.reservation_service.client.PaymentClient;
 import com.nivara.reservation_service.model.dto.CreateHoldRequest;
 import com.nivara.reservation_service.model.dto.CreateHoldResponse;
 import com.nivara.reservation_service.model.dto.CreateOrderRequest;
 import com.nivara.reservation_service.model.dto.CreateOrderResponse;
-import com.nivara.reservation_service.model.dto.CreateReservationRequest;
-import com.nivara.reservation_service.model.dto.CreateReservationResponse;
+import com.nivara.reservation_service.model.dto.ReservationItemDTO;
 import com.nivara.reservation_service.model.entity.Reservation;
 import com.nivara.reservation_service.model.entity.ReservationItem;
 import com.nivara.reservation_service.model.enums.ReservationStatus;
 import com.nivara.reservation_service.repository.ReservationRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -32,32 +32,34 @@ public class ReservationServiceImpl implements ReservationService {
     private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
 
     private final ReservationRepository reservationRepository;
-    private final InventoryServiceClient inventoryServiceClient;
-    private final PaymentServiceClient paymentServiceClient;
+    private final InventoryClient inventoryClient;
+    private final PaymentClient paymentClient;
 
     @Override
-    @Transactional
-    public CreateReservationResponse createReservation(String requestId, CreateReservationRequest requestBody) {
+    public Reservation createReservation(
+        String requestId, 
+        Long hotelId, 
+        LocalDate checkInDate,
+        LocalDate checkOutDate,
+        List<ReservationItemDTO> reservationItems,
+        Long subtotal,
+        Long taxes,
+        Long total,
+        String currency)
+    {
 
-        // Step 1. Idempotency Check: If a reservation already exists with this requestId, return it
-        Optional<Reservation> existing = reservationRepository.findByRequestId(requestId);
-        if(existing.isPresent()) {
-            Reservation reservation = existing.get();
-            return CreateReservationResponse.from(reservation);
-        } 
-
-        // Step 2. Perist reservation row with status = PENDING
+        // Step 1. Perist reservation row with status = PENDING
         Reservation reservation = Reservation.builder()
             .requestId(requestId)
-            .hotelId(requestBody.hotelId())
-            .checkInDate(requestBody.checkInDate())
-            .checkOutDate(requestBody.checkOutDate())
+            .hotelId(hotelId)
+            .checkInDate(checkInDate)
+            .checkOutDate(checkOutDate)
             .status(ReservationStatus.PENDING)
             .createdAt(Instant.now())
             .updatedAt(Instant.now())
             .build();
 
-        List<ReservationItem> items = requestBody.reservationItems().stream()
+        List<ReservationItem> items = reservationItems.stream()
             .map(item -> ReservationItem.builder()
                 .roomTypeId(item.roomTypeId())
                 .qty(item.qty())
@@ -68,43 +70,57 @@ public class ReservationServiceImpl implements ReservationService {
             .collect(Collectors.toList());
 
         reservation.setReservationItems(items);
-        reservationRepository.save(reservation);
 
-        // Step 3. Call inventory-service to create hold
+        try {
+            reservationRepository.save(reservation); // Spring Data JPA executes this inside a transactional boundary,
+        } catch (DataIntegrityViolationException ex) {
+            // Idempotency Check: If a reservation already exists with this requestId, return it
+            Optional<Reservation> existing = reservationRepository.findByRequestId(requestId);
+            if(existing.isPresent()) {
+                return existing.get();
+            }
+        }
+        
+        // Step 2. Call Inventory Service to create Hold
         CreateHoldRequest holdReq = new CreateHoldRequest(
-            requestBody.hotelId(),
-            requestBody.checkInDate(),
-            requestBody.checkOutDate(),
-            requestBody.reservationItems()
+            reservation.getId(),
+            hotelId,
+            checkInDate,
+            checkOutDate,
+            reservationItems
         );
 
         CreateHoldResponse holdResp;
         try {
-            holdResp = inventoryServiceClient.createHold(requestId, holdReq);  
+            holdResp = inventoryClient.createHold(holdReq); // do 1–2 sync retries for createHold. If still failing, persist reservation as FAILED
         } catch (Exception e) {
             log.error("inventory.createHold failed for reservationId={}", reservation.getId(), e);
-            reservation.setStatus(ReservationStatus.CANCELLED);
+            reservation.setStatus(ReservationStatus.FAILED);
             reservationRepository.save(reservation);
             throw new RuntimeException("Failed to create inventory hold: ", e);
         }
 
-        // 4. Persist Hold info and set HOLD_CREATED
+        // Step 3. Persist Hold info in reservation and set status = PAYMENT_AWAITING
         reservation.setHoldId(holdResp.holdId());
         reservation.setExpiresAt(holdResp.expiresAt());
-        reservation.setStatus(ReservationStatus.HOLD_CREATED);
-        reservationRepository.save(reservation);
-        log.info("Hold created {} for reservation {}", holdResp.holdId(), reservation.getId());
+        reservation.setStatus(ReservationStatus.AWAITING_PAYMENT);
+        try {
+            reservationRepository.save(reservation);
+            log.info("Hold created {} for reservation {}", holdResp.holdId(), reservation.getId());
+        } catch (Exception ex) {
+            // schedule compensation / retry; log
+        }
 
-        // 5. Call payment-service to create Payment Order
+        // Step 4. Call payment service to create Payment Order
         CreateOrderRequest order = new CreateOrderRequest(
             holdReq.hotelId(),
             holdResp.lockedAmount(),
-            requestBody.currency()
+            currency
         );
 
         CreateOrderResponse orderResp;
         try {
-            orderResp = paymentServiceClient.createOrder(requestId, order);
+            orderResp = paymentClient.createOrder(requestId, order);
         } catch (Exception e) {
             // compensation & scheduling
             throw new RuntimeException("Failed to create payment order", e);
@@ -114,13 +130,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.AWAITING_PAYMENT);
         reservationRepository.save(reservation);
 
-        return new CreateReservationResponse(
-            reservation.getId(),
-            reservation.getStatus().toString(),
-            reservation.getHoldId(),
-            reservation.getPaymentOrderId(),
-            reservation.getExpiresAt()
-        );
+        return reservation;
 
     }
 
