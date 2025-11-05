@@ -134,4 +134,14 @@ public class ReservationServiceImpl implements ReservationService {
 
     }
 
+    private CreateHoldResponse createInventoryHold(CreateHoldRequest holdReq) {
+        return inventoryClient.createHold(holdReq);
+    }
+
+    private void createHoldFallback(Reservation reservation) {
+        log.error("inventory.createHold failed for reservationId={}", reservation.getId());
+        reservation.setStatus(ReservationStatus.FAILED);
+        reservationRepository.save(reservation);
+    }
+
 }
