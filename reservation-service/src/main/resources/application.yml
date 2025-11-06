@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: reservation-service
+
+server:
+  port: 8084
+
+resilience4j:
+  retry:
+    instances:
+      createInventoryHoldRetry:
+        max-attempts: 3             # 1 original + 2 retries
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backof-multiplier: 2
+        randomization-factor: 0.2
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+        ignore-exceptions:
+          - 
+
+

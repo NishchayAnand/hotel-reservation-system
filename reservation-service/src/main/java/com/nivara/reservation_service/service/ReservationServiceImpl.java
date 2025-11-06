@@ -23,6 +23,7 @@ import com.nivara.reservation_service.model.entity.ReservationItem;
 import com.nivara.reservation_service.model.enums.ReservationStatus;
 import com.nivara.reservation_service.repository.ReservationRepository;
 
+import feign.FeignException;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
 
@@ -91,7 +92,13 @@ public class ReservationServiceImpl implements ReservationService {
             reservationItems
         );
 
-        CreateHoldResponse holdResp = createInventoryHold(holdReq);
+        CreateHoldResponse holdResp;
+        try {
+            holdResp = createInventoryHold(holdReq);
+        } catch (Exception ex) {
+            log.error("Failed to create inventory hold for reservationId={}", reservation.getId(), ex);
+            throw new RuntimeException("Failed to create inventory hold", ex);
+        }
 
         // Step 3. Persist Hold info in reservation and set status = PAYMENT_AWAITING
         reservation.setHoldId(holdResp.holdId());
@@ -129,7 +136,15 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Retry(name = "createInventoryHoldRetry", fallbackMethod = "createInventoryHoldFallback")
     private CreateHoldResponse createInventoryHold(CreateHoldRequest holdReq) {
-        return inventoryClient.createHold(holdReq);
+        try {
+            return inventoryClient.createHold(holdReq);
+        } catch (FeignException ex) {
+            int status = ex.status();
+            if(status >= 500) {
+                System.out.println("implement ways to throw exception here");
+            }
+            return null;
+        }
     }
 
     @SuppressWarnings("unused")
