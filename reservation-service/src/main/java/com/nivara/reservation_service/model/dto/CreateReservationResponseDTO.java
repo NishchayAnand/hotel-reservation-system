@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class CreateReservationResponse {
+public class CreateReservationResponseDTO {
     private Long reservationId;
     private String status; // required for controller to return the proper HTTP status code.
     private Long holdId;
@@ -19,8 +19,8 @@ public class CreateReservationResponse {
     private String paymentOrderId;
     //private String checkOutUrl; // to decouple frontend from the payment service provider
 
-    public static CreateReservationResponse from(Reservation reservation) {
-        return new CreateReservationResponse(
+    public static CreateReservationResponseDTO from(Reservation reservation) {
+        return new CreateReservationResponseDTO(
             reservation.getId(),
             reservation.getStatus().toString(),
             reservation.getHoldId(),

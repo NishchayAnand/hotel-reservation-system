@@ -23,6 +23,7 @@ import com.nivara.reservation_service.model.entity.ReservationItem;
 import com.nivara.reservation_service.model.enums.ReservationStatus;
 import com.nivara.reservation_service.repository.ReservationRepository;
 
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -72,7 +73,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setReservationItems(items);
 
         try {
-            reservationRepository.save(reservation); // Spring Data JPA executes this inside a transactional boundary,
+            reservationRepository.save(reservation); // Spring Data JPA executes this inside a transactional boundary.
         } catch (DataIntegrityViolationException ex) {
             // Idempotency Check: If a reservation already exists with this requestId, return it
             Optional<Reservation> existing = reservationRepository.findByRequestId(requestId);
@@ -90,15 +91,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservationItems
         );
 
-        CreateHoldResponse holdResp;
-        try {
-            holdResp = inventoryClient.createHold(holdReq); // do 1–2 sync retries for createHold. If still failing, persist reservation as FAILED
-        } catch (Exception e) {
-            log.error("inventory.createHold failed for reservationId={}", reservation.getId(), e);
-            reservation.setStatus(ReservationStatus.FAILED);
-            reservationRepository.save(reservation);
-            throw new RuntimeException("Failed to create inventory hold: ", e);
-        }
+        CreateHoldResponse holdResp = createInventoryHold(holdReq);
 
         // Step 3. Persist Hold info in reservation and set status = PAYMENT_AWAITING
         reservation.setHoldId(holdResp.holdId());
@@ -134,14 +127,19 @@ public class ReservationServiceImpl implements ReservationService {
 
     }
 
+    @Retry(name = "createInventoryHoldRetry", fallbackMethod = "createInventoryHoldFallback")
     private CreateHoldResponse createInventoryHold(CreateHoldRequest holdReq) {
         return inventoryClient.createHold(holdReq);
     }
 
-    private void createHoldFallback(Reservation reservation) {
-        log.error("inventory.createHold failed for reservationId={}", reservation.getId());
-        reservation.setStatus(ReservationStatus.FAILED);
-        reservationRepository.save(reservation);
+    @SuppressWarnings("unused")
+    private CreateHoldResponse createInventoryHoldFallback(CreateHoldRequest req, Throwable ex) {
+        reservationRepository.findById(req.reservationId()).ifPresent(reservation -> {
+            reservation.setStatus(ReservationStatus.FAILED);
+            reservation.setUpdatedAt(Instant.now());
+        });
+        log.error("createHold failed for reservationId={}", req.reservationId(), ex);
+        throw new RuntimeException("Failed to create inventory hold: ", ex);
     }
 
 }

@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nivara.reservation_service.model.dto.CreateReservationRequest;
-import com.nivara.reservation_service.model.dto.CreateReservationResponse;
+import com.nivara.reservation_service.model.dto.CreateReservationRequestDTO;
+import com.nivara.reservation_service.model.dto.CreateReservationResponseDTO;
 import com.nivara.reservation_service.model.entity.Reservation;
 import com.nivara.reservation_service.service.ReservationService;
 
@@ -22,9 +22,9 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @PostMapping
-    public ResponseEntity<CreateReservationResponse> createReservation(
+    public ResponseEntity<CreateReservationResponseDTO> createReservation(
         @RequestHeader(value = "X-Request-ID") String requestId,
-        @RequestBody CreateReservationRequest requestBody
+        @RequestBody CreateReservationRequestDTO requestBody
     ) {
         Reservation reservation = reservationService.createReservation(
             requestId, 
@@ -37,7 +37,7 @@ public class ReservationController {
             requestBody.total(),
             requestBody.currency());
 
-        return ResponseEntity.status(201).body(CreateReservationResponse.from(reservation));
+        return ResponseEntity.status(201).body(CreateReservationResponseDTO.from(reservation));
     }
 
 }
