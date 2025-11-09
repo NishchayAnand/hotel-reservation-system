@@ -17,18 +17,18 @@ import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Data;
 
-@Entity
-@Table(name = "holds")
 @Data
 @Builder
+@Entity
+@Table(name = "holds")
 public class Hold {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "request_id", nullable = false, unique = true)
-    private String requestId;
+    @Column(name = "reservation_id", nullable = false, unique = true)
+    private String reservationId;
 
     @Column(name = "status")
     private HoldStatus status;

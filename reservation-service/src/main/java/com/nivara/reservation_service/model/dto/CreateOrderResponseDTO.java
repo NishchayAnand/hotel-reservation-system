@@ -1,5 +1,5 @@
 package com.nivara.reservation_service.model.dto;
 
-public record CreateOrderResponse (
+public record CreateOrderResponseDTO (
     String orderId
 ) {}

@@ -14,10 +14,11 @@ import org.springframework.stereotype.Service;
 import com.nivara.reservation_service.client.InventoryClient;
 import com.nivara.reservation_service.client.PaymentClient;
 import com.nivara.reservation_service.exception.InventoryUnavailableException;
-import com.nivara.reservation_service.model.dto.CreateHoldRequest;
-import com.nivara.reservation_service.model.dto.CreateHoldResponse;
-import com.nivara.reservation_service.model.dto.CreateOrderRequest;
-import com.nivara.reservation_service.model.dto.CreateOrderResponse;
+import com.nivara.reservation_service.exception.RemoteServerException;
+import com.nivara.reservation_service.model.dto.CreateHoldRequestDTO;
+import com.nivara.reservation_service.model.dto.CreateHoldResponseDTO;
+import com.nivara.reservation_service.model.dto.CreateOrderRequestDTO;
+import com.nivara.reservation_service.model.dto.CreateOrderResponseDTO;
 import com.nivara.reservation_service.model.dto.ReservationItemDTO;
 import com.nivara.reservation_service.model.entity.Reservation;
 import com.nivara.reservation_service.model.entity.ReservationItem;
@@ -84,7 +85,7 @@ public class ReservationServiceImpl implements ReservationService {
         }
         
         // Step 2. Call Inventory Service to create Hold
-        CreateHoldRequest holdReq = new CreateHoldRequest(
+        CreateHoldRequestDTO holdReq = new CreateHoldRequestDTO(
             reservation.getId(),
             hotelId,
             checkInDate,
@@ -92,14 +93,28 @@ public class ReservationServiceImpl implements ReservationService {
             reservationItems
         );
 
-        CreateHoldResponse holdResp;
+        CreateHoldResponseDTO holdResp;
         try {
+            // this method will be retried on RemoteServerException
             holdResp = createInventoryHold(holdReq);
-        } catch (InventoryUnavailableException ex) {
+
+        } catch (InventoryUnavailableException iue) {
+            // non-retryable: mark reservation FAILED and propagate (map to 4xx at controller)
             reservation.setStatus(ReservationStatus.FAILED);
             reservation.setUpdatedAt(Instant.now());
-            log.error("createHold failed for reservationId={}", reservation.getId(), ex);
-            throw new RuntimeException("Selected Inventory no longer available. Failed to create inventory hold: ", ex);
+            reservationRepository.save(reservation);
+            log.info("Inventory unavailable for reservation {}: {}", reservation.getId(), iue.getMessage());
+            throw iue;
+
+        } catch (RemoteServerException rse) {
+            // retryable: Resilience4j will have retried; when it bubbles here it means retries were exhausted
+            // mark as transient failure
+            reservation.setStatus(ReservationStatus.FAILED);
+            reservation.setUpdatedAt(Instant.now());
+            reservationRepository.save(reservation);
+            log.error("Inventory service transient failure for reservation {}, retries exhausted: {}", reservation.getId(), rse.getMessage());
+            throw rse;
+
         }
         
         // Step 3. Persist Hold info in reservation and set status = PAYMENT_AWAITING
@@ -114,13 +129,13 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         // Step 4. Call payment service to create Payment Order
-        CreateOrderRequest order = new CreateOrderRequest(
+        CreateOrderRequestDTO order = new CreateOrderRequestDTO(
             holdReq.hotelId(),
             holdResp.lockedAmount(),
             currency
         );
 
-        CreateOrderResponse orderResp;
+        CreateOrderResponseDTO orderResp;
         try {
             orderResp = paymentClient.createOrder(requestId, order);
         } catch (Exception e) {
@@ -137,15 +152,16 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Retry(name = "createInventoryHoldRetry", fallbackMethod = "createInventoryHoldFallback")
-    private CreateHoldResponse createInventoryHold(CreateHoldRequest holdReq) {
+    private CreateHoldResponseDTO createInventoryHold(CreateHoldRequestDTO holdReq) {
         return inventoryClient.createHold(holdReq);
     }
 
     @SuppressWarnings("unused")
-    private CreateHoldResponse createInventoryHoldFallback(CreateHoldRequest req, Throwable ex) {
+    private CreateHoldResponseDTO createInventoryHoldFallback(CreateHoldRequestDTO req, Throwable ex) {
         reservationRepository.findById(req.reservationId()).ifPresent(reservation -> {
             reservation.setStatus(ReservationStatus.FAILED);
             reservation.setUpdatedAt(Instant.now());
+            reservationRepository.save(reservation);
         });
         log.error("createHold failed for reservationId={}", req.reservationId(), ex);
         throw new RuntimeException("Failed to create inventory hold. Inventory service error: ", ex);

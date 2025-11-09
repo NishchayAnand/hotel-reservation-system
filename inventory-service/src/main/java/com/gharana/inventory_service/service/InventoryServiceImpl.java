@@ -16,7 +16,7 @@ import com.gharana.inventory_service.model.entity.InventoryRecord;
 import com.gharana.inventory_service.model.enums.HoldStatus;
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
 import com.gharana.inventory_service.model.dto.HoldDTO;
-import com.gharana.inventory_service.model.dto.SelectedInventoryDTO;
+import com.gharana.inventory_service.model.dto.ReservationItemDTO;
 import com.gharana.inventory_service.model.entity.Hold;
 import com.gharana.inventory_service.model.entity.HoldItem;
 import com.gharana.inventory_service.repository.HoldRepository;
@@ -47,14 +47,16 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     @Transactional
-    public HoldDTO createInventoryHold(String requestId, 
+    public Hold createHold(
+        Long reservationId, 
         Long hotelId, 
         LocalDate checkInDate, 
         LocalDate checkOutDate,
-        List<SelectedInventoryDTO> selectedInventory) {
+        List<ReservationItemDTO> reservationItems) 
+    {
 
-        // Step 1: Perform idempotent check to verify if an ACTIVE hold exists for this requestId
-        Optional<Hold> existing = holdRepository.findByRequestId(requestId);
+        // Step 1: Idempotent Check:verify if an ACTIVE hold exists for this requestId
+        Optional<Hold> existing = holdRepository.findByReservationId(reservationId);
         if(existing.isPresent()) {
             Hold hold = existing.get();
             if(hold.getStatus().toString().equalsIgnoreCase("ACTIVE")) {
@@ -71,7 +73,7 @@ public class InventoryServiceImpl implements InventoryService {
 
         // Step 2: Pre-check & lock inventory rows for every selected room type
         List<SelectedInventoryRecords> selectedInventoryRecords = new ArrayList<>();
-        for(SelectedInventoryDTO selection: selectedInventory) {
+        for(ReservationItemDTO selection: reservationItems) {
             
             List<InventoryRecord> records = inventoryRepository.findByHotelIdAndRoomTypeIdAndReservationDateBetween(
                 hotelId, 
@@ -110,7 +112,7 @@ public class InventoryServiceImpl implements InventoryService {
             .build();
         
         List<HoldItem> heldItems = new ArrayList<>();
-        for(SelectedInventoryDTO selection: selectedInventory) {
+        for(ReservationItemDTO selection: selectedInventory) {
             HoldItem item = HoldItem.builder()
                 .hold(hold)
                 .hotelId(hotelId)
@@ -158,9 +160,9 @@ public class InventoryServiceImpl implements InventoryService {
 
     // private holder for inventory records per selection
     private static class SelectedInventoryRecords {
-        SelectedInventoryDTO selection;
+        ReservationItemDTO selection;
         List<InventoryRecord> records;
-        SelectedInventoryRecords(SelectedInventoryDTO selection, List<InventoryRecord> records) { this.selection = selection; this.records = records; }
+        SelectedInventoryRecords(ReservationItemDTO selection, List<InventoryRecord> records) { this.selection = selection; this.records = records; }
     }
 
 }
