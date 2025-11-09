@@ -4,16 +4,22 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.gharana.inventory_service.model.entity.InventoryRecord;
 import com.gharana.inventory_service.model.enums.HoldStatus;
+import com.gharana.inventory_service.exception.HoldUnavailableException;
+import com.gharana.inventory_service.exception.InventoryUnavailableException;
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
 import com.gharana.inventory_service.model.dto.HoldDTO;
 import com.gharana.inventory_service.model.dto.ReservationItemDTO;
@@ -32,64 +38,72 @@ public class InventoryServiceImpl implements InventoryService {
     private InventoryRepository inventoryRepository;
     private HoldRepository holdRepository;
 
+    private static final Logger log = LoggerFactory.getLogger(InventoryServiceImpl.class);
+
     @Override
     public List<AvailableRoomTypeDTO> getAvailableRoomTypes(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) { 
         // Fetch room types for the given hotels that have availability across the entire [checkInDate, checkOutDate) range.  
         long nights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
         List<Object[]> rows = inventoryRepository.findAvailableRoomTypesForHotels(hotelIds, checkInDate, checkOutDate, nights); 
         return rows.stream()
-            .map(row -> new AvailableRoomTypeDTO( // row[0] => hotelId, row[1] => roomTypeId, row[2] => availableRoomCount
-                (Long) row[0], 
-                (Long) row[1],
-                (int) row[2])) 
+            .map(row -> new AvailableRoomTypeDTO( (Long) row[0], (Long) row[1], (int) row[2])) // row[0] => hotelId, row[1] => roomTypeId, row[2] => availableRoomCount
             .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public Hold createHold(
-        Long reservationId, 
-        Long hotelId, 
-        LocalDate checkInDate, 
-        LocalDate checkOutDate,
-        List<ReservationItemDTO> reservationItems) 
-    {
+            Long reservationId, 
+            Long hotelId, 
+            LocalDate checkInDate, 
+            LocalDate checkOutDate,
+            List<ReservationItemDTO> reservationItems) {
 
-        // Step 1: Idempotent Check:verify if an ACTIVE hold exists for this requestId
+        // Step 1: Idempotent Check: If hold already exists for this reservation, return or error depending on status
+        
         Optional<Hold> existing = holdRepository.findByReservationId(reservationId);
         if(existing.isPresent()) {
             Hold hold = existing.get();
-            if(hold.getStatus().toString().equalsIgnoreCase("ACTIVE")) {
-                return HoldDTO.builder()
-                    .holdId(hold.getId())
-                    .success(true)
-                    .created(false)
-                    .expiresAt(hold.getExpiresAt())
-                    .message("existing active hold")
-                    .build();
+            String status = hold.getStatus().toString();
+            if ("HELD".equals(status) || "CONFIRMED".equals(status)) {
+                // idempotent success: return existing hold
+                log.info("Returning existing hold for reservationId={} status={}", reservationId, status);
+                return hold;
+            } else {
+                // RELEASED / EXPIRED -> cannot reuse; ask caller to create a new reservation request.
+                log.warn("Attempt to recreate hold for reservationId={} which {}. Ignoring request.", reservationId, status);
+                throw new HoldUnavailableException("Existing hold cannot be reused");
             }
-            // if exists but not ACTIVE, can attempt new hold, if required.
         }
 
-        // Step 2: Pre-check & lock inventory rows for every selected room type
-        List<SelectedInventoryRecords> selectedInventoryRecords = new ArrayList<>();
-        for(ReservationItemDTO selection: reservationItems) {
-            
-            List<InventoryRecord> records = inventoryRepository.findByHotelIdAndRoomTypeIdAndReservationDateBetween(
-                hotelId, 
-                selection.getRoomTypeId(), 
-                checkInDate, 
-                checkInDate.minusDays(1));
+        // Step 2: For each reservation item (roomType), lock inventory for the date range and validate inventory 
+        
+        // Keep the locked rows per roomType so we can decrement and pesist later
+        Map<Long, List<InventoryRecord>> lockedInventoryRecordsByRoomType = new HashMap<>();
 
-            // do availability check to ensure the selected quantity is still available
-            for(InventoryRecord record: records) {
-                int availableRooms = record.getTotalCount() - record.getReservedCount();
-                if(availableRooms < selection.getCount()) {
-                    return HoldDTO.builder()
-                        .success(false)
-                        .message("insufficient inventory for roomType:" + selection.getRoomTypeId())
-                        .build();
+        for(ReservationItemDTO item: reservationItems) {
+            Long roomTypeId = item.roomTypeId();
+            int requestedQuantity = item.quantity();
+
+            // This method must be annotated with @Lock(PESSIMISTIC_WRITE) in repository
+            List<InventoryRecord> inventoryRecords = inventoryRepository.findForUpdateBetweenDates(hotelId, roomTypeId, checkInDate, checkInDate.minusDays(1));
+
+            // verify per-day availability
+            for(InventoryRecord inventoryRecord: inventoryRecords) {
+                int availableQuantity = inventoryRecord.getTotalCount() - inventoryRecord.getReservedCount();
+                if(availableQuantity < requestedQuantity) {
+                    log.debug("Insufficient inventory for hotel={}, roomType={}, date={}, available={}, requested={}",
+                        hotelId, roomTypeId, inventoryRecord.getReservationDate(), availableQuantity, requestedQuantity);
+                    throw new InventoryUnavailableException("insufficient inventory for date " + inventoryRecord.getReservationDate());
                 }
+            }
+
+            // ------- (continue from here) -------
+
+            // All good for this roomType; decrement in-memory now
+            for(InventoryRecord record: inventoryRecords.records) {
+                record.setReservedCount(record.getReservedCount() + inventoryRecords.selection.getCount());
+                inventoryRepository.save(record);
             }
 
             selectedInventoryRecords.add(new SelectedInventoryRecords(selection, records));
