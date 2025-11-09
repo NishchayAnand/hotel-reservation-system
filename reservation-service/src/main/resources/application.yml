@@ -15,9 +15,10 @@ resilience4j:
         exponential-backof-multiplier: 2
         randomization-factor: 0.2
         retry-exceptions:
-          - java.io.IOException
-          - java.util.concurrent.TimeoutException
+          - RemoteServerException
+          - RetryableException      # optional: treat Feign network errors as retryable
+          - IOException             # optional: common IO/network retryable types
         ignore-exceptions:
-          - 
+          - InventoryUnavailableException
 
 

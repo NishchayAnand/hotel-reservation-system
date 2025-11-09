@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.nivara.reservation_service.client.InventoryClient;
 import com.nivara.reservation_service.client.PaymentClient;
+import com.nivara.reservation_service.exception.InventoryUnavailableException;
 import com.nivara.reservation_service.model.dto.CreateHoldRequest;
 import com.nivara.reservation_service.model.dto.CreateHoldResponse;
 import com.nivara.reservation_service.model.dto.CreateOrderRequest;
@@ -23,7 +24,6 @@ import com.nivara.reservation_service.model.entity.ReservationItem;
 import com.nivara.reservation_service.model.enums.ReservationStatus;
 import com.nivara.reservation_service.repository.ReservationRepository;
 
-import feign.FeignException;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
 
@@ -95,11 +95,13 @@ public class ReservationServiceImpl implements ReservationService {
         CreateHoldResponse holdResp;
         try {
             holdResp = createInventoryHold(holdReq);
-        } catch (Exception ex) {
-            log.error("Failed to create inventory hold for reservationId={}", reservation.getId(), ex);
-            throw new RuntimeException("Failed to create inventory hold", ex);
+        } catch (InventoryUnavailableException ex) {
+            reservation.setStatus(ReservationStatus.FAILED);
+            reservation.setUpdatedAt(Instant.now());
+            log.error("createHold failed for reservationId={}", reservation.getId(), ex);
+            throw new RuntimeException("Selected Inventory no longer available. Failed to create inventory hold: ", ex);
         }
-
+        
         // Step 3. Persist Hold info in reservation and set status = PAYMENT_AWAITING
         reservation.setHoldId(holdResp.holdId());
         reservation.setExpiresAt(holdResp.expiresAt());
@@ -136,15 +138,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Retry(name = "createInventoryHoldRetry", fallbackMethod = "createInventoryHoldFallback")
     private CreateHoldResponse createInventoryHold(CreateHoldRequest holdReq) {
-        try {
-            return inventoryClient.createHold(holdReq);
-        } catch (FeignException ex) {
-            int status = ex.status();
-            if(status >= 500) {
-                System.out.println("implement ways to throw exception here");
-            }
-            return null;
-        }
+        return inventoryClient.createHold(holdReq);
     }
 
     @SuppressWarnings("unused")
@@ -154,7 +148,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setUpdatedAt(Instant.now());
         });
         log.error("createHold failed for reservationId={}", req.reservationId(), ex);
-        throw new RuntimeException("Failed to create inventory hold: ", ex);
+        throw new RuntimeException("Failed to create inventory hold. Inventory service error: ", ex);
     }
 
 }

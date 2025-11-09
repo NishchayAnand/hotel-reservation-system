@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import com.nivara.reservation_service.exception.InventoryUnavailableException;
+import com.nivara.reservation_service.exception.RemoteServerException;
 
 import feign.Response;
 import feign.Util;
@@ -24,7 +25,8 @@ public class InventoryErrorDecoder implements ErrorDecoder {
         
         int status = response.status();
         return switch(status) {
-            case 409 -> new InventoryUnavailableException("Inventory Unavailable: " + body);
+            case 409 -> new InventoryUnavailableException("Inventory Unavailable: " + body);  
+            case 500, 502, 503, 504 -> new RemoteServerException("Inventory Service Error: " + body);  
             default  -> defaultDecoder.decode(methodKey, response); 
         };
     }
