@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,11 @@ public class InventoryServiceImpl implements InventoryService {
             .collect(Collectors.toList());
     }
 
+    /*
+     * Create a hold for the given reservation (idempotent by reservationId).
+     * Throws InventoryUnavailableException for business limitation (no capacity).
+     * Throws HoldUnavailableException if a previous hold existed but is RELEASED/EXPIRED.
+    */
     @Override
     @Transactional
     public Hold createHold(
@@ -60,7 +66,6 @@ public class InventoryServiceImpl implements InventoryService {
             List<ReservationItemDTO> reservationItems) {
 
         // Step 1: Idempotent Check: If hold already exists for this reservation, return or error depending on status
-        
         Optional<Hold> existing = holdRepository.findByReservationId(reservationId);
         if(existing.isPresent()) {
             Hold hold = existing.get();
@@ -77,7 +82,6 @@ public class InventoryServiceImpl implements InventoryService {
         }
 
         // Step 2: For each reservation item (roomType), lock inventory for the date range and validate inventory 
-        
         // Keep the locked rows per roomType so we can decrement and pesist later
         Map<Long, List<InventoryRecord>> lockedInventoryRecordsByRoomType = new HashMap<>();
 
@@ -85,10 +89,10 @@ public class InventoryServiceImpl implements InventoryService {
             Long roomTypeId = item.roomTypeId();
             int requestedQuantity = item.quantity();
 
-            // This method must be annotated with @Lock(PESSIMISTIC_WRITE) in repository
+            // This method must be annotated with @Lock(PESSIMISTIC_WRITE) to lock the selected roomType inventory for the [checkInDate, checkOutDate).
             List<InventoryRecord> inventoryRecords = inventoryRepository.findForUpdateBetweenDates(hotelId, roomTypeId, checkInDate, checkInDate.minusDays(1));
 
-            // verify per-day availability
+            // Verify per-day availability.
             for(InventoryRecord inventoryRecord: inventoryRecords) {
                 int availableQuantity = inventoryRecord.getTotalCount() - inventoryRecord.getReservedCount();
                 if(availableQuantity < requestedQuantity) {
@@ -98,19 +102,21 @@ public class InventoryServiceImpl implements InventoryService {
                 }
             }
 
-            // ------- (continue from here) -------
-
-            // All good for this roomType; decrement in-memory now
-            for(InventoryRecord record: inventoryRecords.records) {
-                record.setReservedCount(record.getReservedCount() + inventoryRecords.selection.getCount());
-                inventoryRepository.save(record);
+            // All good for this roomType, decrement in-memory now
+            for(InventoryRecord inventoryRecord: inventoryRecords) {
+                inventoryRecord.setReservedCount(inventoryRecord.getReservedCount() + item.quantity());
             }
 
-            selectedInventoryRecords.add(new SelectedInventoryRecords(selection, records));
+            lockedInventoryRecordsByRoomType.put(roomTypeId, inventoryRecords);
         
         }
 
-        // Step 3: All checks passed -> increment reserved_count for each locked record
+        // Step 3: Persist updated inventory rows (still inside the same transaction)
+        List<InventoryRecord> allInventoryRecordsToSave = lockedInventoryRecordsByRoomType.values().stream()
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+        inventoryRepository.saveAll(allInventoryRecordsToSave);
+
         for(SelectedInventoryRecords inventoryRecords: selectedInventoryRecords) {
             for(InventoryRecord record: inventoryRecords.records) {
                 record.setReservedCount(record.getReservedCount() + inventoryRecords.selection.getCount());
