@@ -1,7 +1,7 @@
 package com.gharana.inventory_service.service;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,6 @@ import com.gharana.inventory_service.model.enums.HoldStatus;
 import com.gharana.inventory_service.exception.HoldUnavailableException;
 import com.gharana.inventory_service.exception.InventoryUnavailableException;
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
-import com.gharana.inventory_service.model.dto.HoldDTO;
 import com.gharana.inventory_service.model.dto.ReservationItemDTO;
 import com.gharana.inventory_service.model.entity.Hold;
 import com.gharana.inventory_service.model.entity.HoldItem;
@@ -30,16 +30,25 @@ import com.gharana.inventory_service.repository.HoldRepository;
 import com.gharana.inventory_service.repository.InventoryRepository;
 
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
 public class InventoryServiceImpl implements InventoryService {
+
+    private static final Logger log = LoggerFactory.getLogger(InventoryServiceImpl.class);
 
     private InventoryRepository inventoryRepository;
     private HoldRepository holdRepository;
 
-    private static final Logger log = LoggerFactory.getLogger(InventoryServiceImpl.class);
+    private final long defaultHoldTtlSeconds;
+
+    // Constructor
+    public InventoryServiceImpl(InventoryRepository inventoryRepository, 
+                                HoldRepository holdRepository, 
+                                @Value("${inventory.hold.ttl-seconds:900}") long defaultHoldTtlSeconds) {
+        this.inventoryRepository = inventoryRepository;
+        this.holdRepository = holdRepository;
+        this.defaultHoldTtlSeconds = defaultHoldTtlSeconds;
+    }
 
     @Override
     public List<AvailableRoomTypeDTO> getAvailableRoomTypes(Set<Long> hotelIds, LocalDate checkInDate, LocalDate checkOutDate) { 
@@ -68,12 +77,12 @@ public class InventoryServiceImpl implements InventoryService {
         // Step 1: Idempotent Check: If hold already exists for this reservation, return or error depending on status
         Optional<Hold> existing = holdRepository.findByReservationId(reservationId);
         if(existing.isPresent()) {
-            Hold hold = existing.get();
-            String status = hold.getStatus().toString();
+            Hold existingHold = existing.get();
+            String status = existingHold.getStatus().toString();
             if ("HELD".equals(status) || "CONFIRMED".equals(status)) {
                 // idempotent success: return existing hold
                 log.info("Returning existing hold for reservationId={} status={}", reservationId, status);
-                return hold;
+                return existingHold;
             } else {
                 // RELEASED / EXPIRED -> cannot reuse; ask caller to create a new reservation request.
                 log.warn("Attempt to recreate hold for reservationId={} which {}. Ignoring request.", reservationId, status);
@@ -112,77 +121,60 @@ public class InventoryServiceImpl implements InventoryService {
         }
 
         // Step 3: Persist updated inventory rows (still inside the same transaction)
-        List<InventoryRecord> allInventoryRecordsToSave = lockedInventoryRecordsByRoomType.values().stream()
+        List<InventoryRecord> allInventoryRecordsToSave = lockedInventoryRecordsByRoomType.values().stream() // returns Stream<Collecton<InventoryRecord>>
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         inventoryRepository.saveAll(allInventoryRecordsToSave);
 
-        for(SelectedInventoryRecords inventoryRecords: selectedInventoryRecords) {
-            for(InventoryRecord record: inventoryRecords.records) {
-                record.setReservedCount(record.getReservedCount() + inventoryRecords.selection.getCount());
-                inventoryRepository.save(record);
-            }
-        }
+        // Step 4: Create Hold and HoldItems, perist hold (in same transaction)
+        Instant expiresAt = Instant.now().plusSeconds(defaultHoldTtlSeconds);
 
-        // Step 4: Create Hold object with list of HoldItems
         Hold hold = Hold.builder()
-            .requestId(requestId)
-            .status(HoldStatus.ACTIVE)
-            .expiresAt(LocalDateTime.now().plusMinutes(15))
+            .reservationId(reservationId)
+            .hotelId(hotelId)
+            .checkInDate(checkInDate)
+            .checkOutDate(checkOutDate)
+            .status(HoldStatus.HELD)
+            .expiresAt(expiresAt)
             .build();
         
         List<HoldItem> heldItems = new ArrayList<>();
-        for(ReservationItemDTO selection: selectedInventory) {
-            HoldItem item = HoldItem.builder()
+        for(ReservationItemDTO reservationItem: reservationItems) {
+            HoldItem heldItem = HoldItem.builder()
                 .hold(hold)
-                .hotelId(hotelId)
-                .checkInDate(checkInDate)
-                .checkOutDate(checkOutDate)
-                .roomTypeId(selection.getRoomTypeId())
-                .heldCount(selection.getCount())
+                .roomTypeId(reservationItem.roomTypeId())
+                .quantity(reservationItem.quantity())
                 .build();
-            heldItems.add(item);
+            heldItems.add(heldItem);
         }
-
         hold.setHeldItems(heldItems);
 
-        // Step 5: Persist the Hold
+        // Step 5: Persist the Hold and HoldItems - still inside the transaction
+        Hold saved = null;
         try {
-            holdRepository.save(hold);
+            saved = holdRepository.save(hold);
         } catch (DataIntegrityViolationException ex) {
-            // Two concurrent requests with the same client holdId (idempotency key) can 
-            // both pass the availability checks and inventory increments; 
-            // the DB unique constraint on hold_id prevents the second insert and 
-            // throws a DataIntegrityViolationException.
-            Optional<Hold> maybe = holdRepository.findByRequestId(requestId);
-            if(maybe.isPresent() && "ACTIVE".equalsIgnoreCase(maybe.get().getStatus().toString())) {
-                return HoldDTO.builder()
-                    .success(true)
-                    .created(false)
-                    .holdId(maybe.get().getId())
-                    .expiresAt(maybe.get().getExpiresAt())
-                    .message("existing active hold (concurrent)")
-                    .build();
+            // Two concurrent requests with the same reservationId (idempotency key) can both pass the availability checks and inventory increments.
+            // The DB unique constraint on hold_id prevents the second insert and throws a DataIntegrityViolationException.
+            Optional<Hold> maybe = holdRepository.findByReservationId(reservationId);
+            if(maybe.isPresent()) {
+                Hold existingHold = maybe.get();
+                String status = existingHold.getStatus().toString();
+                if ("HELD".equals(status)) {
+                    // idempotent success: return existing hold
+                    log.info("Returning existing hold for reservationId={} status={}", reservationId, status);
+                    return existingHold;
+                }
+                // If an existing hold is present but not HELD, it cannot be reused.
+                throw new HoldUnavailableException("Existing hold cannot be reused");
             }
-            // unexpected -> rethrow
+            // If we cannot find an existing hold after the integrity violation, rethrow to surface the unexpected error.
             throw ex;
         }
 
-        return HoldDTO.builder()
-            .success(true)
-            .created(true)
-            .holdId(hold.getId())
-            .expiresAt(hold.getExpiresAt())
-            .message("hold created")
-            .build();
+        log.info("Created hold {} for reservation {} (expiresAt={})", saved.getId(), reservationId, expiresAt);
+        return saved;
 
-    }
-
-    // private holder for inventory records per selection
-    private static class SelectedInventoryRecords {
-        ReservationItemDTO selection;
-        List<InventoryRecord> records;
-        SelectedInventoryRecords(ReservationItemDTO selection, List<InventoryRecord> records) { this.selection = selection; this.records = records; }
     }
 
 }

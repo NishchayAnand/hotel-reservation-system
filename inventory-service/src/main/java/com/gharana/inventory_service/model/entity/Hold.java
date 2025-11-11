@@ -1,6 +1,7 @@
 package com.gharana.inventory_service.model.entity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.gharana.inventory_service.model.enums.HoldStatus;
@@ -17,9 +18,9 @@ import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Data;
 
+@Entity
 @Data
 @Builder
-@Entity
 @Table(name = "holds")
 public class Hold {
 
@@ -28,15 +29,24 @@ public class Hold {
     private Long id;
 
     @Column(name = "reservation_id", nullable = false, unique = true)
-    private String reservationId;
+    private Long reservationId;
+
+    @Column(name = "hotel_id", nullable = false)
+    private Long hotelId;
+
+    @Column(name = "check_in_date", nullable = false)
+    private LocalDate checkInDate;
+
+    @Column(name = "check_out_date", nullable = false)
+    private LocalDate checkOutDate;
+
+    @OneToMany(mappedBy = "hold", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<HoldItem> heldItems;
 
     @Column(name = "status")
     private HoldStatus status;
 
     @Column(name = "expires_at")
-    private LocalDateTime expiresAt;
-
-    @OneToMany(mappedBy = "hold", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<HoldItem> heldItems;
+    private Instant expiresAt;
     
 }
