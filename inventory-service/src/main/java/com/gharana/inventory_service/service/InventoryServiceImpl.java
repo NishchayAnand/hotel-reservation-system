@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.gharana.inventory_service.model.entity.InventoryRecord;
@@ -150,28 +149,10 @@ public class InventoryServiceImpl implements InventoryService {
         hold.setHeldItems(heldItems);
 
         // Step 5: Persist the Hold and HoldItems - still inside the transaction
-        Hold saved = null;
-        try {
-            saved = holdRepository.save(hold);
-        } catch (DataIntegrityViolationException ex) {
-            // Two concurrent requests with the same reservationId (idempotency key) can both pass the availability checks and inventory increments.
-            // The DB unique constraint on hold_id prevents the second insert and throws a DataIntegrityViolationException.
-            Optional<Hold> maybe = holdRepository.findByReservationId(reservationId);
-            if(maybe.isPresent()) {
-                Hold existingHold = maybe.get();
-                String status = existingHold.getStatus().toString();
-                if ("HELD".equals(status)) {
-                    // idempotent success: return existing hold
-                    log.info("Returning existing hold for reservationId={} status={}", reservationId, status);
-                    return existingHold;
-                }
-                // If an existing hold is present but not HELD, it cannot be reused.
-                throw new HoldUnavailableException("Existing hold cannot be reused");
-            }
-            // If we cannot find an existing hold after the integrity violation, rethrow to surface the unexpected error.
-            throw ex;
-        }
-
+        // Two concurrent requests with the same reservationId (idempotency key) can both pass the availability checks and inventory increments.
+        // The DB unique constraint on reservationId prevents the second insert and throws a DataIntegrityViolationException, leading to transaction roll back.
+        Hold saved = holdRepository.save(hold);
+        
         log.info("Created hold {} for reservation {} (expiresAt={})", saved.getId(), reservationId, expiresAt);
         return saved;
 
