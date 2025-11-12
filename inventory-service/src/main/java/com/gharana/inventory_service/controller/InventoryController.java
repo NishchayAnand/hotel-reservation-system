@@ -2,6 +2,7 @@ package com.gharana.inventory_service.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,36 +31,18 @@ public class InventoryController {
     }
 
     @PostMapping("/create-hold")
-    public ResponseEntity<CreateHoldResponseDTO> createHold(@RequestBody CreateHoldRequestDTO requestBody) {
-        
-        try {
+    public ResponseEntity<CreateHoldResponseDTO> createHold(@RequestBody CreateHoldRequestDTO requestBody) {  
+        Hold hold = inventoryService.createHold(
+            requestBody.reservationId(), 
+            requestBody.hotelId(), 
+            requestBody.checkInDate(), 
+            requestBody.checkOutDate(),
+            requestBody.reservationItems()
+        );
 
-            Hold hold = inventoryService.createHold(
-                requestBody.reservationId(), 
-                requestBody.hotelId(), 
-                requestBody.checkInDate(), 
-                requestBody.checkOutDate(),
-                requestBody.reservationItems()
-            );
-
-            return null;
-            /* 
-            if(!resp.isSuccess()) {
-                // business failure -> insufficient inventory -> 409 Conflict
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(resp);
-            }
-
-            if(resp.isCreated()) {
-                return ResponseEntity.status(HttpStatus.CREATED).body(resp);
-            }
-
-            return ResponseEntity.ok().body(resp);   
-            */
-
-        } catch (Exception ex) {
-            return ResponseEntity.status(502).body(null);
-        }
-    
+        // map entity -> DTO using factory and return created
+        CreateHoldResponseDTO responseBody = CreateHoldResponseDTO.from(hold);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
     }
 
 }
