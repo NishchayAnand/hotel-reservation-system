@@ -8,31 +8,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.gharana.inventory_service.exception.HoldUnavailableException;
+import com.gharana.inventory_service.exception.HoldInvalidStateException;
 import com.gharana.inventory_service.exception.InventoryUnavailableException;
 import com.gharana.inventory_service.model.dto.ErrorResponseDTO;
 
 @RestControllerAdvice
 public class InventoryControllerAdvice {
 
+    // HTTP 422 - UNPROCESSABLE_ENTITY
     @ExceptionHandler(InventoryUnavailableException.class)
-    public ResponseEntity<Object> handleInventoryUnavailable(InventoryUnavailableException ex) {
-        return build(HttpStatus.CONFLICT, "INVENTORY_UNAVAILABLE", ex.getMessage(), null);
+    public ResponseEntity<Object> handleUnavailableInventory(InventoryUnavailableException ex) {
+        return build(HttpStatus.UNPROCESSABLE_ENTITY, "INVENTORY_UNAVAILABLE", ex.getMessage(), null);
     }
 
-    @ExceptionHandler(HoldUnavailableException.class)
-    public ResponseEntity<Object> handleHoldUnavailable(HoldUnavailableException ex) {
-        return build(HttpStatus.CONFLICT, "HOLD_UNAVAILABLE", ex.getMessage(), null);
+    // HTTP 409 - CONFLICT
+    @ExceptionHandler(HoldInvalidStateException.class)
+    public ResponseEntity<Object> handleInvalidHold(HoldInvalidStateException ex) {
+        return build(HttpStatus.CONFLICT, "HOLD_INVALID_STATE", ex.getMessage(), null);
     }
 
+    // HTTP 409 - CONFLICT
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleDataIntegrity(DataIntegrityViolationException ex) {
-        // Map duplicate-key to 409, other constraint violations to 500
-        String msg = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
-        if (msg != null && msg.toLowerCase().contains("unique")) {
-            return build(HttpStatus.CONFLICT, "DATA_INTEGRITY_VIOLATION", msg, null);
-        }
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "DATA_INTEGRITY_ERROR", msg, null);
+        return build(HttpStatus.CONFLICT, "HOLD_ALREADY_EXISTS", ex.getMessage(), null);
     }
 
     private ResponseEntity<Object> build(HttpStatus status, String code, String message, Object details) {

@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 
 import com.gharana.inventory_service.model.entity.InventoryRecord;
 import com.gharana.inventory_service.model.enums.HoldStatus;
-import com.gharana.inventory_service.exception.HoldUnavailableException;
+import com.gharana.inventory_service.exception.HoldInvalidStateException;
 import com.gharana.inventory_service.exception.InventoryUnavailableException;
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
 import com.gharana.inventory_service.model.dto.ReservationItemDTO;
@@ -85,7 +85,7 @@ public class InventoryServiceImpl implements InventoryService {
             } else {
                 // RELEASED / EXPIRED -> cannot reuse; ask caller to create a new reservation request.
                 log.warn("Attempt to recreate hold for reservationId={} which {}. Ignoring request.", reservationId, status);
-                throw new HoldUnavailableException("Existing hold cannot be reused");
+                throw new HoldInvalidStateException("Hold already exists and cannot be reused.");
             }
         }
 
@@ -106,7 +106,7 @@ public class InventoryServiceImpl implements InventoryService {
                 if(availableQuantity < requestedQuantity) {
                     log.debug("Insufficient inventory for hotel={}, roomType={}, date={}, available={}, requested={}",
                         hotelId, roomTypeId, inventoryRecord.getReservationDate(), availableQuantity, requestedQuantity);
-                    throw new InventoryUnavailableException("insufficient inventory for date " + inventoryRecord.getReservationDate());
+                    throw new InventoryUnavailableException("Insufficient inventory for date " + inventoryRecord.getReservationDate());
                 }
             }
 
