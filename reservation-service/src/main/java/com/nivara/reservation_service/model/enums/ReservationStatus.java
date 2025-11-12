@@ -6,5 +6,5 @@ public enum ReservationStatus {
     FAILED,           // if payment fails
     CONFIRMED,        // if payment is success
     CANCELLED,        // if user cancels
-    EXPIRED           // if user doesn't pay before the hold expires
+    HOLD_EXPIRED      // if user doesn't pay before the hold expires
 }

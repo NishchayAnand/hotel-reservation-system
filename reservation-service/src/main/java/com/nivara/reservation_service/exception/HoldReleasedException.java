@@ -1,8 +1,8 @@
 package com.nivara.reservation_service.exception;
 
-public class HoldInvalidStateException extends RuntimeException {
+public class HoldReleasedException extends RuntimeException {
 
-    public HoldInvalidStateException(String message) {
+    public HoldReleasedException(String message) {
         super(message);
     }
 

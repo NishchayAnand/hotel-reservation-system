@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.nivara.reservation_service.client.InventoryClient;
 import com.nivara.reservation_service.client.PaymentClient;
 import com.nivara.reservation_service.exception.HoldDuplicateException;
+import com.nivara.reservation_service.exception.HoldExpiredException;
 import com.nivara.reservation_service.exception.HoldReleasedException;
 import com.nivara.reservation_service.exception.InventoryUnavailableException;
 import com.nivara.reservation_service.exception.RemoteServerException;
@@ -88,7 +89,7 @@ public class ReservationServiceImpl implements ReservationService {
         }
         
         // Step 2. Call Inventory Service to create Hold
-        CreateHoldRequestDTO holdReq = new CreateHoldRequestDTO(
+        CreateHoldRequestDTO holdRequest = new CreateHoldRequestDTO(
             reservation.getId(),
             hotelId,
             checkInDate,
@@ -96,21 +97,36 @@ public class ReservationServiceImpl implements ReservationService {
             reservationItems
         );
 
-        CreateHoldResponseDTO holdResp;
+        CreateHoldResponseDTO holdResponse;
         try {
             // this method will be retried on RemoteServerException
-            holdResp = createInventoryHold(holdReq);
+            holdResponse = createInventoryHold(holdRequest);
+            // if hold status = HELD and hold is already expired
+            if ( "HELD".equalsIgnoreCase(holdResponse.status().toString()) && holdResponse.expiresAt().isBefore(Instant.now()) ) {
+                reservation.setStatus(ReservationStatus.HOLD_EXPIRED);
+                reservation.setUpdatedAt(Instant.now());
+                reservationRepository.save(reservation);
 
-            // if hold = HELD and not expired
-            // if hold = HELD and expired
-            // if hold = CONFIRMED
-
-
+                log.info("Hold expired for reservation {} (holdId={})", reservation.getId(), holdResponse.holdId());
+                throw new HoldExpiredException("Hold expired for reservation: " + reservation.getId());
+            
+                // if hold status = CONFIRMED
+            } else if ("CONFIRMED".equalsIgnoreCase(holdResponse.status().toString())) {
+                Optional<Reservation> existing = reservationRepository.findByRequestId(requestId);
+                if(existing.isPresent()) return existing.get();
+                // if not existing, then do what and can this even happen?
+            }
+            
         } catch (HoldDuplicateException hde) {
-            // fetch hold for the reservationId
+            holdResponse = inventoryClient.getHoldByReservationId(reservation.getId());
 
         } catch (HoldReleasedException hise) {
-            // throw error stating hold expired
+            reservation.setStatus(ReservationStatus.HOLD_EXPIRED);
+            reservation.setUpdatedAt(Instant.now());
+            reservationRepository.save(reservation);
+
+            log.info("Hold expired for reservation {} (holdId={})", reservation.getId(), holdResponse.holdId());
+            throw new HoldExpiredException("Hold expired for reservation: " + reservation.getId());
 
         } catch (InventoryUnavailableException iue) {
             // non-retryable: mark reservation FAILED and propagate (map to 4xx at controller)
@@ -131,19 +147,16 @@ public class ReservationServiceImpl implements ReservationService {
         }
         
         // Step 3. Persist Hold info in reservation and set status = PAYMENT_AWAITING
-        reservation.setHoldId(holdResp.holdId());
-        reservation.setExpiresAt(holdResp.expiresAt());
+        reservation.setHoldId(holdResponse.holdId());
+        reservation.setExpiresAt(holdResponse.expiresAt());
         reservation.setStatus(ReservationStatus.AWAITING_PAYMENT);
-        try {
-            reservationRepository.save(reservation);
-            log.info("Hold created {} for reservation {}", holdResp.holdId(), reservation.getId());
-        } catch (Exception ex) {
-            // schedule compensation / retry; log
-        }
+        reservationRepository.save(reservation);
+
+        // (continue from here)
 
         // Step 4. Call payment service to create Payment Order
         CreateOrderRequestDTO order = new CreateOrderRequestDTO(
-            holdReq.hotelId(),
+            holdResponse.hotelId(),
             holdResp.lockedAmount(),
             currency
         );
