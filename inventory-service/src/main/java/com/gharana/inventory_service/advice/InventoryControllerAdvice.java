@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.gharana.inventory_service.exception.HoldInvalidStateException;
+import com.gharana.inventory_service.exception.HoldReleasedException;
 import com.gharana.inventory_service.exception.InventoryUnavailableException;
 import com.gharana.inventory_service.model.dto.ErrorResponseDTO;
 
@@ -21,10 +21,10 @@ public class InventoryControllerAdvice {
         return build(HttpStatus.UNPROCESSABLE_ENTITY, "INVENTORY_UNAVAILABLE", ex.getMessage(), null);
     }
 
-    // HTTP 409 - CONFLICT
-    @ExceptionHandler(HoldInvalidStateException.class)
-    public ResponseEntity<Object> handleInvalidHold(HoldInvalidStateException ex) {
-        return build(HttpStatus.CONFLICT, "HOLD_INVALID_STATE", ex.getMessage(), null);
+    // HTTP 410 - GONE
+    @ExceptionHandler(HoldReleasedException.class)
+    public ResponseEntity<Object> handleInvalidHold(HoldReleasedException ex) {
+        return build(HttpStatus.GONE, "HOLD_RELEASED", ex.getMessage(), null);
     }
 
     // HTTP 409 - CONFLICT

@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import com.nivara.reservation_service.client.InventoryClient;
 import com.nivara.reservation_service.client.PaymentClient;
+import com.nivara.reservation_service.exception.HoldDuplicateException;
+import com.nivara.reservation_service.exception.HoldReleasedException;
 import com.nivara.reservation_service.exception.InventoryUnavailableException;
 import com.nivara.reservation_service.exception.RemoteServerException;
 import com.nivara.reservation_service.model.dto.CreateHoldRequestDTO;
@@ -75,7 +77,8 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setReservationItems(items);
 
         try {
-            reservationRepository.save(reservation); // Spring Data JPA executes this inside a transactional boundary.
+            // Spring Data JPA executes this inside a transactional boundary.
+            reservationRepository.save(reservation);
         } catch (DataIntegrityViolationException ex) {
             // Idempotency Check: If a reservation already exists with this requestId, return it
             Optional<Reservation> existing = reservationRepository.findByRequestId(requestId);
@@ -98,6 +101,17 @@ public class ReservationServiceImpl implements ReservationService {
             // this method will be retried on RemoteServerException
             holdResp = createInventoryHold(holdReq);
 
+            // if hold = HELD and not expired
+            // if hold = HELD and expired
+            // if hold = CONFIRMED
+
+
+        } catch (HoldDuplicateException hde) {
+            // fetch hold for the reservationId
+
+        } catch (HoldReleasedException hise) {
+            // throw error stating hold expired
+
         } catch (InventoryUnavailableException iue) {
             // non-retryable: mark reservation FAILED and propagate (map to 4xx at controller)
             reservation.setStatus(ReservationStatus.FAILED);
@@ -107,8 +121,7 @@ public class ReservationServiceImpl implements ReservationService {
             throw iue;
 
         } catch (RemoteServerException rse) {
-            // retryable: Resilience4j will have retried; when it bubbles here it means retries were exhausted
-            // mark as transient failure
+            // retryable: Resilience4j will have retried; when it bubbles here it means retries were exhausted mark as transient failure
             reservation.setStatus(ReservationStatus.FAILED);
             reservation.setUpdatedAt(Instant.now());
             reservationRepository.save(reservation);

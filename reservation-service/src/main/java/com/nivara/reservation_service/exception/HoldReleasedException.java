@@ -1,4 +1,4 @@
-package com.gharana.inventory_service.exception;
+package com.nivara.reservation_service.exception;
 
 public class HoldInvalidStateException extends RuntimeException {
 

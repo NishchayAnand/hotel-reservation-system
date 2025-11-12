@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 
 import com.gharana.inventory_service.model.entity.InventoryRecord;
 import com.gharana.inventory_service.model.enums.HoldStatus;
-import com.gharana.inventory_service.exception.HoldInvalidStateException;
+import com.gharana.inventory_service.exception.HoldReleasedException;
 import com.gharana.inventory_service.exception.InventoryUnavailableException;
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
 import com.gharana.inventory_service.model.dto.ReservationItemDTO;
@@ -67,11 +67,12 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional
     public Hold createHold(
-            Long reservationId, 
-            Long hotelId, 
-            LocalDate checkInDate, 
-            LocalDate checkOutDate,
-            List<ReservationItemDTO> reservationItems) {
+        Long reservationId, 
+        Long hotelId, 
+        LocalDate checkInDate, 
+        LocalDate checkOutDate,
+        List<ReservationItemDTO> reservationItems
+    ) {
 
         // Step 1: Idempotent Check: If hold already exists for this reservation, return or error depending on status
         Optional<Hold> existing = holdRepository.findByReservationId(reservationId);
@@ -83,9 +84,9 @@ public class InventoryServiceImpl implements InventoryService {
                 log.info("Returning existing hold for reservationId={} status={}", reservationId, status);
                 return existingHold;
             } else {
-                // RELEASED / EXPIRED -> cannot reuse; ask caller to create a new reservation request.
+                // RELEASED -> cannot reuse; ask caller to create a new reservation request.
                 log.warn("Attempt to recreate hold for reservationId={} which {}. Ignoring request.", reservationId, status);
-                throw new HoldInvalidStateException("Hold already exists and cannot be reused.");
+                throw new HoldReleasedException("Hold already exists and cannot be reused.");
             }
         }
 

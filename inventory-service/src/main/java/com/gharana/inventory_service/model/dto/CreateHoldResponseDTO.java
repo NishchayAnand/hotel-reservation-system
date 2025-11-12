@@ -9,15 +9,15 @@ import lombok.Data;
 @Data
 public class CreateHoldResponseDTO {
     private Long holdId;
-    private Instant expiresAt;
     private String status;
+    private Instant expiresAt;
 
     // factory to map Hold -> DTO
     public static CreateHoldResponseDTO from(Hold hold) {
         CreateHoldResponseDTO dto = new CreateHoldResponseDTO();
         dto.setHoldId(hold.getId());
-        dto.setExpiresAt(hold.getExpiresAt());
         dto.setStatus(hold.getStatus().toString());
+        dto.setExpiresAt(hold.getExpiresAt());
         return dto;     
     }
 }
