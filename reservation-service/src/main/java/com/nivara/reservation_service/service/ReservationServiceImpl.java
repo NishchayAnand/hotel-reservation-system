@@ -20,8 +20,8 @@ import com.nivara.reservation_service.exception.InventoryUnavailableException;
 import com.nivara.reservation_service.exception.RemoteServerException;
 import com.nivara.reservation_service.model.dto.CreateHoldRequestDTO;
 import com.nivara.reservation_service.model.dto.CreateHoldResponseDTO;
-import com.nivara.reservation_service.model.dto.CreateOrderRequestDTO;
-import com.nivara.reservation_service.model.dto.CreateOrderResponseDTO;
+import com.nivara.reservation_service.model.dto.CreatePaymentOrderRequestDTO;
+import com.nivara.reservation_service.model.dto.CreatePaymentOrderResponseDTO;
 import com.nivara.reservation_service.model.dto.ReservationItemDTO;
 import com.nivara.reservation_service.model.entity.Reservation;
 import com.nivara.reservation_service.model.entity.ReservationItem;
@@ -90,10 +90,10 @@ public class ReservationServiceImpl implements ReservationService {
         
         // Step 2. Call Inventory Service to create Hold
         CreateHoldRequestDTO holdRequest = new CreateHoldRequestDTO(
-            reservation.getId(),
-            hotelId,
-            checkInDate,
-            checkOutDate,
+            reservation.getId(), 
+            hotelId, 
+            checkInDate, 
+            checkOutDate, 
             reservationItems
         );
 
@@ -125,7 +125,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setUpdatedAt(Instant.now());
             reservationRepository.save(reservation);
 
-            log.info("Hold expired for reservation {} (holdId={})", reservation.getId(), holdResponse.holdId());
+            log.info("Hold expired for reservation: {}", reservation.getId());
             throw new HoldExpiredException("Hold expired for reservation: " + reservation.getId());
 
         } catch (InventoryUnavailableException iue) {
@@ -152,23 +152,18 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.AWAITING_PAYMENT);
         reservationRepository.save(reservation);
 
-        // (continue from here)
-
         // Step 4. Call payment service to create Payment Order
-        CreateOrderRequestDTO order = new CreateOrderRequestDTO(
-            holdResponse.hotelId(),
-            holdResp.lockedAmount(),
-            currency
-        );
+        CreatePaymentOrderRequestDTO paymentOrder = new CreatePaymentOrderRequestDTO(reservation.getId(), total, currency);
 
-        CreateOrderResponseDTO orderResp;
+        CreatePaymentOrderResponseDTO orderResp;
         try {
-            orderResp = paymentClient.createOrder(requestId, order);
+            orderResp = paymentClient.createPaymentOrder(paymentOrder);
         } catch (Exception e) {
             // compensation & scheduling
             throw new RuntimeException("Failed to create payment order", e);
         }
 
+        // Step 5. Persist Payment Order details in reservation
         reservation.setPaymentOrderId(orderResp.orderId());
         reservation.setStatus(ReservationStatus.AWAITING_PAYMENT);
         reservationRepository.save(reservation);
