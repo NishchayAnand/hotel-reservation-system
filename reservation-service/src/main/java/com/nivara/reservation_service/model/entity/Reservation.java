@@ -52,9 +52,6 @@ public class Reservation {
     @Column(name = "hold_id")
     private Long holdId;
 
-    @Column(name = "payment_order_id")
-    private String paymentOrderId;
-
     @Column(name = "expires_at")
     private Instant expiresAt; // tells your system: If payment hasn’t been completed by expiresAt, this reservation can no longer be confirmed because the inventory lock has expired.
 

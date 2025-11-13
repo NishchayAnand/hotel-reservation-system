@@ -12,7 +12,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.nivara.reservation_service.client.InventoryClient;
-import com.nivara.reservation_service.client.PaymentClient;
 import com.nivara.reservation_service.exception.HoldDuplicateException;
 import com.nivara.reservation_service.exception.HoldExpiredException;
 import com.nivara.reservation_service.exception.HoldReleasedException;
@@ -20,8 +19,6 @@ import com.nivara.reservation_service.exception.InventoryUnavailableException;
 import com.nivara.reservation_service.exception.RemoteServerException;
 import com.nivara.reservation_service.model.dto.CreateHoldRequestDTO;
 import com.nivara.reservation_service.model.dto.CreateHoldResponseDTO;
-import com.nivara.reservation_service.model.dto.CreatePaymentOrderRequestDTO;
-import com.nivara.reservation_service.model.dto.CreatePaymentOrderResponseDTO;
 import com.nivara.reservation_service.model.dto.ReservationItemDTO;
 import com.nivara.reservation_service.model.entity.Reservation;
 import com.nivara.reservation_service.model.entity.ReservationItem;
@@ -39,7 +36,6 @@ public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final InventoryClient inventoryClient;
-    private final PaymentClient paymentClient;
 
     @Override
     public Reservation createReservation(
@@ -149,22 +145,6 @@ public class ReservationServiceImpl implements ReservationService {
         // Step 3. Persist Hold info in reservation and set status = PAYMENT_AWAITING
         reservation.setHoldId(holdResponse.holdId());
         reservation.setExpiresAt(holdResponse.expiresAt());
-        reservation.setStatus(ReservationStatus.AWAITING_PAYMENT);
-        reservationRepository.save(reservation);
-
-        // Step 4. Call payment service to create Payment Order
-        CreatePaymentOrderRequestDTO paymentOrder = new CreatePaymentOrderRequestDTO(reservation.getId(), total, currency);
-
-        CreatePaymentOrderResponseDTO orderResp;
-        try {
-            orderResp = paymentClient.createPaymentOrder(paymentOrder);
-        } catch (Exception e) {
-            // compensation & scheduling
-            throw new RuntimeException("Failed to create payment order", e);
-        }
-
-        // Step 5. Persist Payment Order details in reservation
-        reservation.setPaymentOrderId(orderResp.orderId());
         reservation.setStatus(ReservationStatus.AWAITING_PAYMENT);
         reservationRepository.save(reservation);
 

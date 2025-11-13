@@ -16,16 +16,13 @@ public class CreateReservationResponseDTO {
     private String status; // required for controller to return the proper HTTP status code.
     private Long holdId;
     private Instant expiresAt;
-    private String paymentOrderId;
-    //private String checkOutUrl; // to decouple frontend from the payment service provider
 
     public static CreateReservationResponseDTO from(Reservation reservation) {
         return new CreateReservationResponseDTO(
             reservation.getId(),
             reservation.getStatus().toString(),
             reservation.getHoldId(),
-            reservation.getExpiresAt(),
-            reservation.getPaymentOrderId()
+            reservation.getExpiresAt()
         );
     }
 }

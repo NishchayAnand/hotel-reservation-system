@@ -9,8 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.nivara.payment_service.client.InventoryServiceClient;
 import com.nivara.payment_service.model.dto.HoldDTO;
-import com.nivara.payment_service.model.dto.PaymentRequestDTO;
-import com.nivara.payment_service.model.dto.PaymentResponseDTO;
+import com.nivara.payment_service.model.dto.CreatePaymentOrderResponseDTO;
 import com.nivara.payment_service.model.entity.Payment;
 import com.nivara.payment_service.model.enums.PaymentStatus;
 import com.nivara.payment_service.repository.PaymentRepository;
@@ -28,14 +27,18 @@ public class PaymentServiceImpl implements PaymentService {
     private final RazorpayClient razorpayClient;
 
     @Override
-    public PaymentResponseDTO createPayment(String requestId, PaymentRequestDTO requestBody) {
+    public CreatePaymentOrderResponseDTO createPaymentOrder(
+        Long reservationId,
+        long amount,
+        String currency
+    ) {
         
         // Step 1: Perform idempotency check to ensure if this request is already processed
         Optional<Payment> existing = paymentRepository.findByRequestId(requestId);
         if(existing.isPresent()) {
             Payment payment = existing.get();
             if("SUCCESS".equalsIgnoreCase(String.valueOf(payment.getStatus()))) {
-                return PaymentResponseDTO.builder()
+                return CreatePaymentOrderResponseDTO.builder()
                     .providerOrderId(payment.getProviderOrderId())
                     .status(payment.getStatus())
                     .message("payment already processed")
@@ -47,7 +50,7 @@ public class PaymentServiceImpl implements PaymentService {
         // Step 2: Validate hold with inventory service
         HoldDTO hold = inventoryServiceClient.getHold(requestBody.getHoldId());
         if(!"ACTIVE".equalsIgnoreCase(String.valueOf(hold.getStatus()))) {
-            return PaymentResponseDTO.builder()
+            return CreatePaymentOrderResponseDTO.builder()
                 .status(PaymentStatus.FAILED)
                 .message("hold is not active")
                 .build();
@@ -56,7 +59,7 @@ public class PaymentServiceImpl implements PaymentService {
         // safety margin: ensure hold has at least 2 minutes remaining (avoid redirect and immediate expiry)
         Instant expiresAt = hold.getExpiresAt();
         if(Instant.now().isAfter(expiresAt.minus(2, ChronoUnit.MINUTES))) {
-            return PaymentResponseDTO.builder()
+            return CreatePaymentOrderResponseDTO.builder()
                 .status(PaymentStatus.FAILED)
                 .message("hold is expiring soon or already expired; refresh hold before paying again")
                 .build();
@@ -84,7 +87,7 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setProviderOrderId(order.get("id"));
             paymentRepository.save(payment);
 
-            return PaymentResponseDTO.builder()
+            return CreatePaymentOrderResponseDTO.builder()
                 .providerOrderId(order.get("id"))
                 .build();
 
@@ -92,7 +95,7 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStatus(PaymentStatus.FAILED);
             paymentRepository.save(payment);
 
-            return PaymentResponseDTO.builder()
+            return CreatePaymentOrderResponseDTO.builder()
                 .status(PaymentStatus.FAILED)
                 .message("gateway error: " + e.getMessage())
                 .build();

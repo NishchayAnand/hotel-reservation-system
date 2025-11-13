@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PaymentResponseDTO {
+public class CreatePaymentOrderResponseDTO {
     private Long paymentId;
     private boolean success;
     private String providerOrderId;
