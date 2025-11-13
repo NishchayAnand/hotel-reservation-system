@@ -1,9 +1,10 @@
 package com.nivara.payment_service.service;
 
-import com.nivara.payment_service.model.dto.CreatePaymentOrderResponseDTO;
+import com.nivara.payment_service.model.dto.CreatePaymentRequestDTO;
+import com.nivara.payment_service.model.dto.CreatePaymentResponseDTO;
 
 public interface PaymentService {
 
-    public CreatePaymentOrderResponseDTO createPayment(Long reservationId, long amount, String currency);    
+    public CreatePaymentResponseDTO createPayment(CreatePaymentRequestDTO requestBody);    
 
 }

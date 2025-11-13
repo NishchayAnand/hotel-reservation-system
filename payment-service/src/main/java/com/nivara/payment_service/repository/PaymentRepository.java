@@ -8,6 +8,6 @@ import com.nivara.payment_service.model.entity.Payment;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     
-    public Optional<Payment> findByRequestId(String requestId);
+    public Optional<Payment> findByReservationId(Long reservationId);
 
 }
