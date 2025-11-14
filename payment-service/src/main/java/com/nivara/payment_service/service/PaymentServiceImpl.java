@@ -5,10 +5,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.nivara.payment_service.client.InventoryServiceClient;
 import com.nivara.payment_service.exception.InventoryServiceException;
+import com.nivara.payment_service.exception.InventoryUnavailableException;
 import com.nivara.payment_service.model.dto.HoldDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentRequestDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentResponseDTO;
@@ -26,6 +29,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentServiceImpl.class);
+
     private final PaymentRepository paymentRepository;
     private final InventoryServiceClient inventoryServiceClient;
     private final RazorpayClient razorpayClient;
@@ -42,70 +47,76 @@ public class PaymentServiceImpl implements PaymentService {
     */
     @Override
     public CreatePaymentResponseDTO createPayment(CreatePaymentRequestDTO requestBody) {
+
+        // ---------- Step 1: Inventory Hold Validation ----------
+        // this remote call will be retried for transient exceptions
+        HoldDTO hold = inventoryServiceClient.getHold(requestBody.holdId()); // throws InventoryUnavailableException, InventoryServiceException (if all retries have been exhausted)
+        HoldStatus holdStatus = hold.getStatus();
         
-        // Step 1: Idempotency Check: If payment already exists, return it.
+        switch (holdStatus) {
+
+            case HELD: {
+                Instant expiresAt = hold.getExpiresAt();
+                if(Instant.now().isAfter(expiresAt)) {
+                    return CreatePaymentResponseDTO.builder()
+                        .status(PaymentStatus.FAILED)
+                        .message("Hold has already expired.")
+                        .build();
+
+                } else if (Instant.now().isAfter(expiresAt.minus(2, ChronoUnit.MINUTES))) {
+                    return CreatePaymentResponseDTO.builder()
+                        .status(PaymentStatus.FAILED)
+                        .message("Hold is expiring soon. Refresh the hold before requesting payment again.")
+                        .build();
+                }
+                break; // continue -> create payment
+            }
+
+            case RELEASED: {
+                // released hold means the hold was expired and the selected inventory was released for re-booking
+                return CreatePaymentResponseDTO.builder()
+                    .status(PaymentStatus.FAILED)
+                    .message("Hold has already expired. Select the inventory and retry again.")
+                    .build();
+            }
+
+            case CONFIRMED: {
+                // confirmed hold means payment was processed successfully -> continue since the idempotency check will return the existing payment info
+            }
+       
+        }
+        
+        // ---------- Step 2: Idempotency Check ----------
         Optional<Payment> existingOpt = paymentRepository.findByReservationId(requestBody.reservationId());
         Payment paymentRecord = null;
+
         if(existingOpt.isPresent()) {
             Payment existing = existingOpt.get();
             PaymentStatus paymentStatus = existing.getStatus();
+
             switch (paymentStatus) {
-                case CREATED:
-                    paymentRecord = existing; // continue flow but reuse existing record 
-                    break;
                 case PENDING:
                     return CreatePaymentResponseDTO.builder()
                         .providerOrderId(existing.getProviderOrderId())
                         .status(PaymentStatus.PENDING)
-                        .message("Payment order already created")
+                        .message("Payment order has already created.")
                         .build();
                 case COMPLETED:
                     return CreatePaymentResponseDTO.builder()
                         .providerOrderId(existing.getProviderOrderId())
                         .status(PaymentStatus.COMPLETED)
-                        .message("Payment already completed")
+                        .message("Payment has already completed.")
                         .build();
                 case FAILED:
                     return CreatePaymentResponseDTO.builder()
                         .providerOrderId(existing.getProviderOrderId())
                         .status(PaymentStatus.FAILED)
-                        .message("Previous payment attempt failed")
+                        .message("Previous payment attempt failed.")
                         .build();
+                case CREATED:
+                    paymentRecord = existing; // continue flow but reuse existing record 
             }
-        }
 
-        // Step 2: Inventory Check: If inventory hold has already expired, throw InventoryUnavailableException
-        HoldDTO hold;
-        try {
-            // this remote call will be retried for transient exceptions
-            hold = inventoryServiceClient.getHold(requestBody.holdId());
-            HoldStatus holdStatus = hold.getStatus();
-            switch (holdStatus) {
-                case HELD:
-                    Instant expiresAt = hold.getExpiresAt();
-                    if(Instant.now().isAfter(expiresAt)) {
-
-                    }
-            }
-        } catch (InventoryServiceException ise) {
-            // Resilience4j will have retried; when it bubbles here it means retries were exhausted, rethrow the exception to notify the user
-            throw ise;
-        }
-        
-        if(!"ACTIVE".equalsIgnoreCase(String.valueOf(hold.getStatus()))) {
-            return CreatePaymentResponseDTO.builder()
-                .status(PaymentStatus.FAILED)
-                .message("hold is not active")
-                .build();
-        }
-
-        // safety margin: ensure hold has at least 2 minutes remaining (avoid redirect and immediate expiry)
-        Instant expiresAt = hold.getExpiresAt();
-        if(Instant.now().isAfter(expiresAt.minus(2, ChronoUnit.MINUTES))) {
-            return CreatePaymentResponseDTO.builder()
-                .status(PaymentStatus.FAILED)
-                .message("hold is expiring soon or already expired; refresh hold before paying again")
-                .build();
         }
 
         // Step 3: Create Payment record (PENDING)
