@@ -44,19 +44,33 @@ public class PaymentServiceImpl implements PaymentService {
     public CreatePaymentResponseDTO createPayment(CreatePaymentRequestDTO requestBody) {
         
         // Step 1: Idempotency Check: If payment already exists, return it.
-        Optional<Payment> existing = paymentRepository.findByReservationId(requestBody.reservationId());
-        if(existing.isPresent()) {
-            Payment payment = existing.get();
-            PaymentStatus paymentStatus = payment.getStatus();
-            if(paymentStatus != PaymentStatus.CREATED) {
-                CreatePaymentResponseDTO response = CreatePaymentResponseDTO.from(payment);
-                switch (paymentStatus) {
-                    case PENDING    -> response.setMessage("Payment order already created");
-                    case COMPLETED  -> response.setMessage("Payment already completed");
-                    case FAILED     -> response.setMessage("Previous payment attempt failed");
-                    default         -> response.setMessage("Existing payment with status: " + paymentStatus);
-                }
-                return response;
+        Optional<Payment> existingOpt = paymentRepository.findByReservationId(requestBody.reservationId());
+        Payment paymentRecord = null;
+        if(existingOpt.isPresent()) {
+            Payment existing = existingOpt.get();
+            PaymentStatus paymentStatus = existing.getStatus();
+            switch (paymentStatus) {
+                case CREATED:
+                    paymentRecord = existing; // continue flow but reuse existing record 
+                    break;
+                case PENDING:
+                    return CreatePaymentResponseDTO.builder()
+                        .providerOrderId(existing.getProviderOrderId())
+                        .status(PaymentStatus.PENDING)
+                        .message("Payment order already created")
+                        .build();
+                case COMPLETED:
+                    return CreatePaymentResponseDTO.builder()
+                        .providerOrderId(existing.getProviderOrderId())
+                        .status(PaymentStatus.COMPLETED)
+                        .message("Payment already completed")
+                        .build();
+                case FAILED:
+                    return CreatePaymentResponseDTO.builder()
+                        .providerOrderId(existing.getProviderOrderId())
+                        .status(PaymentStatus.FAILED)
+                        .message("Previous payment attempt failed")
+                        .build();
             }
         }
 
@@ -66,8 +80,16 @@ public class PaymentServiceImpl implements PaymentService {
             // this remote call will be retried for transient exceptions
             hold = inventoryServiceClient.getHold(requestBody.holdId());
             HoldStatus holdStatus = hold.getStatus();
-        } catch (InventoryServiceException ex) {
-            
+            switch (holdStatus) {
+                case HELD:
+                    Instant expiresAt = hold.getExpiresAt();
+                    if(Instant.now().isAfter(expiresAt)) {
+
+                    }
+            }
+        } catch (InventoryServiceException ise) {
+            // Resilience4j will have retried; when it bubbles here it means retries were exhausted, rethrow the exception to notify the user
+            throw ise;
         }
         
         if(!"ACTIVE".equalsIgnoreCase(String.valueOf(hold.getStatus()))) {

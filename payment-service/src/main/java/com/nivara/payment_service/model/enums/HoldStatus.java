@@ -1,7 +1,7 @@
 package com.nivara.payment_service.model.enums;
 
 public enum HoldStatus {
-    ACTIVE,
+    HELD,
     CONFIRMED,
     RELEASED
 }
