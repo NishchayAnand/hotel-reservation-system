@@ -11,7 +11,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.nivara.payment_service.client.InventoryServiceClient;
-import com.nivara.payment_service.exception.HoldConfirmedException;
 import com.nivara.payment_service.exception.HoldExpiredException;
 import com.nivara.payment_service.exception.HoldExpiringSoonException;
 import com.nivara.payment_service.exception.HoldReleaseException;
@@ -59,25 +58,33 @@ public class PaymentServiceImpl implements PaymentService {
         
         switch (holdStatus) {
 
-            case CONFIRMED: {
-                log.info("Confirmed hold means payment was processed successfully. Continue since the idempotency check will return the existing payment info");
-                throw new HoldConfirmedException("Hold was already confirmed. Please check your booking before retrying");
-            }
-
-            case RELEASED: {
-                log.info("released hold means the hold was expired and the selected inventory was released for re-booking");
+            case RELEASED -> {
+                log.info("Hold {} is RELEASED. Inventory was released for re-booking.");
                 throw new HoldReleaseException("Hold has been released. Cannot proceed with payment.");
             }
 
-            case HELD: {
+            case HELD -> {
+                Instant now = Instant.now();
                 Instant expiresAt = hold.getExpiresAt();
-                if(Instant.now().isAfter(expiresAt)) {
+
+                if(now.isAfter(expiresAt)) {
+                    log.info("Hold {} has EXPIRED at {}.", hold.getId(), expiresAt);
                     throw new HoldExpiredException("Hold has already expired.");
 
-                } else if (Instant.now().isAfter(expiresAt.minus(2, ChronoUnit.MINUTES))) {
+                } 
+                
+                if (now.isAfter(expiresAt.minus(2, ChronoUnit.MINUTES))) {
+                    log.info("Hold {} is expiring soon at {}.", hold.getId(), expiresAt);
                     throw new HoldExpiringSoonException("Hold is expiring soon. Refresh the hold before requesting payment again.");
                 }
-                log.info("Hold is valid atleast for the next 2 minutes. Continue to create payment"); 
+
+                log.info("Hold {} is HELD and valid at least 2 more minutes. Proceeding to payment creation.", hold.getId()); 
+            }
+
+            case CONFIRMED -> {
+                // Do NOT throw here. Just log
+                log.info("Hold {} is already CONFIRMED. Payment was processed earlier", hold.getId());
+                // We'll rely on the payment idempotency check below to return the existing payment info.
             }
 
         }
