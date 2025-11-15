@@ -10,8 +10,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.nivara.payment_service.client.InventoryServiceClient;
+import com.nivara.payment_service.exception.HoldConfirmedException;
+import com.nivara.payment_service.exception.HoldExpiredException;
+import com.nivara.payment_service.exception.HoldExpiringSoonException;
+import com.nivara.payment_service.exception.HoldReleaseException;
 import com.nivara.payment_service.exception.InventoryServiceException;
 import com.nivara.payment_service.exception.InventoryUnavailableException;
+import com.nivara.payment_service.exception.PaymentConfirmedException;
+import com.nivara.payment_service.exception.PaymentFailedException;
 import com.nivara.payment_service.model.dto.HoldDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentRequestDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentResponseDTO;
@@ -46,7 +52,7 @@ public class PaymentServiceImpl implements PaymentService {
      * @return CreatePaymentResponse containing providerOrderId
     */
     @Override
-    public CreatePaymentResponseDTO createPayment(CreatePaymentRequestDTO requestBody) {
+    public CreatePaymentResponseDTO createPayment(CreatePaymentRequestDTO requestBody) throws Exception {
 
         // ---------- Step 1: Inventory Hold Validation ----------
         // this remote call will be retried for transient exceptions
@@ -55,35 +61,27 @@ public class PaymentServiceImpl implements PaymentService {
         
         switch (holdStatus) {
 
-            case HELD: {
-                Instant expiresAt = hold.getExpiresAt();
-                if(Instant.now().isAfter(expiresAt)) {
-                    return CreatePaymentResponseDTO.builder()
-                        .status(PaymentStatus.FAILED)
-                        .message("Hold has already expired.")
-                        .build();
-
-                } else if (Instant.now().isAfter(expiresAt.minus(2, ChronoUnit.MINUTES))) {
-                    return CreatePaymentResponseDTO.builder()
-                        .status(PaymentStatus.FAILED)
-                        .message("Hold is expiring soon. Refresh the hold before requesting payment again.")
-                        .build();
-                }
-                break; // continue -> create payment
+            case CONFIRMED: {
+                log.info("Confirmed hold means payment was processed successfully. Continue since the idempotency check will return the existing payment info");
+                throw new HoldConfirmedException("Hold was already confirmed. Please check your booking before retrying");
             }
 
             case RELEASED: {
-                // released hold means the hold was expired and the selected inventory was released for re-booking
-                return CreatePaymentResponseDTO.builder()
-                    .status(PaymentStatus.FAILED)
-                    .message("Hold has already expired. Select the inventory and retry again.")
-                    .build();
+                log.info("released hold means the hold was expired and the selected inventory was released for re-booking");
+                throw new HoldReleaseException("Hold has been released. Cannot proceed with payment.");
             }
 
-            case CONFIRMED: {
-                // confirmed hold means payment was processed successfully -> continue since the idempotency check will return the existing payment info
+            case HELD: {
+                Instant expiresAt = hold.getExpiresAt();
+                if(Instant.now().isAfter(expiresAt)) {
+                    throw new HoldExpiredException("Hold has already expired.");
+
+                } else if (Instant.now().isAfter(expiresAt.minus(2, ChronoUnit.MINUTES))) {
+                    throw new HoldExpiringSoonException("Hold is expiring soon. Refresh the hold before requesting payment again.");
+                }
+                log.info("Hold is valid atleast for the next 2 minutes. Continue to create payment"); 
             }
-       
+
         }
         
         // ---------- Step 2: Idempotency Check ----------
@@ -95,37 +93,35 @@ public class PaymentServiceImpl implements PaymentService {
             PaymentStatus paymentStatus = existing.getStatus();
 
             switch (paymentStatus) {
+
+                case COMPLETED:
+                    throw new PaymentConfirmedException("Previous payment attempt was already confirmed. Please check your booking before retrying");
+
+                case FAILED:
+                    throw new PaymentFailedException("Previous payment attempt failed.");
+
                 case PENDING:
                     return CreatePaymentResponseDTO.builder()
                         .providerOrderId(existing.getProviderOrderId())
                         .status(PaymentStatus.PENDING)
                         .message("Payment order has already created.")
                         .build();
-                case COMPLETED:
-                    return CreatePaymentResponseDTO.builder()
-                        .providerOrderId(existing.getProviderOrderId())
-                        .status(PaymentStatus.COMPLETED)
-                        .message("Payment has already completed.")
-                        .build();
-                case FAILED:
-                    return CreatePaymentResponseDTO.builder()
-                        .providerOrderId(existing.getProviderOrderId())
-                        .status(PaymentStatus.FAILED)
-                        .message("Previous payment attempt failed.")
-                        .build();
+           
                 case CREATED:
-                    paymentRecord = existing; // continue flow but reuse existing record 
+                    log.info("Payment record already exist but the payment order hasn't been created yet. Continue but reuse existing record.");
+                    paymentRecord = existing;
+
             }
 
         }
 
         // Step 3: Create Payment record (PENDING)
         Payment payment = Payment.builder()
-            .requestId(requestId)
-            .customer(requestBody.getCustomer())
-            .amount(requestBody.getAmount())
-            .currency(requestBody.getCurrency())
+            .reservationId(requestBody.reservationId())
+            .total(requestBody.total())
+            .currency(requestBody.currency())
             .status(PaymentStatus.PENDING)
+            .customer(requestBody.customer())
             .build();
         payment = paymentRepository.save(payment);
 

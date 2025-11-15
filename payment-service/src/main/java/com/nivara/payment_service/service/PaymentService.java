@@ -5,6 +5,6 @@ import com.nivara.payment_service.model.dto.CreatePaymentResponseDTO;
 
 public interface PaymentService {
 
-    public CreatePaymentResponseDTO createPayment(CreatePaymentRequestDTO requestBody);    
+    public CreatePaymentResponseDTO createPayment(CreatePaymentRequestDTO requestBody) throws Exception;    
 
 }
