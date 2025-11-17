@@ -131,7 +131,7 @@ public class PaymentServiceImpl implements PaymentService {
         // ---------- Step 3: Persist payment intent (CREATED) ----------
             Payment toCreate = Payment.builder()
                 .reservationId(requestBody.reservationId())
-                .total(requestBody.amount())
+                .amount(requestBody.amount())
                 .currency(requestBody.currency())
                 .status(PaymentStatus.CREATED)
                 .customer(requestBody.customer())

@@ -25,7 +25,7 @@ public class ReservationItem {
     @Column(name = "room_type_id")
     private Long roomTypeId;
 
-    private Integer qty;
+    private Integer quantity;
 
     private Long rate;
 

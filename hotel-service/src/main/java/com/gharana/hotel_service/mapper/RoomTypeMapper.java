@@ -1,7 +1,7 @@
 package com.gharana.hotel_service.mapper;
 
-import com.gharana.hotel_service.dto.RoomTypeDTO;
-import com.gharana.hotel_service.entity.RoomType;
+import com.gharana.hotel_service.model.dto.RoomTypeDTO;
+import com.gharana.hotel_service.model.entity.RoomType;
 
 public class RoomTypeMapper {
 

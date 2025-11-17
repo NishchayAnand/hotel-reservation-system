@@ -1,6 +1,17 @@
 spring:
-  application:
-    name: reservation-service
+    application:
+      name: reservation-service
+    datasource:
+      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54602}/${DB_NAME:reservationdb}
+      username: ${DB_USERNAME:postgres}
+      password: ${DB_PASSWORD:postgres}
+    jpa:
+      properties:
+        hibernate:
+          hbm2dll.auto: validate
+          format_sql: true
+          show-sql: true
+          highlight_sql: true
 
 server:
   port: 8084

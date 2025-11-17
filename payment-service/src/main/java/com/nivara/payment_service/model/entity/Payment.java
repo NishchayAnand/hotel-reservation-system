@@ -25,8 +25,8 @@ public class Payment {
     @Column(name = "reservation_id")
     private Long reservationId; 
 
-    @Column(name = "total")
-    private Long total;
+    @Column(name = "amount")
+    private Long amount;
 
     private String currency;
 

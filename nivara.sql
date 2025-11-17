@@ -285,20 +285,23 @@ INSERT INTO public.room_type_inventory
 SELECT hotel_id, room_type_id, reservation_date, total_count, 0
 FROM to_insert;
 
-CREATE TABLE holds (
-    id BIGSERIAL PRIMARY KEY,
-    request_id TEXT NOT NULL UNIQUE,
-    expires_at TIMESTAMPTZ NOT NULL
+CREATE TYPE hold_status AS ENUM ('HELD', 'CONFIRMED', 'RELEASED');
+
+CREATE TABLE HOLDS (
+    id  BIGSERIAL PRIMARY KEY,
+    reservation_id BIGINT UNIQUE NOT NULL,
+    hotel_id    BIGINT NOT NULL,
+    check_in_date DATE NOT NULL,
+    check_out_date DATE NOT NULL,
+    status hold_status NOT NULL DEFAULT 'HELD',
+    expires_at  TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE hold_items (
-    id BIGSERIAL PRIMARY KEY,
-    hold_id BIGINT NOT NULL REFERENCES holds(id) ON DELETE CASCADE,
-    hotel_id BIGINT NOT NULL,
-    room_type_id BIGINT NOT NULL,
-    check_in_date DATE NOT NULL,
-    check_out_date DATE NOT NULL,
-    held_count INTEGER NOT NULL
+    id              BIGSERIAL PRIMARY KEY,
+    hold_id         BIGINT NOT NULL REFERENCES holds(id) ON DELETE CASCADE,
+    room_type_id    BIGINT  NOT NULL,
+    quantity        INTEGER NOT NULL CHECK (quantity > 0)
 );
 
 */
@@ -385,5 +388,63 @@ to_insert AS (
 INSERT INTO room_type_rate (hotel_id, room_type_id, reservation_date, rate)
 SELECT hotel_id, room_type_id, reservation_date, rate
 FROM to_insert;
+
+*/
+
+/*
+
+RESERVATION DB
+
+CREATE TYPE reservation_status AS ENUM (
+    'PENDING',
+    'AWAITING_PAYMENT',
+    'CONFIRMED',
+    'FAILED',
+    'CANCELLED',
+    'HOLD_EXPIRED'
+);
+
+CREATE TABLE reservations (
+    id              BIGSERIAL PRIMARY KEY,
+    request_id      VARCHAR(255)        NOT NULL UNIQUE,
+    hotel_id        BIGINT              NOT NULL,
+    check_in_date   DATE                NOT NULL,
+    check_out_date  DATE                NOT NULL,
+    amount          BIGINT,
+    currency        VARCHAR(10),
+    hold_id         BIGINT,
+    expires_at      TIMESTAMPTZ,
+    status          reservation_status  NOT NULL DEFAULT 'PENDING',
+    created_at      TIMESTAMPTZ         NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ         NOT NULL DEFAULT now()
+);
+
+CREATE TABLE reservation_items (
+    id              BIGSERIAL PRIMARY KEY,
+    reservation_id  BIGINT NOT NULL REFERENCES reservations(id) ON DELETE CASCADE,
+    room_type_id    BIGINT NOT NULL,
+    quantity        INTEGER NOT NULL CHECK (quantity > 0),
+    rate            BIGINT NOT NULL CHECK (rate >= 0)
+);
+
+*/
+
+/*
+
+PAYMENT SERVICE
+
+CREATE TYPE payment_status AS ENUM ('CREATED', 'PENDING', 'COMPLETED', 'FAILED');
+
+CREATE TABLE payments (
+    id                  BIGSERIAL PRIMARY KEY,
+    reservation_id      BIGINT          NOT NULL UNIQUE,
+    amount              BIGINT          NOT NULL CHECK (amount >= 0),
+    currency            VARCHAR(3)      NOT NULL DEFAULT 'INR',
+    status              payment_status  NOT NULL DEFAULT 'CREATED',
+    provider_order_id   VARCHAR(255),
+    customer_name       VARCHAR(255),
+    customer_email      VARCHAR(255),
+    customer_phone      VARCHAR(255)
+);
 
 */

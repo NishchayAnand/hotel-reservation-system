@@ -1,6 +1,23 @@
 spring:
-  application:
-    name: payment-service
+    application:
+      name: payment-service
+    datasource:
+      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54602}/${DB_NAME:paymentdb}
+      username: ${DB_USERNAME:postgres}
+      password: ${DB_PASSWORD:postgres}
+    jpa:
+      properties:
+        hibernate:
+          hbm2dll.auto: validate
+          format_sql: true
+          show-sql: true
+          highlight_sql: true
+      
+server:
+    port: 8085  
+
 razorpay:
   key-id: rzp_test_Rak9R66XB3fuVa
   key-secret: 5yfH0COVjWAqLTTgDQORw6wT
+
+
