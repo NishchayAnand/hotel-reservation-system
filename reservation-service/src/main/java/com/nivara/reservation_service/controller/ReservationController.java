@@ -23,7 +23,7 @@ public class ReservationController {
 
     @PostMapping
     public ResponseEntity<CreateReservationResponseDTO> createReservation(
-        @RequestHeader(value = "X-Request-ID") String requestId,
+        @RequestHeader(value = "X-Request-Id") String requestId,
         @RequestBody CreateReservationRequestDTO requestBody
     ) {
         Reservation reservation = reservationService.createReservation(
@@ -32,9 +32,7 @@ public class ReservationController {
             requestBody.checkInDate(),
             requestBody.checkOutDate(),
             requestBody.reservationItems(),
-            requestBody.subtotal(),
-            requestBody.taxes(),
-            requestBody.total(),
+            requestBody.amount(),
             requestBody.currency());
 
         return ResponseEntity.status(201).body(CreateReservationResponseDTO.from(reservation));

@@ -1,6 +1,14 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+
 export default function ReviewPage() {
+
+  const searchParams = useSearchParams();
+  const hotelId = searchParams.get("hotelId") ?? "";
+  const checkInDate = searchParams.get("checkInDate") ?? ""; // (ISO: YYYY-MM-DD)
+  const checkOutDate = searchParams.get("checkOutDate") ?? ""; // (ISO: YYYY-MM-DD)
+
   return (
     <main className="mt-16 max-w-6xl mx-auto p-6">
 

@@ -44,9 +44,7 @@ public class ReservationServiceImpl implements ReservationService {
         LocalDate checkInDate,
         LocalDate checkOutDate,
         List<ReservationItemDTO> reservationItems,
-        Long subtotal,
-        Long taxes,
-        Long total,
+        Long amount,
         String currency)
     {
 
@@ -56,6 +54,8 @@ public class ReservationServiceImpl implements ReservationService {
             .hotelId(hotelId)
             .checkInDate(checkInDate)
             .checkOutDate(checkOutDate)
+            .amount(amount)
+            .currency(currency)
             .status(ReservationStatus.PENDING)
             .createdAt(Instant.now())
             .updatedAt(Instant.now())
@@ -73,9 +73,10 @@ public class ReservationServiceImpl implements ReservationService {
 
         reservation.setReservationItems(items);
 
+        Reservation saved = null;
         try {
             // Spring Data JPA executes this inside a transactional boundary.
-            reservationRepository.save(reservation);
+            saved = reservationRepository.save(reservation);
         } catch (DataIntegrityViolationException ex) {
             // Idempotency Check: If a reservation already exists with this requestId, return it
             Optional<Reservation> existing = reservationRepository.findByRequestId(requestId);
@@ -83,10 +84,14 @@ public class ReservationServiceImpl implements ReservationService {
                 return existing.get();
             }
         }
+
+        if(saved == null) {
+            throw new RuntimeException("Failed to create reservation: unknown");
+        }
         
         // Step 2. Call Inventory Service to create Hold
         CreateHoldRequestDTO holdRequest = new CreateHoldRequestDTO(
-            reservation.getId(), 
+            saved.getId(), 
             hotelId, 
             checkInDate, 
             checkOutDate, 
@@ -99,9 +104,9 @@ public class ReservationServiceImpl implements ReservationService {
             holdResponse = createInventoryHold(holdRequest);
             // if hold status = HELD and hold is already expired
             if ( "HELD".equalsIgnoreCase(holdResponse.status().toString()) && holdResponse.expiresAt().isBefore(Instant.now()) ) {
-                reservation.setStatus(ReservationStatus.HOLD_EXPIRED);
-                reservation.setUpdatedAt(Instant.now());
-                reservationRepository.save(reservation);
+                saved.setStatus(ReservationStatus.HOLD_EXPIRED);
+                saved.setUpdatedAt(Instant.now());
+                reservationRepository.save(saved);
 
                 log.info("Hold expired for reservation {} (holdId={})", reservation.getId(), holdResponse.holdId());
                 throw new HoldExpiredException("Hold expired for reservation: " + reservation.getId());
@@ -117,38 +122,38 @@ public class ReservationServiceImpl implements ReservationService {
             holdResponse = inventoryClient.getHoldByReservationId(reservation.getId());
 
         } catch (HoldReleasedException hise) {
-            reservation.setStatus(ReservationStatus.HOLD_EXPIRED);
-            reservation.setUpdatedAt(Instant.now());
-            reservationRepository.save(reservation);
+            saved.setStatus(ReservationStatus.HOLD_EXPIRED);
+            saved.setUpdatedAt(Instant.now());
+            reservationRepository.save(saved);
 
             log.info("Hold expired for reservation: {}", reservation.getId());
             throw new HoldExpiredException("Hold expired for reservation: " + reservation.getId());
 
         } catch (InventoryUnavailableException iue) {
             // non-retryable: mark reservation FAILED and propagate (map to 4xx at controller)
-            reservation.setStatus(ReservationStatus.FAILED);
-            reservation.setUpdatedAt(Instant.now());
-            reservationRepository.save(reservation);
+            saved.setStatus(ReservationStatus.FAILED);
+            saved.setUpdatedAt(Instant.now());
+            reservationRepository.save(saved);
             log.info("Inventory unavailable for reservation {}: {}", reservation.getId(), iue.getMessage());
             throw iue;
 
         } catch (RemoteServerException rse) {
             // retryable: Resilience4j will have retried; when it bubbles here it means retries were exhausted mark as transient failure
-            reservation.setStatus(ReservationStatus.FAILED);
-            reservation.setUpdatedAt(Instant.now());
-            reservationRepository.save(reservation);
+            saved.setStatus(ReservationStatus.FAILED);
+            saved.setUpdatedAt(Instant.now());
+            reservationRepository.save(saved);
             log.error("Inventory service transient failure for reservation {}, retries exhausted: {}", reservation.getId(), rse.getMessage());
             throw rse;
 
         }
         
         // Step 3. Persist Hold info in reservation and set status = PAYMENT_AWAITING
-        reservation.setHoldId(holdResponse.holdId());
-        reservation.setExpiresAt(holdResponse.expiresAt());
-        reservation.setStatus(ReservationStatus.AWAITING_PAYMENT);
-        reservationRepository.save(reservation);
+        saved.setHoldId(holdResponse.holdId());
+        saved.setExpiresAt(holdResponse.expiresAt());
+        saved.setStatus(ReservationStatus.AWAITING_PAYMENT);
+        reservationRepository.save(saved);
 
-        return reservation;
+        return saved;
 
     }
 

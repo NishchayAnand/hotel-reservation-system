@@ -23,6 +23,8 @@ import { useState, useEffect, useMemo } from "react";
 import SkeletonCard from "@/components/ui/skeleton-card";
 import HotelDetailsSkeleton from "@/components/ui/hotel-details-skeleton";
 import HotelFaqs from "@/components/ui/hotel-faqs";
+import { useRouter } from "next/navigation";
+import { request } from "http";
 
 // static image list for the carousel
 const DEFAULT_CAROUSEL = [
@@ -32,6 +34,8 @@ const DEFAULT_CAROUSEL = [
 
 export default function HotelPage() {
 
+    const router = useRouter();
+
     const searchParams = useSearchParams();
     const hotelId = searchParams.get("hotelId") ?? "";
     const checkInDate = searchParams.get("checkInDate") ?? ""; // (ISO: YYYY-MM-DD)
@@ -40,6 +44,9 @@ export default function HotelPage() {
     const [hotel, setHotel] = useState<Hotel | null>(null);
     const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+
+    const [submitting, setSubmitting] = useState<boolean>(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     // selections map: roomTypeId -> quantity
     const [selections, setSelections] = useState<Record<string, number>>({});
@@ -114,27 +121,82 @@ export default function HotelPage() {
 
     // breakdown selection pricing and total
     const breakdown = useMemo(() => {
-        const items: {id: string, name: string, qty: number, rate: number, subtotal: number}[] = [];
+        const selectedItems: {id: string, name: string, qty: number, rate: number, subtotal: number}[] = [];
         let total = 0;
         for(const [id, qty] of Object.entries(selections)) {
             const rt = roomTypes.find(roomType => String(roomType.id) === id);
             if (!rt) continue;
             const rate = rt.avgPricePerNight ?? 0;
             const subtotal = qty * rate * nights;
-            items.push({id, name: rt.name, qty, rate, subtotal});
+            selectedItems.push({id, name: rt.name, qty, rate, subtotal});
             total += subtotal;
         }
-        return { items, total };
+        return { selectedItems, total };
     }, [selections, roomTypes, nights]);
 
     // helper for formatting currency
-    const formatCurrency = (v: number) =>
-      new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(v);
+    const formatCurrency = (v: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(v);
     
     // taxes & fees (adjust percentages/thresholds as you need)
-    const taxes = Math.round(breakdown.total * 0.18); // 18% GST example
-    const serviceFee = breakdown.total > 0 ? Math.max(50, Math.round(breakdown.total * 0.02)) : 0; // min ₹50 or 2%
-    const grandTotal = breakdown.total + taxes + serviceFee;
+    // const taxes = Math.round(breakdown.total * 0.18); // 18% GST example
+    // const serviceFee = breakdown.total > 0 ? Math.max(50, Math.round(breakdown.total * 0.02)) : 0; // min ₹50 or 2%
+    // const grandTotal = breakdown.total + taxes + serviceFee;
+
+    const handleCreateReservation = async () => {
+        setSubmitError(null);
+        setSubmitting(true);
+        try {
+            // build reservation items from precomputed breakdown.selectedItems
+            const reservationItems = breakdown.selectedItems.map( item => ({
+                roomTypeId: Number(item.id),
+                quantity: item.qty,
+                rate: item.rate
+            }));
+
+            // idempotency key
+            const requestId = crypto.randomUUID();
+
+            const payload = {
+                hotelId: Number(hotelId),
+                checkInDate,
+                checkOutDate,
+                reservationItems,
+                amount: breakdown.total,
+                currency: "INR"
+            };
+
+            const baseUrl = process.env.NEXT_PUBLIC_RESERVATION_SERVICE_URL || "http://localhost:8084";
+            const res = await fetch(`${baseUrl}/api/reservations`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Request-Id": requestId
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const errBody = await res.json().catch(() => null);
+                throw new Error(errBody?.message || `Reservation create failed: ${res.status}`);
+            }
+
+            const created = await res.json();
+
+            const paramString = new URLSearchParams({
+                hotelId: hotelId,
+                checkInDate:  checkInDate,
+                checkOutDate: checkOutDate
+            }).toString();
+            
+            router.push(`/hotels/booking-review?${paramString}`);
+
+        } catch (err) {
+            console.error("create reservation failed", err);
+            setSubmitError(err instanceof Error ? err.message : "Failed to create reservation");
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <main>
@@ -231,14 +293,14 @@ export default function HotelPage() {
                         </CardHeader>
                       <CardContent>
                         <div className="flex flex-col gap-4">
-                          {breakdown.items.length === 0 ? (
+                          {breakdown.selectedItems.length === 0 ? (
                             <div className="p-4 bg-gray-50 rounded-md text-sm text-gray-600">
                               No rooms selected
                             </div>
                           ) : (
                             <div className="space-y-3">
                                 <div id="pricing-breakdown" className="text-sm">
-                                    {breakdown.items.map(it => (
+                                    {breakdown.selectedItems.map(it => (
                                     <div key={it.id} className="flex items-center justify-between mb-2">
                                         <div>
                                         <div className="font-medium">{it.name}</div>
@@ -254,6 +316,7 @@ export default function HotelPage() {
                                 </div>
 
                                 <div className="border-t border-gray-200 pt-3 text-sm space-y-2">
+                                    {/*
                                     <div className="flex justify-between text-gray-600">
                                         <span>Subtotal</span>
                                         <span>{formatCurrency(breakdown.total)}</span>
@@ -266,11 +329,12 @@ export default function HotelPage() {
                                         <span>Service fee</span>
                                         <span>{formatCurrency(serviceFee)}</span>
                                     </div>
+                                    */}
                                     <div className="flex justify-between font-semibold text-gray-900">
                                         <span>Total</span>
-                                        <span>{formatCurrency(grandTotal)}</span>
+                                        <span>{formatCurrency(breakdown.total)}</span>
                                     </div>
-                                    <div className="text-xs text-gray-500">Final price may vary during checkout</div>
+                                    <div className="text-xs text-gray-500">Prices shown exclude taxes and fees.</div>
                                 </div>
                             </div>
                           )}
@@ -279,12 +343,13 @@ export default function HotelPage() {
                       <CardFooter className="flex-col gap-3">
                         <Button
                           type="submit"
-                          className="w-full"
-                          disabled={breakdown.items.length === 0}
+                          className="w-full cursor-pointer"
+                          disabled={breakdown.selectedItems.length === 0 || submitting}
+                          onClick={handleCreateReservation}
                         >
-                          {breakdown.items.length === 0 ? "Select rooms to continue" : `Book • ${formatCurrency(grandTotal)}`}
+                          {submitting ? "Processing..." : (breakdown.selectedItems.length === 0 ? "Select rooms to continue" : `Book • ${formatCurrency(breakdown.total)}`)}
                         </Button>
-                        <div className="text-xs text-gray-500">Secure booking · Free cancellation may apply</div>
+                        {submitError && <div className="text-xs text-red-600 mt-2">{submitError}</div>}
                       </CardFooter>
                     </Card>
                   </div>

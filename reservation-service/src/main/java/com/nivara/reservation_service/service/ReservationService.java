@@ -14,9 +14,7 @@ public interface ReservationService {
         LocalDate checkInDate,
         LocalDate checkOutDate,
         List<ReservationItemDTO> reservationItems,
-        Long subtotal,
-        Long taxes,
-        Long total,
+        Long amount,
         String currency
     );
 }
