@@ -293,7 +293,7 @@ CREATE TABLE HOLDS (
     hotel_id    BIGINT NOT NULL,
     check_in_date DATE NOT NULL,
     check_out_date DATE NOT NULL,
-    status hold_status NOT NULL DEFAULT 'HELD',
+    status VARCHAR(32) NOT NULL DEFAULT 'HELD',
     expires_at  TIMESTAMPTZ NOT NULL
 );
 
@@ -414,7 +414,7 @@ CREATE TABLE reservations (
     currency        VARCHAR(10),
     hold_id         BIGINT,
     expires_at      TIMESTAMPTZ,
-    status          reservation_status  NOT NULL DEFAULT 'PENDING',
+    status          VARCHAR(32)         NOT NULL DEFAULT 'PENDING',
     created_at      TIMESTAMPTZ         NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ         NOT NULL DEFAULT now()
 );

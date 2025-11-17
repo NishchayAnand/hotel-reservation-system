@@ -102,21 +102,6 @@ public class ReservationServiceImpl implements ReservationService {
         try {
             // this method will be retried on RemoteServerException
             holdResponse = createInventoryHold(holdRequest);
-            // if hold status = HELD and hold is already expired
-            if ( "HELD".equalsIgnoreCase(holdResponse.status().toString()) && holdResponse.expiresAt().isBefore(Instant.now()) ) {
-                saved.setStatus(ReservationStatus.HOLD_EXPIRED);
-                saved.setUpdatedAt(Instant.now());
-                reservationRepository.save(saved);
-
-                log.info("Hold expired for reservation {} (holdId={})", reservation.getId(), holdResponse.holdId());
-                throw new HoldExpiredException("Hold expired for reservation: " + reservation.getId());
-            
-                // if hold status = CONFIRMED
-            } else if ("CONFIRMED".equalsIgnoreCase(holdResponse.status().toString())) {
-                Optional<Reservation> existing = reservationRepository.findByRequestId(requestId);
-                if(existing.isPresent()) return existing.get();
-                // if not existing, then do what and can this even happen?
-            }
             
         } catch (HoldDuplicateException hde) {
             holdResponse = inventoryClient.getHoldByReservationId(reservation.getId());
@@ -145,6 +130,21 @@ public class ReservationServiceImpl implements ReservationService {
             log.error("Inventory service transient failure for reservation {}, retries exhausted: {}", reservation.getId(), rse.getMessage());
             throw rse;
 
+        }
+
+        // if hold status = HELD and hold is already expired
+        if ( "HELD".equalsIgnoreCase(holdResponse.status().toString()) && holdResponse.expiresAt().isBefore(Instant.now()) ) {
+            saved.setStatus(ReservationStatus.HOLD_EXPIRED);
+            saved.setUpdatedAt(Instant.now());
+            reservationRepository.save(saved);
+
+            log.info("Hold expired for reservation {} (holdId={})", reservation.getId(), holdResponse.holdId());
+            throw new HoldExpiredException("Hold expired for reservation: " + reservation.getId());
+        
+            // if hold status = CONFIRMED
+        } else if ("CONFIRMED".equalsIgnoreCase(holdResponse.status().toString())) {
+            Optional<Reservation> existing = reservationRepository.findByRequestId(requestId);
+            if(existing.isPresent()) return existing.get();
         }
         
         // Step 3. Persist Hold info in reservation and set status = PAYMENT_AWAITING

@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.gharana.inventory_service.model.entity.InventoryRecord;
@@ -97,17 +98,17 @@ public class InventoryServiceImpl implements InventoryService {
 
         for(ReservationItemDTO item: reservationItems) {
             Long roomTypeId = item.roomTypeId();
-            int requestedQuantity = item.quantity();
+            int quantity = item.quantity();
 
             // This method must be annotated with @Lock(PESSIMISTIC_WRITE) to lock the selected roomType inventory for the [checkInDate, checkOutDate).
-            List<InventoryRecord> inventoryRecords = inventoryRepository.findForUpdateBetweenDates(hotelId, roomTypeId, checkInDate, checkInDate.minusDays(1));
+            List<InventoryRecord> inventoryRecords = inventoryRepository.findForUpdateBetweenDates(hotelId, roomTypeId, checkInDate, checkOutDate.minusDays(1));
 
             // Verify per-day availability.
             for(InventoryRecord inventoryRecord: inventoryRecords) {
                 int availableQuantity = inventoryRecord.getTotalCount() - inventoryRecord.getReservedCount();
-                if(availableQuantity < requestedQuantity) {
+                if(availableQuantity < quantity) {
                     log.debug("Insufficient inventory for hotel={}, roomType={}, date={}, available={}, requested={}",
-                        hotelId, roomTypeId, inventoryRecord.getReservationDate(), availableQuantity, requestedQuantity);
+                        hotelId, roomTypeId, inventoryRecord.getReservationDate(), availableQuantity, quantity);
                     throw new InventoryUnavailableException("Insufficient inventory for date " + inventoryRecord.getReservationDate());
                 }
             }
@@ -153,7 +154,21 @@ public class InventoryServiceImpl implements InventoryService {
         // Step 5: Persist the Hold and HoldItems - still inside the transaction
         // Two concurrent requests with the same reservationId (idempotency key) can both pass the availability checks and inventory increments.
         // The DB unique constraint on reservationId prevents the second insert and throws a DataIntegrityViolationException, leading to transaction roll back.
-        Hold saved = holdRepository.save(hold);
+        Hold saved = null;
+        try {
+            saved = holdRepository.save(hold);
+
+        } catch(DataIntegrityViolationException ex) {
+            // Idempotency Check: If a reservation already exists with this requestId, return it
+            Optional<Hold> maybe = holdRepository.findByReservationId(reservationId);
+            if(maybe.isPresent()) {
+                return maybe.get();
+            }
+        }
+
+        if(saved == null) {
+            throw new RuntimeException("Unknown error occured while persisting hold");
+        }
         
         log.info("Created hold {} for reservation {} (expiresAt={})", saved.getId(), reservationId, expiresAt);
         return saved;
