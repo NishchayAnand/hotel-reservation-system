@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
+import com.gharana.inventory_service.model.dto.HoldDTO;
 import com.gharana.inventory_service.model.dto.ReservationItemDTO;
 import com.gharana.inventory_service.model.entity.Hold;
 
@@ -23,5 +24,7 @@ public interface InventoryService {
         LocalDate checkOutDate, 
         List<ReservationItemDTO> selectedRooms
     );
+
+    HoldDTO getHold(Long holdId);
 
 }

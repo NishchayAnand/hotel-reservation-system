@@ -34,9 +34,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
-    private final PaymentRepository paymentRepository;
-    private final InventoryServiceClient inventoryServiceClient;
-    private final RazorpayClient razorpayClient;
+    private PaymentRepository paymentRepository;
+    private InventoryServiceClient inventoryServiceClient;
+    private RazorpayClient razorpayClient;
 
     /*
      * Creates a Razorpay Order for the given reservation.
@@ -134,7 +134,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .amount(requestBody.amount())
                 .currency(requestBody.currency())
                 .status(PaymentStatus.CREATED)
-                .customer(requestBody.customer())
+                .customerName(requestBody.customer().getName())
+                .customerEmail(requestBody.customer().getEmailId())
+                .customerPhone(requestBody.customer().getPhone())
                 .build();
 
             try {

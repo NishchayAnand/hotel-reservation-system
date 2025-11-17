@@ -22,6 +22,7 @@ import com.gharana.inventory_service.model.enums.HoldStatus;
 import com.gharana.inventory_service.exception.HoldReleasedException;
 import com.gharana.inventory_service.exception.InventoryUnavailableException;
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
+import com.gharana.inventory_service.model.dto.HoldDTO;
 import com.gharana.inventory_service.model.dto.ReservationItemDTO;
 import com.gharana.inventory_service.model.entity.Hold;
 import com.gharana.inventory_service.model.entity.HoldItem;
@@ -157,6 +158,11 @@ public class InventoryServiceImpl implements InventoryService {
         log.info("Created hold {} for reservation {} (expiresAt={})", saved.getId(), reservationId, expiresAt);
         return saved;
 
+    }
+
+    public HoldDTO getHold(Long holdId) {
+        Hold hold = holdRepository.findById(holdId).get();
+        return new HoldDTO(hold.getId(), hold.getStatus(), hold.getExpiresAt());
     }
 
 }

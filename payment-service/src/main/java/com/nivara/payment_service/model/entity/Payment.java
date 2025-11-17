@@ -1,6 +1,5 @@
 package com.nivara.payment_service.model.entity;
 
-import com.nivara.payment_service.model.dto.CustomerDTO;
 import com.nivara.payment_service.model.enums.PaymentStatus;
 
 import jakarta.persistence.Column;
@@ -35,7 +34,13 @@ public class Payment {
     @Column(name = "provider_order_id")
     private String providerOrderId;
 
-    // do we need a customer table / entity for customer details as of now
-    private CustomerDTO customer;
+    @Column(name = "customer_name")
+    private String customerName;
+
+    @Column(name = "customer_email")
+    private String customerEmail;
+
+    @Column(name = "customer_phone")
+    private String customerPhone;
 
 }

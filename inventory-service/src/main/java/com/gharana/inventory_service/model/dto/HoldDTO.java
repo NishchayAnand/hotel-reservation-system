@@ -1,16 +1,14 @@
 package com.gharana.inventory_service.model.dto;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-import lombok.Builder;
+import com.gharana.inventory_service.model.enums.HoldStatus;
+
 import lombok.Data;
 
 @Data
-@Builder
 public class HoldDTO {
-    private Long holdId;
-    private boolean success;
-    private boolean created; // true if a new hold was created, false if existing active hold was returned
-    private LocalDateTime expiresAt;
-    private String message;
+    private final Long id;
+    private final HoldStatus status;
+    private final Instant expiresAt;
 }
