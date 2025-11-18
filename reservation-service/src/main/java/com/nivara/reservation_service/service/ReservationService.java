@@ -17,4 +17,7 @@ public interface ReservationService {
         Long amount,
         String currency
     );
+
+    public Reservation findById(Long reservationId);
+
 }

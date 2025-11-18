@@ -173,4 +173,9 @@ public class ReservationServiceImpl implements ReservationService {
         throw new RuntimeException("Failed to create inventory hold. Inventory service error: ", ex);
     }
 
+    @Override
+    public Reservation findById(Long reservationId) {
+        return reservationRepository.findById(reservationId).get();
+    }
+
 }

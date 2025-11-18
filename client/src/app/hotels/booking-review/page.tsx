@@ -1,13 +1,53 @@
 "use client";
 
+import { Reservation } from "@/types/reservation";
+import { MapPinIcon } from "@heroicons/react/24/solid";
+
 import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function ReviewPage() {
 
   const searchParams = useSearchParams();
-  const hotelId = searchParams.get("hotelId") ?? "";
-  const checkInDate = searchParams.get("checkInDate") ?? ""; // (ISO: YYYY-MM-DD)
-  const checkOutDate = searchParams.get("checkOutDate") ?? ""; // (ISO: YYYY-MM-DD)
+  const reservationId = searchParams.get("reservationId") ?? "";
+
+  const [reservation, setReservation] = useState<Reservation | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if(!reservationId) return;
+
+    const abort = new AbortController();
+    const fetchReservation = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_RESERVATION_SERVICE_URL || "http://localhost:8084";
+        const res = await fetch(`${baseUrl}/api/reservations/${encodeURIComponent(reservationId)}`, {
+          method: "GET",
+          signal: abort.signal,
+          headers: { Accept: "application/json" }
+        });
+
+        if(!res.ok) {
+          const errBody = await res.json().catch(() => null);
+          throw new Error(errBody?.message ?? `Failed to fetch reservation: ${res.status}`);
+        }
+
+        const data = await res.json();
+        setReservation(data);
+
+      } catch (err: any) {
+        if (err.name !== "AbortError") setError(err.message ?? "Failed to load reservation");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReservation();
+    return () => abort.abort();
+  }, [reservationId]);
 
   return (
     <main className="mt-16 max-w-6xl mx-auto p-6">
@@ -24,7 +64,7 @@ export default function ReviewPage() {
           {/* Booking Summary */}
           <div
             id="booking-summary"
-            className="p-5 border rounded-lg shadow-sm bg-white flex flex-col sm:flex-row gap-4 items-start"
+            className="p-5 border rounded-lg bg-white flex flex-col sm:flex-row gap-4 items-start"
           >
             <img
               src="/images/jaipur/the-johri/thumbnail/photo1.jpg"
@@ -34,19 +74,17 @@ export default function ReviewPage() {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4">
+
                 <div className="min-w-0">
                   <h2 className="text-lg font-semibold truncate">Rajasthan Heritage Hotel</h2>
                   <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-                    <span className="inline-flex items-center gap-2">
-                      <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7l3-7z" />
-                      </svg>
+                    <span className="inline-flex items-center gap-1">
+                      <MapPinIcon className="w-4 h-4" />
                       Fort area, Jaipur
                     </span>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-800">
                       4.4 ★
                     </span>
-                    <span className="inline-flex items-center text-xs text-gray-400">Free Wi‑Fi</span>
                   </div>
                 </div>
 
@@ -55,18 +93,10 @@ export default function ReviewPage() {
                   <div className="text-sm my-1 font-medium">21 Oct 2025 → 22 Oct 2025</div>
                   <div className="text-xs text-gray-400 mt-1">1 night</div>
                 </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between gap-4">
-                <div className="text-sm text-gray-600">
-                  <div className="inline-flex items-center gap-2 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">
-                    Flexible dates
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500">Breakfast not included</div>
-                </div>
 
               </div>
             </div>
+
           </div>
 
           {/* Rooms Summary */}

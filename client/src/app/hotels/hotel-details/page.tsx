@@ -182,12 +182,7 @@ export default function HotelPage() {
 
             const created = await res.json();
 
-            const paramString = new URLSearchParams({
-                hotelId: hotelId,
-                checkInDate:  checkInDate,
-                checkOutDate: checkOutDate
-            }).toString();
-            
+            const paramString = new URLSearchParams({ reservationId: created.reservationId }).toString();
             router.push(`/hotels/booking-review?${paramString}`);
 
         } catch (err) {

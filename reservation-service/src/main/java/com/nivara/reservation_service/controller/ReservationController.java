@@ -1,14 +1,18 @@
 package com.nivara.reservation_service.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.nivara.reservation_service.mapper.ReservationMapper;
 import com.nivara.reservation_service.model.dto.CreateReservationRequestDTO;
 import com.nivara.reservation_service.model.dto.CreateReservationResponseDTO;
+import com.nivara.reservation_service.model.dto.ReservationDTO;
 import com.nivara.reservation_service.model.entity.Reservation;
 import com.nivara.reservation_service.service.ReservationService;
 
@@ -36,6 +40,12 @@ public class ReservationController {
             requestBody.currency());
 
         return ResponseEntity.status(201).body(CreateReservationResponseDTO.from(reservation));
+    }
+
+    @GetMapping("/{reservationId}")
+    public ResponseEntity<ReservationDTO> getReservation(@RequestParam Long reservationId) {
+        Reservation reservation = reservationService.findById(reservationId);
+        return ResponseEntity.ok().body(ReservationMapper.toDto(reservation));
     }
 
 }
