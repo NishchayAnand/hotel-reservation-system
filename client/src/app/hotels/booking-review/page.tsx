@@ -6,6 +6,7 @@ import { MapPinIcon } from "@heroicons/react/24/solid";
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ReviewPage() {
 
@@ -30,7 +31,7 @@ export default function ReviewPage() {
       setError(null);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_RESERVATION_SERVICE_URL || "http://localhost:8084";
-        const res = await fetch(`${baseUrl}/api/reservations/${encodeURIComponent(reservationId)}`, {
+        const res = await fetch(`${baseUrl}/api/reservations/${reservationId}`, {
           method: "GET",
           signal: abort.signal,
           headers: { Accept: "application/json" }
@@ -85,11 +86,12 @@ export default function ReviewPage() {
       } finally {
         setHotelLoading(false);
 
-      }
+      } 
 
-      fetchHotel();
-      return () => abort.abort();
     };
+
+    fetchHotel();
+    return () => abort.abort();
   }, [reservation?.hotelId]);
 
   return (
@@ -118,16 +120,23 @@ export default function ReviewPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4">
 
-                <div className="min-w-0">
-                  <h2 className="text-lg font-semibold truncate">Rajasthan Heritage Hotel</h2>
+                {/* Hotel Details */}
+                <div id="hotel-details" className="min-w-0">
+                  <h2 className="text-lg font-semibold truncate">
+                    {hotel?.name ?? <Skeleton className="h-4 w-[250px]" />}
+                  </h2>
                   <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
                     <span className="inline-flex items-center gap-1">
                       <MapPinIcon className="w-4 h-4" />
-                      Fort area, Jaipur
+                      {hotel?.address ?? <Skeleton className="h-4 w-[100px]" />}
                     </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-800">
-                      4.4 ★
-                    </span>
+                    {hotel?.rating ? 
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-800">
+                        {Number(hotel.rating).toFixed(1)} ★
+                      </span>
+                      :
+                      <Skeleton className="h-4 w-[50px]" />
+                    }
                   </div>
                 </div>
 

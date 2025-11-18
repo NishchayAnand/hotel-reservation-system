@@ -2,11 +2,11 @@ package com.nivara.reservation_service.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nivara.reservation_service.mapper.ReservationMapper;
@@ -43,9 +43,10 @@ public class ReservationController {
     }
 
     @GetMapping("/{reservationId}")
-    public ResponseEntity<ReservationDTO> getReservation(@RequestParam Long reservationId) {
+    public ResponseEntity<ReservationDTO> getReservation(@PathVariable Long reservationId) {
         Reservation reservation = reservationService.findById(reservationId);
-        return ResponseEntity.ok().body(ReservationMapper.toDto(reservation));
+        ReservationDTO resp = ReservationMapper.toDto(reservation);
+        return ResponseEntity.ok().body(resp);
     }
 
 }

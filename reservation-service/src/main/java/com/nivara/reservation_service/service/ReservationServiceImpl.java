@@ -63,9 +63,9 @@ public class ReservationServiceImpl implements ReservationService {
 
         List<ReservationItem> items = reservationItems.stream()
             .map(item -> ReservationItem.builder()
-                .roomTypeId(item.roomTypeId())
-                .quantity(item.quantity())
-                .rate(item.rate())
+                .roomTypeId(item.getRoomTypeId())
+                .quantity(item.getQuantity())
+                .rate(item.getRate())
                 .reservation(reservation)
                 .build()
             )

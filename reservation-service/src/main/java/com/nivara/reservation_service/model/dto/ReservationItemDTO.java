@@ -1,7 +1,14 @@
 package com.nivara.reservation_service.model.dto;
 
-public record ReservationItemDTO(
-    Long roomTypeId, 
-    Integer quantity, 
-    Long rate
-) {}
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+public class ReservationItemDTO {
+    Long roomTypeId;
+    Integer quantity;
+    Long rate;
+}
