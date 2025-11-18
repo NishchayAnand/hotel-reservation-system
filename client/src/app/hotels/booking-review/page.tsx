@@ -5,7 +5,7 @@ import { Hotel } from "@/types/hotel";
 import { MapPinIcon } from "@heroicons/react/24/solid";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ReviewPage() {
@@ -55,6 +55,15 @@ export default function ReviewPage() {
     fetchReservation();
     return () => abort.abort();
   }, [reservationId]);
+
+  // compute number of nights 
+  const nights = useMemo(() => {
+    if (!reservation) return;
+    const checkIn = new Date(reservation.checkInDate);
+    const checkOut = new Date(reservation.checkOutDate);
+    const ms = checkOut.getTime() - checkIn.getTime();
+    return Math.round(ms / (1000 * 60 * 60 * 24));
+  }, [reservation?.checkInDate, reservation?.checkOutDate]);
 
   // fetch hotel details once reservation is available (use reservation.hotelId)
   useEffect(() => {
@@ -142,8 +151,20 @@ export default function ReviewPage() {
 
                 <div className="text-right flex-shrink-0">
                   <div className="text-sm text-gray-500">Dates</div>
-                  <div className="text-sm my-1 font-medium">21 Oct 2025 → 22 Oct 2025</div>
-                  <div className="text-xs text-gray-400 mt-1">1 night</div>
+                  <div className="text-sm my-1 font-medium">
+                    {reservation?.checkInDate ? 
+                      `${reservation?.checkInDate} → ${reservation?.checkOutDate}`
+                      :
+                      <Skeleton className="h-4 w-[100px]" /> 
+                    }
+                  </div>
+                  {typeof nights === "number" ? (
+                    <div className="text-xs text-gray-400 mt-1">
+                      {nights} {nights === 1 ? "night" : "nights"}
+                    </div>
+                  ) : (
+                    <Skeleton className="h-4 w-[50px] mt-1" />
+                  )}
                 </div>
 
               </div>
@@ -152,7 +173,7 @@ export default function ReviewPage() {
           </div>
 
           {/* Rooms Summary */}
-          <div id="rooms-summary" className="p-4 border rounded-lg bg-white shadow-sm">
+          <div id="rooms-summary" className="p-4 border rounded-lg bg-white">
             <h3 className="text-md font-medium mb-3">Selected rooms</h3>
             <ul className="divide-y">
               <li className="py-3 flex justify-between items-center">
