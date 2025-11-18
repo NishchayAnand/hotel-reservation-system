@@ -115,7 +115,7 @@ export default function ReviewPage() {
 
         <section id="hero-section" className="col-span-2 space-y-4">
 
-          {/* Booking Summary */}
+          {/* Hotel Details */}
           <div
             id="booking-summary"
             className="p-5 border rounded-lg bg-white flex flex-col sm:flex-row gap-4 items-start"
@@ -129,7 +129,6 @@ export default function ReviewPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4">
 
-                {/* Hotel Details */}
                 <div id="hotel-details" className="min-w-0">
                   <h2 className="text-lg font-semibold truncate">
                     {hotel?.name ?? <Skeleton className="h-4 w-[250px]" />}
@@ -176,27 +175,30 @@ export default function ReviewPage() {
           <div id="rooms-summary" className="p-4 border rounded-lg bg-white">
             <h3 className="text-md font-medium mb-3">Selected rooms</h3>
             <ul className="divide-y">
-              <li className="py-3 flex justify-between items-center">
-                <div>
-                  <div className="font-medium">Deluxe Room</div>
-                  <div className="text-xs text-gray-500">1 room • Non-refundable</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold">₹3,000</div>
-                  <div className="text-xs text-gray-400">per night</div>
-                </div>
-              </li>
+              {reservation?.reservedItems && reservation.reservedItems.length > 0 ? (
+                reservation.reservedItems.map((item, idx) => {
+                  const qty = item.qty ?? 0;
+                  const rate = item.rate ?? 0;
+                  const currency = reservation?.currency ?? "INR";
+                  const fmt = new Intl.NumberFormat("en-IN", { style: "currency", currency });
 
-              <li className="py-3 flex justify-between items-center">
-                <div>
-                  <div className="font-medium">Executive Suite</div>
-                  <div className="text-xs text-gray-500">0 rooms selected</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold">₹6,000</div>
-                  <div className="text-xs text-gray-400">per night</div>
-                </div>
-              </li>
+                  return (
+                    <li key={idx} className="py-3 flex justify-between items-center">
+                      <div>
+                        <div className="font-medium">Deluxe Room</div>
+                        <div className="text-xs text-gray-500">1 room • Non-refundable</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">₹3,000</div>
+                        <div className="text-xs text-gray-400">per night</div>
+                      </div>
+                    </li>
+
+                  );
+                })
+              ) : (
+                <li className="py-3 text-sm text-gray-500">No rooms selected</li>
+              )}
             </ul>
           </div>
 

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 public class ReservationItemDTO {
     Long roomTypeId;
+    String name;
     Integer quantity;
     Long rate;
 }

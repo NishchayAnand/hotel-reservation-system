@@ -65,6 +65,7 @@ public class ReservationServiceImpl implements ReservationService {
             .map(item -> ReservationItem.builder()
                 .roomTypeId(item.getRoomTypeId())
                 .quantity(item.getQuantity())
+                .name(item.getName())
                 .rate(item.getRate())
                 .reservation(reservation)
                 .build()

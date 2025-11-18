@@ -14,7 +14,11 @@ public final class ReservationMapper {
     public static ReservationDTO toDto(Reservation reservation) {
         List<ReservationItemDTO> reservedItems = reservation.getReservationItems()
             .stream()
-            .map(item -> new ReservationItemDTO(item.getRoomTypeId(), item.getQuantity(), item.getRate()))
+            .map(item -> new ReservationItemDTO(
+                item.getRoomTypeId(),
+                item.getName(),
+                item.getQuantity(), 
+                item.getRate()))
             .toList();
 
         return ReservationDTO.builder()

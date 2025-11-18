@@ -423,6 +423,7 @@ CREATE TABLE reservation_items (
     id              BIGSERIAL PRIMARY KEY,
     reservation_id  BIGINT NOT NULL REFERENCES reservations(id) ON DELETE CASCADE,
     room_type_id    BIGINT NOT NULL,
+    name            VARCHAR(255) NOT NULL,
     quantity        INTEGER NOT NULL CHECK (quantity > 0),
     rate            BIGINT NOT NULL CHECK (rate >= 0)
 );

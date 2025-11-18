@@ -149,6 +149,7 @@ export default function HotelPage() {
             // build reservation items from precomputed breakdown.selectedItems
             const reservationItems = breakdown.selectedItems.map( item => ({
                 roomTypeId: Number(item.id),
+                name: item.name,
                 quantity: item.qty,
                 rate: item.rate
             }));
