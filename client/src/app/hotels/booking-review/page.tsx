@@ -1,6 +1,7 @@
 "use client";
 
 import { Reservation } from "@/types/reservation";
+import { Hotel } from "@/types/hotel";
 import { MapPinIcon } from "@heroicons/react/24/solid";
 
 import { useSearchParams } from "next/navigation";
@@ -14,6 +15,11 @@ export default function ReviewPage() {
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // hotel details after reservation is loaded
+  const [hotel, setHotel] = useState<Hotel | null>(null);
+  const [hotelLoading, setHotelLoading] = useState<boolean>(false);
+  const [hotelError, setHotelError] = useState<string | null>(null);
 
   useEffect(() => {
     if(!reservationId) return;
@@ -48,6 +54,43 @@ export default function ReviewPage() {
     fetchReservation();
     return () => abort.abort();
   }, [reservationId]);
+
+  // fetch hotel details once reservation is available (use reservation.hotelId)
+  useEffect(() => {
+    if(!reservation?.hotelId) return;
+
+    const abort = new AbortController();
+    const fetchHotel = async () => {
+      setHotelLoading(true);
+      setHotelError(null);
+
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_HOTEL_SERVICE_URL || "http://localhost:8081";
+        const res = await fetch(`${baseUrl}/api/hotels/${encodeURIComponent(reservation.hotelId)}`, {
+          method: "GET",
+          signal: abort.signal,
+          headers: { Accept: "application/json" }
+        });
+        
+        if(!res.ok) {
+          const errBody = await res.json().catch(() => null);
+          throw new Error(errBody?.message ?? `Failed to fetch hotel: ${res.status}`);
+        }
+
+        const data = await res.json();
+        setHotel(data);
+      } catch (err: any) {
+        if (err.name !== "AbortError") setHotelError(err.message ?? "Failed to load hotel");
+
+      } finally {
+        setHotelLoading(false);
+
+      }
+
+      fetchHotel();
+      return () => abort.abort();
+    };
+  }, [reservation?.hotelId]);
 
   return (
     <main className="mt-16 max-w-6xl mx-auto p-6">
