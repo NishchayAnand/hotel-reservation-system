@@ -270,7 +270,40 @@ export default function ReviewPage() {
           contact: guestPhone|| ""
         },
         handler: (razorpayResponse: any) => {
-          console.log("finalize reservation please");
+          (async () => {
+            try {
+              // finalize reservation
+              const resvBase = process.env.NEXT_PUBLIC_RESERVATION_SERVICE_URL || "http://localhost:8084";
+              const finalizeRes = await fetch(
+                `${resvBase}/api/reservations/${encodeURIComponent(String(reservation.id))}/finalize`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    provider: "razorpay",
+                    paymentId: razorpayResponse.razorpay_payment_id,
+                    orderId: razorpayResponse.razorpay_order_id,
+                    signature: razorpayResponse.razorpay_signature
+                  })
+                }
+              );
+
+              if (!finalizeRes.ok) {
+                const errBody = await finalizeRes.json().catch(() => null);
+                throw new Error(errBody?.message ?? `Reservation finalize failed: ${finalizeRes.status}`);
+              }
+
+              // on success, navigate to payment success page
+              window.location.href = `/payments/success?reservationId=${encodeURIComponent(String(reservation.id))}&paymentId=${encodeURIComponent(razorpayResponse.razorpay_payment_id)}&orderId=${encodeURIComponent(razorpayResponse.razorpay_order_id)}`;
+            } catch (err: any) {
+              console.error("Failed to finalize reservation after payment:", err);
+              toast.error(err?.message ?? "Payment succeeded but finalizing reservation failed");
+              // still redirect to a failure/verification page if desired
+              window.location.href = `/payments/verify?reservationId=${encodeURIComponent(String(reservation.id))}`;
+            } finally {
+              setCreatingPayment(false);
+            }
+          })();
         },
         modal: {
           ondismiss: () => {
