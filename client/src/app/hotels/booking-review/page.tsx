@@ -270,7 +270,7 @@ export default function ReviewPage() {
           contact: guestPhone|| ""
         },
         handler: (razorpayResponse: any) => {
-
+          console.log("finalize reservation please");
         },
         modal: {
           ondismiss: () => {
