@@ -20,7 +20,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/create-payment")
+    @PostMapping
     public ResponseEntity<CreatePaymentResponseDTO> createPayment(@RequestBody CreatePaymentRequestDTO requestBody) {
         CreatePaymentResponseDTO response = paymentService.createPayment(requestBody);
         return ResponseEntity.status(200).body(response); 

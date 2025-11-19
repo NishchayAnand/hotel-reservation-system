@@ -11,26 +11,22 @@ import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { toast } from "sonner";
+
 import {
   Field,
-  FieldContent,
   FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
   FieldLegend,
-  FieldSeparator,
   FieldSet,
-  FieldTitle,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Item,
-  ItemActions,
   ItemContent,
   ItemDescription,
-  ItemTitle,
 } from "@/components/ui/item"
 
 const formatRemaining = (ms: number) => {
@@ -68,6 +64,10 @@ export default function ReviewPage() {
   const [guestName, setGuestName] = useState<string>("");
   const [guestEmail, setGuestEmail] = useState<string>("");
   const [guestPhone, setGuestPhone] = useState<string>("");
+
+  // payment state
+  const [creatingPayment, setCreatingPayment] = useState<boolean>(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   useEffect(() => {
     if(!reservationId) return;
@@ -196,6 +196,51 @@ export default function ReviewPage() {
     fetchHotel();
     return () => abort.abort();
   }, [reservation?.hotelId]);
+
+  const handlePayNow = async () => {
+    if(!reservation) return;
+
+    setPaymentError(null);
+    setCreatingPayment(true);
+
+    // validation: require guest details
+    if( !guestName?.trim() || !guestEmail?.trim() || !guestPhone?.trim() ) {
+      toast.error("Name, email and phone are required");
+      setPaymentError("Name, email and phone are required");
+      setCreatingPayment(false);
+      return;
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_PAYMENT_SERVICE_URL || "http://localhost:8085";
+    const payload = {
+      reservationId: reservation.id,
+      holdId: reservation.holdId,
+      amount: Math.round((total ?? 0) * 100), // send amount in cents/paise to make server expectation
+      currency: reservation.currency ?? "INR",
+      guestName: guestName,
+      guestEmail: guestEmail,
+      guestPhone: guestPhone   
+    };
+
+    try {
+      const res = await fetch(`${baseUrl}/api/payments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      
+      
+    } catch (err: any) {
+      console.error(err);
+      setPaymentError(err?.message ?? "Failed to initiate payment");
+    } finally {
+      setCreatingPayment(false);
+    }
+    
+  };
 
   return (
     <main className="mt-16 max-w-6xl mx-auto p-6">
@@ -405,15 +450,21 @@ export default function ReviewPage() {
             </div>
 
             <Button 
+              id="pay-now"
               type="submit" 
               className="w-full cursor-pointer"
-              disabled={holdExpired}
-            >
-              {holdExpired ? "Hold Expired" : "Pay Now"}
-            </Button>
+              onClick={handlePayNow}
+              disabled={holdExpired || creatingPayment}
 
+            >
+              {creatingPayment ? "Processing…" : holdExpired ? "Hold Expired" : "Pay Now"}
+            </Button>
+            {paymentError && <div className="mt-2 text-sm text-red-600">{paymentError}</div>}
+          
           </div>
+
         </aside>
+
       </div>
 
     </main>
