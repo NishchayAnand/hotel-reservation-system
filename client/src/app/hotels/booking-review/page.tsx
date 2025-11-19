@@ -8,6 +8,19 @@ import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSeparator,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field";
+
 export default function ReviewPage() {
 
   const searchParams = useSearchParams();
@@ -177,19 +190,25 @@ export default function ReviewPage() {
             <ul className="divide-y">
               {reservation?.reservedItems && reservation.reservedItems.length > 0 ? (
                 reservation.reservedItems.map((item, idx) => {
-                  const qty = item.qty ?? 0;
+                  const name = item.name ?? "Unknown Room Type"
+                  const quantity = item.quantity ?? 0;
                   const rate = item.rate ?? 0;
                   const currency = reservation?.currency ?? "INR";
-                  const fmt = new Intl.NumberFormat("en-IN", { style: "currency", currency });
+                  const fmt = new Intl.NumberFormat("en-IN", { 
+                    style: "currency", 
+                    currency,
+                    minimumFractionDigits:0,
+                    maximumFractionDigits:0 
+                  });
 
                   return (
                     <li key={idx} className="py-3 flex justify-between items-center">
                       <div>
-                        <div className="font-medium">Deluxe Room</div>
-                        <div className="text-xs text-gray-500">1 room • Non-refundable</div>
+                        <div className="font-medium">{name}</div>
+                        <div className="text-xs text-gray-500">{quantity} {quantity === 1 ? "room" : "rooms"} • Non-refundable</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold">₹3,000</div>
+                        <div className="font-semibold">{fmt.format(rate)}</div>
                         <div className="text-xs text-gray-400">per night</div>
                       </div>
                     </li>
@@ -203,7 +222,7 @@ export default function ReviewPage() {
           </div>
 
           {/* Guest Details */}
-          <div id="guest-details" className="p-4 border rounded-lg bg-white shadow-sm">
+          <div id="guest-details" className="p-4 border rounded-lg bg-white">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-md font-medium mb-1">Guest details</h3>
@@ -248,6 +267,7 @@ export default function ReviewPage() {
 
         </section>
 
+        {/* Payment Summary */}
         <aside id="side-section" className="col-span-1">
           <div className="p-4 border rounded-lg bg-white shadow-sm sticky top-24">
             <h3 className="text-lg font-semibold mb-2">Payment summary</h3>

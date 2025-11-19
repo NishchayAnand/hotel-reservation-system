@@ -1,5 +1,6 @@
 export type ReservationItem = {
     id: number;
-    qty: number;
+    name: string;
+    quantity: number;
     rate: number;
 };
