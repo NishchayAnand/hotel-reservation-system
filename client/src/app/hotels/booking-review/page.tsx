@@ -2,7 +2,10 @@
 
 import { Reservation } from "@/types/reservation";
 import { Hotel } from "@/types/hotel";
+
 import { MapPinIcon } from "@heroicons/react/24/solid";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
+import { ClockIcon } from "@heroicons/react/24/solid";
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
@@ -20,6 +23,28 @@ import {
   FieldSet,
   FieldTitle,
 } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item"
+
+const formatRemaining = (ms: number) => {
+  if (ms <= 0) return "0s";
+  const totalSecs = Math.floor(ms / 1000);
+  const days = Math.floor(totalSecs / 86400);
+  const hours = Math.floor((totalSecs % 86400) / 3600);
+  const minutes = Math.floor((totalSecs % 3600) / 60);
+  const seconds = totalSecs % 60;
+  
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
+  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+};
 
 export default function ReviewPage() {
 
@@ -30,10 +55,19 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // hold expiry timer state
+  const [timeLeftMs, setTimeLeftMs] = useState<number | null>(null);
+  const [holdExpired, setHoldExpired] = useState<boolean>(false);
+
   // hotel details after reservation is loaded
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [hotelLoading, setHotelLoading] = useState<boolean>(false);
   const [hotelError, setHotelError] = useState<string | null>(null);
+
+  // guest input state (controlled inputs)
+  const [guestName, setGuestName] = useState<string>("");
+  const [guestEmail, setGuestEmail] = useState<string>("");
+  const [guestPhone, setGuestPhone] = useState<string>("");
 
   useEffect(() => {
     if(!reservationId) return;
@@ -69,6 +103,30 @@ export default function ReviewPage() {
     return () => abort.abort();
   }, [reservationId]);
 
+  useEffect(() => {
+    if(!reservation?.expiresAt) {
+      setTimeLeftMs(null);
+      setHoldExpired(false);
+      return;
+    }
+
+    const target = new Date(reservation.expiresAt).getTime();
+    const tick = () => {
+      const diff = target - Date.now();
+      if(diff <= 0) {
+        setTimeLeftMs(0);
+        setHoldExpired(true);
+        return;
+      }
+      setTimeLeftMs(diff);
+      setHoldExpired(false);
+    };
+
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [reservation?.expiresAt]);
+
   // compute number of nights 
   const nights = useMemo(() => {
     if (!reservation) return;
@@ -77,6 +135,29 @@ export default function ReviewPage() {
     const ms = checkOut.getTime() - checkIn.getTime();
     return Math.round(ms / (1000 * 60 * 60 * 24));
   }, [reservation?.checkInDate, reservation?.checkOutDate]);
+
+  // global currency formatter for this component (recreated only when currency changes)
+  const fmt = useMemo(() => {
+    const currency = reservation?.currency ?? "INR";
+    return new Intl.NumberFormat("en-IN", { 
+      style: "currency", 
+      currency,
+      minimumFractionDigits:0,
+      maximumFractionDigits:0 
+    });
+  }, [reservation?.currency]);
+
+  // taxes (18%) from reservation.amount
+  const taxes = useMemo(() => {
+    const amt = reservation?.amount ?? 0;
+    // calculate 18% and round to nearest whole unit
+    return Math.round(amt * 0.18);
+  }, [reservation?.amount]);
+
+  const total = useMemo(() => {
+    const amt = reservation?.amount ?? 0;
+    return amt + taxes;
+  }, [reservation?.amount, taxes]);
 
   // fetch hotel details once reservation is available (use reservation.hotelId)
   useEffect(() => {
@@ -118,6 +199,18 @@ export default function ReviewPage() {
 
   return (
     <main className="mt-16 max-w-6xl mx-auto p-6">
+
+      {/* Hold expiry timer (bottom-right) */}
+      {timeLeftMs !== null && !holdExpired && (
+        <Item variant="outline" className="fixed bottom-6 right-6 z-50 w-60 bg-white">
+          <ItemContent>
+            <ItemDescription className="font-medium text-gray-800">
+              <ClockIcon className="w-5 h-5 mr-1.5 inline" />
+              {`Hold will expire in ${formatRemaining(timeLeftMs)}`}
+            </ItemDescription>
+          </ItemContent>
+        </Item>
+      )}
 
       <header id="title" className="mb-6">
         <h1 className="text-3xl font-semibold">Booking Review</h1>
@@ -193,13 +286,6 @@ export default function ReviewPage() {
                   const name = item.name ?? "Unknown Room Type"
                   const quantity = item.quantity ?? 0;
                   const rate = item.rate ?? 0;
-                  const currency = reservation?.currency ?? "INR";
-                  const fmt = new Intl.NumberFormat("en-IN", { 
-                    style: "currency", 
-                    currency,
-                    minimumFractionDigits:0,
-                    maximumFractionDigits:0 
-                  });
 
                   return (
                     <li key={idx} className="py-3 flex justify-between items-center">
@@ -223,94 +309,108 @@ export default function ReviewPage() {
 
           {/* Guest Details */}
           <div id="guest-details" className="p-4 border rounded-lg bg-white">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-md font-medium mb-1">Guest details</h3>
-                <p className="text-xs text-gray-500">Primary guest information — used for check-in and confirmation</p>
-              </div>
-              <div>
-                <button
-                  className="text-sm text-black hover:underline"
-                  aria-label="Edit guest details"
-                >
-                  Edit
-                </button>
-              </div>
+
+            <FieldSet>
+
+              <FieldLegend>Guest details</FieldLegend>
+              <FieldDescription>Primary guest information — used for check-in and confirmation</FieldDescription>
+              
+              <FieldGroup className="mt-2 grid grid-cols-2 gap-y-3 gap-x-6 text-md text-gray-800">
+                
+                <Field>
+                  <FieldLabel htmlFor="username">Name</FieldLabel>
+                  <FieldDescription>Enter your full name exactly as shown on your ID.</FieldDescription>
+                  <Input 
+                    id="username" 
+                    type="text" 
+                    placeholder="Max Leiter" 
+                    value={guestName}
+                    onChange={ (e) => setGuestName(e.target.value) }
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <FieldDescription>We'll send confirmation to this email.</FieldDescription>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="yourname@example.com" 
+                    value={guestEmail}
+                    onChange={ (e) => setGuestEmail(e.target.value) }
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="phone">Phone</FieldLabel>
+                  <FieldDescription>Use digits and spaces only.</FieldDescription>
+                  <Input 
+                    id="phone" 
+                    type="tel" 
+                    placeholder="+91 888 888 8888" 
+                    value={guestPhone}
+                    onChange={ (e) => setGuestPhone(e.target.value) }
+                  />
+                </Field>
+
+              </FieldGroup>
+
+            </FieldSet>
+
+            <div className="mt-6 text-xs text-gray-400">
+              Note: Valid ID will be required at check-in.
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-y-3 gap-x-6 text-sm text-gray-700">
-              <div className="flex flex-col">
-                <span className="text-xs text-gray-500">Name</span>
-                <span className="font-medium">John Doe</span>
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-xs text-gray-500">Email</span>
-                <span className="font-medium">john.doe@example.com</span>
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-xs text-gray-500">Phone</span>
-                <span className="font-medium">+91 98765 43210</span>
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-xs text-gray-500">Guests</span>
-                <span className="font-medium">2 adults, 1 child</span>
-              </div>
-            </div>
-
-            <div className="mt-4 text-xs text-gray-400">
-              Note: Valid ID will be required at check-in. You can update guest details later if needed.
-            </div>
           </div>
 
         </section>
 
         {/* Payment Summary */}
         <aside id="side-section" className="col-span-1">
-          <div className="p-4 border rounded-lg bg-white shadow-sm sticky top-24">
+          <div className="p-4 border rounded-lg bg-white sticky top-24">
             <h3 className="text-lg font-semibold mb-2">Payment summary</h3>
 
             <div className="text-sm text-gray-600 mb-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span className="font-medium">₹3,000</span>
+                <span className="font-medium">{reservation?.amount ? fmt.format(reservation.amount) : <Skeleton className="h-4 w-[50px]" /> }</span>
               </div>
               <div className="flex justify-between mt-2">
                 <span>Taxes (est.)</span>
-                <span className="font-medium">₹540</span>
-              </div>
-              <div className="flex justify-between mt-2">
-                <span>Service fee</span>
-                <span className="font-medium">₹100</span>
+                <span className="font-medium">{ reservation ? fmt.format(taxes) : <Skeleton className="h-4 w-[50px]" /> }</span>
               </div>
             </div>
 
-            <div className="border-t pt-3 mb-4" role="region" aria-label="Price summary">
+            <div className="border-t pt-3 mb-4">
+
               <div className="flex justify-between items-start gap-4">
-              <div>
-                <div className="text-sm text-gray-500">Total (incl. taxes & fees)</div>
-                <div className="text-xl my-2 font-semibold text-gray-900">₹3,640</div>
-                <div className="text-xs text-gray-400">Includes estimated taxes & fees</div>
+
+                <div>
+                  <div className="text-sm text-gray-500">Total (incl. taxes)</div>
+                  <div className="text-xl my-2 font-semibold text-gray-900">{reservation ? fmt.format(total) : <Skeleton className="h-6 w-[120px]" />}</div>
+                  <div className="text-xs text-gray-400">Includes estimated taxes & fees</div>
+                </div>
+
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-2 text-xs text-gray-500">
+                    <svg className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                      <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 2v6m0 8v6M4 12h16" />
+                    </svg>
+                    <span>Secure payment</span>
+                  </span>
+                </div>
+
               </div>
 
-              <div className="text-right">
-                <span className="inline-flex items-center gap-2 text-xs text-gray-500">
-                <svg className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                  <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 2v6m0 8v6M4 12h16" />
-                </svg>
-                <span className="sr-only">Secure payment</span>
-                <span>Secure payment</span>
-                </span>
-              </div>
-              </div>
-              <div aria-live="polite" className="sr-only">Total payable is ₹3,640</div>
             </div>
 
-            <button className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 bg-black text-white rounded-md shadow-sm">
-              Proceed to payment
-            </button>
+            <Button 
+              type="submit" 
+              className="w-full cursor-pointer"
+              disabled={holdExpired}
+            >
+              {holdExpired ? "Hold Expired" : "Pay Now"}
+            </Button>
 
           </div>
         </aside>
