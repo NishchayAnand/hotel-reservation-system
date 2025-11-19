@@ -197,6 +197,16 @@ export default function ReviewPage() {
     return () => abort.abort();
   }, [reservation?.hotelId]);
 
+  const loadRazorpay = () => new Promise<void>((resolve, reject) => {
+    if ((window as any).Razorpay) return resolve();
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Razorpay checkout script"));
+    document.body.appendChild(script); // This is the moment the browser actually starts loading the script. Once it’s appended to the DOM, the browser begins downloading it.
+  });
+
   const handlePayNow = async () => {
     if(!reservation) return;
 
@@ -211,18 +221,19 @@ export default function ReviewPage() {
       return;
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_PAYMENT_SERVICE_URL || "http://localhost:8085";
-    const payload = {
-      reservationId: reservation.id,
-      holdId: reservation.holdId,
-      amount: Math.round((total ?? 0) * 100), // send amount in cents/paise to make server expectation
-      currency: reservation.currency ?? "INR",
-      guestName: guestName,
-      guestEmail: guestEmail,
-      guestPhone: guestPhone   
-    };
-
     try {
+
+      const baseUrl = process.env.NEXT_PUBLIC_PAYMENT_SERVICE_URL || "http://localhost:8085";
+      const payload = {
+        reservationId: reservation.id,
+        holdId: reservation.holdId,
+        amount: Math.round((total ?? 0) * 100), // send amount in cents/paise to make server expectation
+        currency: reservation.currency ?? "INR",
+        guestName: guestName,
+        guestEmail: guestEmail,
+        guestPhone: guestPhone   
+      };
+
       const res = await fetch(`${baseUrl}/api/payments`, {
         method: "POST",
         headers: {
@@ -231,7 +242,48 @@ export default function ReviewPage() {
         body: JSON.stringify(payload)
       });
 
-      
+      if(!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.message ?? `Create payment failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+      const orderId = data.providerOrderId;
+      const key = data.providerKeyId;
+      const amountPaise = data.amount ?? Math.round((reservation.amount ?? 0) * 100);
+      const currency = data.currency ?? "INR";
+
+      if(!orderId || !key) throw new Error("Payment service did not return provider order id or key");
+
+      await loadRazorpay(); // pause here until the Razorpay script is loaded, or throw an error if it fails.
+
+      const options = {
+        key,
+        order_id: orderId,
+        amount: amountPaise,
+        currency: currency,
+        name: "Nivara",
+        description: "Test transaction",
+        prefill: {
+          name: guestName || "",
+          email: guestEmail || "",
+          contact: guestPhone|| ""
+        },
+        handler: (razorpayResponse: any) => {
+
+        },
+        modal: {
+          ondismiss: () => {
+            // is called only when the modal is closed by the user
+            // helps you detect when a user cancels or exits the payment flow
+            console.log("Checkout modal was closed by the user");
+          }
+        },
+        theme: { color: "#111827" }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
       
     } catch (err: any) {
       console.error(err);
@@ -239,7 +291,7 @@ export default function ReviewPage() {
     } finally {
       setCreatingPayment(false);
     }
-    
+
   };
 
   return (
