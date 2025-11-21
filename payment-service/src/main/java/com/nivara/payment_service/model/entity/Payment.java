@@ -34,13 +34,13 @@ public class Payment {
     @Column(name = "provider_order_id")
     private String providerOrderId;
 
-    @Column(name = "customer_name")
-    private String customerName;
+    @Column(name = "guest_name")
+    private String guestName;
 
-    @Column(name = "customer_email")
-    private String customerEmail;
+    @Column(name = "guest_email")
+    private String guestEmail;
 
-    @Column(name = "customer_phone")
-    private String customerPhone;
+    @Column(name = "guest_phone")
+    private String guestPhone;
 
 }

@@ -5,5 +5,7 @@ public record CreatePaymentRequestDTO (
     Long holdId,
     long amount,
     String currency,
-    CustomerDTO customer
+    String guestName,
+    String guestEmail,
+    String guestPhone
 ) {}

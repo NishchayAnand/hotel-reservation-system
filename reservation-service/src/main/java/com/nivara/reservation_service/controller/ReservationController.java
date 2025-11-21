@@ -49,4 +49,9 @@ public class ReservationController {
         return ResponseEntity.ok().body(resp);
     }
 
+    @PostMapping("/{reservationId}/finalize")
+    public ResponseEntity<String> finalizeReservation(@PathVariable Long reservationId) {
+        return null;
+    }
+
 }

@@ -16,6 +16,7 @@ import com.nivara.payment_service.exception.HoldExpiringSoonException;
 import com.nivara.payment_service.exception.HoldReleaseException;
 import com.nivara.payment_service.exception.PaymentFailedException;
 import com.nivara.payment_service.model.dto.HoldDTO;
+import com.nivara.payment_service.model.dto.ConfirmPaymentRequest;
 import com.nivara.payment_service.model.dto.CreatePaymentRequestDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentResponseDTO;
 import com.nivara.payment_service.model.entity.Payment;
@@ -134,9 +135,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .amount(requestBody.amount())
                 .currency(requestBody.currency())
                 .status(PaymentStatus.CREATED)
-                .customerName(requestBody.customer().getName())
-                .customerEmail(requestBody.customer().getEmailId())
-                .customerPhone(requestBody.customer().getPhone())
+                .guestName(requestBody.guestName())
+                .guestEmail(requestBody.guestEmail())
+                .guestPhone(requestBody.guestPhone())
                 .build();
 
             try {
@@ -246,6 +247,48 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
         }
         
+    }
+
+    /**
+     * 1. Verify Razorpay signature
+     * 2. Mark payment as SUCCESS_CLIENT_CALLBACK (or FAILED_SIGNATURE)
+     * 3. Orchestrate downstream calls:
+     *      a) consumeHold(holdId)
+     *      b) confirmReservation(reservationId, paymentId)
+     * 4. Mark payment as SUCCESS / FAILED_*
+     */
+    @Override
+    public void handlePaymentCallback(ConfirmPaymentRequest requestBody) {
+        // Step 1: Find payment by Razorpay order id
+        Payment payment = paymentRepository
+            .findByRazorpayOrderId(requestBody.razorpayOrderId())
+            .orElseThrow(() -> new IllegalArgumentException("Payment not found for order id"));
+
+        // Step 2: Verify signature
+        boolean isValid = signatureVerifier.isValidSignature(
+            requestBody.razorpayOrderId(),
+            requestBody.razorpayPaymentId(),
+            requestBody.razorpaySignature()
+        );
+
+        if(!isValid) {
+            payment.setStatus(PaymentStatus.FAILED_SIGNATURE);
+            paymentRepository.save(payment);
+            throw new IllegalStateException("Invalid Razorpay signature");
+        }
+
+        // Signature valid ->. persist Razorpay fields + mark SUCCESS_CLIENT_CALLBACK
+        payment.setProviderPaymentId(requestBody.razorpayPaymentId());
+        payment.setProviderSignature(requestBody.razorpaySignature());
+        payment.setStatus(PaymentStatus.SUCCESS_CLIENT_CALLBACK);
+        paymentRepository.save(payment);
+
+        // Step 3: Orchestrate with downstream services
+        try {
+
+        } catch (Exception ex) {
+            throw ex;        
+        }
     }
 
 }

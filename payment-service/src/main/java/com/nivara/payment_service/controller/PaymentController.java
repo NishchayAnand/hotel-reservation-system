@@ -3,10 +3,10 @@ package com.nivara.payment_service.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.nivara.payment_service.model.dto.ConfirmPaymentRequest;
 import com.nivara.payment_service.model.dto.CreatePaymentRequestDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentResponseDTO;
 import com.nivara.payment_service.service.PaymentService;
@@ -26,9 +26,10 @@ public class PaymentController {
         return ResponseEntity.status(200).body(response); 
     }
 
-    @PostMapping("/confirm-payment")
-    public ResponseEntity<String> confirmPayment(@RequestHeader("X-Razorpay-Signature") String signatureHeader) {
-        return null;
+    @PostMapping("/confirm")
+    public ResponseEntity<Void> confirmPaymentCallback(@RequestBody ConfirmPaymentRequest requestBody) {
+        paymentService.handlePaymentCallback(requestBody);
+        return ResponseEntity.ok().build();
     }
 
 }
