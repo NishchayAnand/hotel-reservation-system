@@ -15,6 +15,6 @@ public interface InventoryServiceClient {
     HoldDTO getHold(@RequestParam Long holdId);
 
     @PostMapping("holds/{holdId}/consume")
-    void consumeHold(@PathVariable Long holdId);
+    void consumeHold(@PathVariable Long holdId, @RequestParam Long paymentId);
 
 }

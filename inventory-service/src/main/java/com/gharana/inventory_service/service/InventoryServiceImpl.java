@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,10 +21,13 @@ import org.springframework.stereotype.Service;
 
 import com.gharana.inventory_service.model.entity.InventoryRecord;
 import com.gharana.inventory_service.model.enums.HoldStatus;
+import com.gharana.inventory_service.exception.HoldNotFoundException;
 import com.gharana.inventory_service.exception.HoldReleasedException;
 import com.gharana.inventory_service.exception.InventoryUnavailableException;
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
+import com.gharana.inventory_service.model.dto.ConsumeHoldResponseDTO;
 import com.gharana.inventory_service.model.dto.HoldDTO;
+import com.gharana.inventory_service.model.dto.HoldNotConsumableException;
 import com.gharana.inventory_service.model.dto.ReservationItemDTO;
 import com.gharana.inventory_service.model.entity.Hold;
 import com.gharana.inventory_service.model.entity.HoldItem;
@@ -136,7 +140,7 @@ public class InventoryServiceImpl implements InventoryService {
             .hotelId(hotelId)
             .checkInDate(checkInDate)
             .checkOutDate(checkOutDate)
-            .status(HoldStatus.HELD)
+            .status(HoldStatus.ACTIVE)
             .expiresAt(expiresAt)
             .build();
         
@@ -178,6 +182,75 @@ public class InventoryServiceImpl implements InventoryService {
     public HoldDTO getHold(Long holdId) {
         Hold hold = holdRepository.findById(holdId).get();
         return new HoldDTO(hold.getId(), hold.getStatus(), hold.getExpiresAt());
+    }
+
+    @Override
+    public ConsumeHoldResponseDTO consumeHold(Long holdId, Long reservationId, Long paymentId) {
+
+        // Step 1: Load hold with write lock (protect against concurrent consumes)
+        Hold hold = holdRepository.findByIdForUpdate(holdId)
+            .orElseThrow(() -> new HoldNotFoundException(holdId));
+
+        // Step 2: Idempotency check: if already CONSUMED for same reservation & payment - return OK
+        if(hold.isConsumed()) {
+            if( Objects.equals(hold.getReservationId(), reservationId) && 
+                Objects.equals(hold.getPaymentId(), paymentId)) {
+                
+                return new ConsumeHoldResponseDTO(
+                    hold.getId(),
+                    hold.getStatus(),
+                    hold.getReservationId(),
+                    hold.getPaymentId()
+                );
+            }
+
+            // consumed but with different reservation/payment - treat as conflict
+            throw new HoldNotConsumableException(
+                    "Hold " + holdId + " already consumed for reservation " +
+                    hold.getReservationId() + " and payment " + hold.getPaymentId()
+            );
+        }
+
+        // 3. Validate hold is ACTIVE and not expired
+        if (!hold.isActive()) {
+            throw new HoldNotConsumableException(
+                    "Hold " + holdId + " is not ACTIVE (status=" + hold.getStatus() + ")"
+            );
+        }
+
+        if (hold.isExpired()) {
+            hold.setStatus(HoldStatus.EXPIRED);
+            // save status update so future calls see it as EXPIRED
+            holdRepository.save(hold);
+
+            throw new HoldNotConsumableException(
+                    "Hold " + holdId + " has expired and cannot be consumed"
+            );
+        }
+
+        // 4. Optional: sanity checks for reservationId/payments
+        if (hold.getReservationId() != null
+                && !Objects.equals(hold.getReservationId(), reservationId)) {
+            throw new HoldNotConsumableException(
+                    "Hold " + holdId + " is already linked to reservation " + hold.getReservationId()
+            );
+        }
+
+        // 5. Link to reservation & payment and mark as CONSUMED
+        hold.setReservationId(reservationId);
+        hold.setPaymentId(paymentId);
+        hold.setStatus(HoldStatus.CONSUMED);
+
+        Hold saved = holdRepository.save(hold);
+
+        // 6. Return result
+        return new ConsumeHoldResponseDTO(
+                saved.getId(),
+                saved.getStatus(),
+                saved.getReservationId(),
+                saved.getPaymentId()
+        );
+
     }
 
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
+import com.gharana.inventory_service.model.dto.ConsumeHoldResponseDTO;
 import com.gharana.inventory_service.model.dto.CreateHoldRequestDTO;
 import com.gharana.inventory_service.model.dto.CreateHoldResponseDTO;
 import com.gharana.inventory_service.model.dto.HoldDTO;
@@ -33,7 +35,7 @@ public class InventoryController {
             return ResponseEntity.ok().body(inventoryService.getAvailableRoomTypes(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate()));
     }
 
-    @PostMapping("/create-hold")
+    @PostMapping("/holds")
     public ResponseEntity<CreateHoldResponseDTO> createHold(@RequestBody CreateHoldRequestDTO requestBody) {  
         Hold hold = inventoryService.createHold(
             requestBody.reservationId(), 
@@ -51,6 +53,16 @@ public class InventoryController {
     @GetMapping("/holds/{holdId}")
     public ResponseEntity<HoldDTO> getHold(@RequestParam Long holdId) {
         HoldDTO responseBody = inventoryService.getHold(holdId);
+        return ResponseEntity.ok().body(responseBody);
+    }
+
+    @PostMapping("/holds/{holdId}/consume")
+    public ResponseEntity<ConsumeHoldResponseDTO> consumeHold(
+        @PathVariable Long holdId, 
+        @RequestParam Long reservationId,
+        @RequestParam Long paymentId 
+    ) {
+        ConsumeHoldResponseDTO responseBody = inventoryService.consumeHold(holdId, reservationId, paymentId);
         return ResponseEntity.ok().body(responseBody);
     }
 

@@ -37,6 +37,9 @@ public class Hold {
     @Column(name = "reservation_id", nullable = false, unique = true)
     private Long reservationId;
 
+    @Column(name = "payment_id", unique = true)
+    private Long paymentId; // to ensure idempotency check when the payment-service calls consumeHold()
+
     @Column(name = "hotel_id", nullable = false)
     private Long hotelId;
 
@@ -55,5 +58,21 @@ public class Hold {
 
     @Column(name = "expires_at")
     private Instant expiresAt;
-    
+
+    public boolean isExpired() {
+        if (expiresAt == null) {
+            return false;
+        }
+        Instant now = Instant.now();
+        return !now.isBefore(expiresAt); // true when now >= expiresAt
+    }
+
+    public boolean isConsumed() {
+        return status == HoldStatus.CONSUMED;
+    }
+
+
+    public boolean isActive() {
+        return status == HoldStatus.ACTIVE && !isExpired();
+    }
 }

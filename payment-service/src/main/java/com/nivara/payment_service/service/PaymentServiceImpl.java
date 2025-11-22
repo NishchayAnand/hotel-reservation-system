@@ -109,6 +109,14 @@ public class PaymentServiceImpl implements PaymentService {
                 case FAILED:
                     throw new PaymentFailedException("Previous payment attempt failed.");
 
+                case REVERSED:
+                    // the payment was refunded ....
+                    return CreatePaymentResponseDTO.builder()
+                        .providerOrderId(existing.getProviderOrderId())
+                        .status(PaymentStatus.REVERSED)
+                        .message("Payment for this reservation was already refunded")
+                        .build();
+
                 case AUTHORIZED:
                     // if payment is authorized, backend will confirm hold and reservation
                     return CreatePaymentResponseDTO.builder()
@@ -184,6 +192,14 @@ public class PaymentServiceImpl implements PaymentService {
 
                     case FAILED:
                         throw new PaymentFailedException("Previous payment attempt failed.");
+
+                    case REVERSED:
+                        // the payment was refunded ....
+                        return CreatePaymentResponseDTO.builder()
+                            .providerOrderId(existing.getProviderOrderId())
+                            .status(PaymentStatus.REVERSED)
+                            .message("Payment for this reservation was already refunded")
+                            .build();
 
                     case AUTHORIZED:
                         // if payment is authorized, backend will confirm hold and reservation
@@ -308,7 +324,7 @@ public class PaymentServiceImpl implements PaymentService {
         // Step 3: Orchestrate with downstream services
         try {
             // 3a. Consume hold
-            inventoryServiceClient.consumeHold(payment.getHoldId());
+            inventoryServiceClient.consumeHold(payment.getHoldId(), payment.getId());
 
             // 3b. Confirm reservation
             reservationServiceClient.confirmReservation(requestBody.reservationId(), payment.getId());
