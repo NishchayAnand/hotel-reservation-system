@@ -2,6 +2,7 @@ package com.gharana.inventory_service.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +29,7 @@ import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
 import com.gharana.inventory_service.model.dto.ConsumeHoldResponseDTO;
 import com.gharana.inventory_service.model.dto.HoldDTO;
 import com.gharana.inventory_service.model.dto.HoldNotConsumableException;
+import com.gharana.inventory_service.model.dto.ReleaseHoldResponseDTO;
 import com.gharana.inventory_service.model.dto.ReservationItemDTO;
 import com.gharana.inventory_service.model.entity.Hold;
 import com.gharana.inventory_service.model.entity.HoldItem;
@@ -252,6 +254,72 @@ public class InventoryServiceImpl implements InventoryService {
                 saved.getPaymentId()
         );
 
+    }
+
+    @Override
+    @Transactional
+    public ReleaseHoldResponseDTO releaseHold(ReleaseHoldRequest request) {
+        Long holdId = request.holdId();
+
+        // 1. Load hold WITH LOCK
+        Hold hold = holdRepository.findByIdForUpdate(holdId)
+            .orElseThrow(() -> new IllegalArgumentException("Hold not found: " + holdId));
+
+        // 2. Handle status / idempotency
+        if (hold.getStatus() == HoldStatus.RELEASED || hold.getStatus() == HoldStatus.EXPIRED) {
+            // idempotent behaviour: nothing to do, just return current state
+            return new ReleaseHoldResponse(hold.getId(), hold.getStatus());
+        }
+
+        if (hold.getStatus() == HoldStatus.CONSUMED) {
+            // rooms already permanently consumed into a reservation;
+            // cannot release them back to inventory
+            throw new IllegalStateException("Cannot release a consumed hold: " + holdId);
+        }
+
+        if (hold.getStatus() != HoldStatus.HELD) {
+            throw new IllegalStateException("Unexpected hold status: " + hold.getStatus());
+        }
+
+        // 3. Restore inventory for each item in the hold
+        LocalDate startDate = hold.getCheckInDate().toLocalDate();
+        LocalDate endDateExclusive = hold.getCheckOutDate().toLocalDate();
+
+        for (HoldItem item : hold.getItems()) {
+            Long roomTypeId = item.getRoomTypeId();
+            int qty = item.getQuantity();
+
+            // We want [startDate, endDateExclusive) so we use endDateExclusive.minusDays(1)
+            List<RoomInventory> inventories = roomInventoryRepository.findForUpdate(
+                hold.getHotelId(),
+                roomTypeId,
+                startDate,
+                endDateExclusive.minusDays(1)
+            );
+
+            if (inventories.size() !=
+                (int) startDate.datesUntil(endDateExclusive).count()) {
+                throw new IllegalStateException(
+                    "Room inventory rows mismatch for holdId " + holdId + ", roomTypeId " + roomTypeId
+                );
+            }
+
+            // Increment availableRooms back
+            for (RoomInventory inv : inventories) {
+                inv.setAvailableRooms(inv.getAvailableRooms() + qty);
+            }
+        }
+
+        // 4. Update hold status
+        hold.setStatus(HoldStatus.RELEASED);
+        hold.setReleasedAt(OffsetDateTime.now(clock));
+        // optionally store reason if you have a field:
+        // hold.setReleaseReason(request.reason());
+
+        // 5. Save (flush happens automatically at transaction commit)
+        holdRepository.save(hold);
+
+        return new ReleaseHoldResponse(hold.getId(), hold.getStatus());
     }
 
 }
