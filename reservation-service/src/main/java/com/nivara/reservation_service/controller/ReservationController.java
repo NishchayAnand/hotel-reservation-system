@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nivara.reservation_service.mapper.ReservationMapper;
+import com.nivara.reservation_service.model.dto.ConfirmReservationResponseDTO;
 import com.nivara.reservation_service.model.dto.CreateReservationRequestDTO;
 import com.nivara.reservation_service.model.dto.CreateReservationResponseDTO;
 import com.nivara.reservation_service.model.dto.ReservationDTO;
@@ -49,9 +51,10 @@ public class ReservationController {
         return ResponseEntity.ok().body(resp);
     }
 
-    @PostMapping("/{reservationId}/finalize")
-    public ResponseEntity<String> finalizeReservation(@PathVariable Long reservationId) {
-        return null;
+    @PostMapping("/{reservationId}/confirm")
+    public ResponseEntity<ConfirmReservationResponseDTO> confirmReservation(@PathVariable Long reservationId, @RequestParam Long paymentId) {
+        ConfirmReservationResponseDTO responseBody = reservationService.confirmReservation(reservationId, paymentId);
+        return ResponseEntity.ok().body(responseBody);
     }
 
 }

@@ -185,6 +185,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    @Transactional
     public ConsumeHoldResponseDTO consumeHold(Long holdId, Long reservationId, Long paymentId) {
 
         // Step 1: Load hold with write lock (protect against concurrent consumes)

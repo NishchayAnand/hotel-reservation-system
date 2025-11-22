@@ -2,7 +2,10 @@ package com.nivara.reservation_service.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -17,8 +20,11 @@ import com.nivara.reservation_service.exception.HoldExpiredException;
 import com.nivara.reservation_service.exception.HoldReleasedException;
 import com.nivara.reservation_service.exception.InventoryUnavailableException;
 import com.nivara.reservation_service.exception.RemoteServerException;
+import com.nivara.reservation_service.exception.ReservationNotFoundException;
+import com.nivara.reservation_service.model.dto.ConfirmReservationResponseDTO;
 import com.nivara.reservation_service.model.dto.CreateHoldRequestDTO;
 import com.nivara.reservation_service.model.dto.CreateHoldResponseDTO;
+import com.nivara.reservation_service.model.dto.CreateReservationRequestDTO;
 import com.nivara.reservation_service.model.dto.ReservationItemDTO;
 import com.nivara.reservation_service.model.entity.Reservation;
 import com.nivara.reservation_service.model.entity.ReservationItem;
@@ -26,6 +32,7 @@ import com.nivara.reservation_service.model.enums.ReservationStatus;
 import com.nivara.reservation_service.repository.ReservationRepository;
 
 import io.github.resilience4j.retry.annotation.Retry;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -177,6 +184,67 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Reservation findById(Long reservationId) {
         return reservationRepository.findById(reservationId).get();
+    }
+
+    @Override
+    @Transactional
+    public ConfirmReservationResponseDTO confirmReservation(Long reservationId, Long paymentId) {
+        // 1. Load reservation
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException("Reservation not found: " + reservationId));
+
+        // 2. Idempotency: if already CONFIRMED with same paymentId, just return
+        if (reservation.getStatus() == ReservationStatus.CONFIRMED) {
+            if (!Objects.equals(reservation.getPaymentId(), paymentId)) {
+                // Something suspicious: trying to confirm same reservation with a different payment
+                throw new IllegalStateException(
+                        "Reservation already confirmed with a different paymentId. " +
+                        "reservationId=" + reservation.getId()
+                );
+            }
+
+            return new ConfirmReservationResponseDTO(
+                    reservation.getId(),
+                    reservation.getStatus().name(),
+                    reservation.getPaymentId()
+            );
+        }
+
+        // // 3. State check: only allow confirmation from “pre-confirmed” states
+        // EnumSet<ReservationStatus> allowedPreviousStatuses = EnumSet.of(
+        //         ReservationStatus.PAYMENT_AUTHORIZED,   // or HOLD_CONSUMED / PAYMENT_SUCCESS_PENDING_CONFIRMATION
+        //         ReservationStatus.PENDING_PAYMENT       // if you allow jumping directly after success
+        // );
+
+        // if (!allowedPreviousStatuses.contains(reservation.getStatus())) {
+        //     throw new IllegalStateException(
+        //             "Cannot confirm reservation in state " + reservation.getStatus() +
+        //             " for reservationId=" + reservation.getId()
+        //     );
+        // }
+
+        // // 4. Safety check: amount & currency should match what was paid
+        // // (optional but recommended)
+        // if (reservation.getAmount() != request.amount()
+        //         || !reservation.getCurrency().equalsIgnoreCase(request.currency())) {
+        //     throw new IllegalArgumentException(
+        //             "Amount or currency mismatch for reservationId=" + reservation.getId()
+        //     );
+        // }
+
+        // 5. Apply confirmation
+        reservation.setPaymentId(paymentId);
+        reservation.setStatus(ReservationStatus.CONFIRMED);
+        reservation.setUpdatedAt(OffsetDateTime.now());
+
+        Reservation saved = reservationRepository.save(reservation);
+
+        // 6. Build response
+        return new ConfirmReservationResponseDTO(
+                saved.getId(),
+                saved.getStatus().name(),
+                saved.getPaymentId()
+        );
     }
 
 }
