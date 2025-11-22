@@ -11,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.nivara.payment_service.client.InventoryServiceClient;
+import com.nivara.payment_service.client.ReservationServiceClient;
 import com.nivara.payment_service.exception.HoldExpiredException;
 import com.nivara.payment_service.exception.HoldExpiringSoonException;
 import com.nivara.payment_service.exception.HoldReleaseException;
@@ -39,6 +40,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private PaymentRepository paymentRepository;
     private InventoryServiceClient inventoryServiceClient;
+    private ReservationServiceClient reservationServiceClient;
     private RazorpayClient razorpayClient;
     private RazorpaySignatureVerifier signatureVerifier;
 
@@ -107,6 +109,14 @@ public class PaymentServiceImpl implements PaymentService {
                 case FAILED:
                     throw new PaymentFailedException("Previous payment attempt failed.");
 
+                case AUTHORIZED:
+                    // if payment is authorized, backend will confirm hold and reservation
+                    return CreatePaymentResponseDTO.builder()
+                        .providerOrderId(existing.getProviderOrderId())
+                        .status(PaymentStatus.AUTHORIZED)
+                        .message("Previous payment attempt was already authorized. Backend is confirming the reservation")
+                        .build();
+
                 case COMPLETED:
                     // if you detect that payment is already confirmed, then the desired final outcome is already achieved.
                     // Throwing an exception would incorrectly treat this as an error — but it’s not an error. It’s simply an idempotent success.
@@ -120,10 +130,10 @@ public class PaymentServiceImpl implements PaymentService {
                     return CreatePaymentResponseDTO.builder()
                         .providerOrderId(existing.getProviderOrderId())
                         .status(PaymentStatus.PENDING)
-                        .message("Payment order has already created.")
+                        .message("Payment order was already created. Waiting for PSP callback.")
                         .build();
            
-                case CREATED:
+                case INITIATED:
                     log.info("Payment record already exist but the payment order hasn't been created yet. Continue but reuse existing record.");
                     paymentRecord = existing;
 
@@ -137,7 +147,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .reservationId(requestBody.reservationId())
                 .amount(requestBody.amount())
                 .currency(requestBody.currency())
-                .status(PaymentStatus.CREATED)
+                .status(PaymentStatus.INITIATED)
                 .guestName(requestBody.guestName())
                 .guestEmail(requestBody.guestEmail())
                 .guestPhone(requestBody.guestPhone())
@@ -151,8 +161,8 @@ public class PaymentServiceImpl implements PaymentService {
                 Payment existing = paymentRepository.findByReservationId(requestBody.reservationId())
                     .orElseThrow(() -> dive);
 
-                // If the concurrent record is still in CREATED state, wait briefly for it to progress (polling).
-                if (existing.getStatus() == PaymentStatus.CREATED) {
+                // If the concurrent record is still in INITIATED state, wait briefly for it to progress (polling).
+                if (existing.getStatus() == PaymentStatus.INITIATED) {
                     final int maxAttempts = 10;
                     final long sleepMs = 200L;
                     int attempt = 0;
@@ -165,7 +175,7 @@ public class PaymentServiceImpl implements PaymentService {
                         }
                         existing = paymentRepository.findByReservationId(requestBody.reservationId())
                             .orElse(existing);
-                        if (existing.getStatus() != PaymentStatus.CREATED) break;
+                        if (existing.getStatus() != PaymentStatus.INITIATED) break;
                     }
                 }
 
@@ -174,6 +184,14 @@ public class PaymentServiceImpl implements PaymentService {
 
                     case FAILED:
                         throw new PaymentFailedException("Previous payment attempt failed.");
+
+                    case AUTHORIZED:
+                        // if payment is authorized, backend will confirm hold and reservation
+                        return CreatePaymentResponseDTO.builder()
+                            .providerOrderId(existing.getProviderOrderId())
+                            .status(PaymentStatus.AUTHORIZED)
+                            .message("Previous payment attempt was already authorized. Backend is confirming the reservation")
+                            .build();
 
                     case COMPLETED:
                         // if you detect that payment is already confirmed, then the desired final outcome is already achieved.
@@ -191,7 +209,7 @@ public class PaymentServiceImpl implements PaymentService {
                             .message("Payment order has already created.")
                             .build();
             
-                    case CREATED:
+                    case INITIATED:
                         // Concurrent worker did not progress in time; conservatively treat as processing.
                         // Return a pending-ish response so caller can retry / poll.
                         return CreatePaymentResponseDTO.builder()
@@ -230,7 +248,7 @@ public class PaymentServiceImpl implements PaymentService {
             } else {
                 log.warn("paymentRecord is null; skipping update to FAILED for reservation {}", requestBody.reservationId());
                 return CreatePaymentResponseDTO.builder()
-                    .status(PaymentStatus.FAILED_CREATION)
+                    .status(PaymentStatus.FAILED)
                     .message("Payment record does not exist.")
                     .build();
             }
@@ -238,14 +256,14 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (RazorpayException ex) {
             log.error("Failed to create payment order for reservation {}: {}", requestBody.reservationId(), ex.getMessage(), ex);
             if (paymentRecord != null) {
-                paymentRecord.setStatus(PaymentStatus.FAILED_ORDER_CREATION);
+                paymentRecord.setStatus(PaymentStatus.FAILED);
                 paymentRepository.save(paymentRecord);
             } else {
                 log.warn("paymentRecord is null; skipping update to FAILED for reservation {}", requestBody.reservationId());
             }
 
             return CreatePaymentResponseDTO.builder()
-                .status(PaymentStatus.FAILED_UNKNOWN)
+                .status(PaymentStatus.FAILED)
                 .message("Payment gateway error. Retry later")
                 .build();
         }
@@ -276,7 +294,7 @@ public class PaymentServiceImpl implements PaymentService {
         );
 
         if(!isValid) {
-            payment.setStatus(PaymentStatus.FAILED_SIGNATURE);
+            payment.setStatus(PaymentStatus.FAILED);
             paymentRepository.save(payment);
             throw new IllegalStateException("Invalid Razorpay signature");
         }
@@ -284,14 +302,28 @@ public class PaymentServiceImpl implements PaymentService {
         // Signature valid ->. persist Razorpay fields + mark SUCCESS_CLIENT_CALLBACK
         payment.setProviderPaymentId(requestBody.razorpayPaymentId());
         payment.setProviderSignature(requestBody.razorpaySignature());
-        payment.setStatus(PaymentStatus.SUCCESS_CLIENT_CALLBACK);
+        payment.setStatus(PaymentStatus.AUTHORIZED);
         paymentRepository.save(payment);
 
         // Step 3: Orchestrate with downstream services
         try {
+            // 3a. Consume hold
+            inventoryServiceClient.consumeHold(payment.getHoldId());
+
+            // 3b. Confirm reservation
+            reservationServiceClient.confirmReservation(requestBody.reservationId(), payment.getId());
+
+            // Step 4: Mark final success
+            payment.setStatus(PaymentStatus.COMPLETED);
+            paymentRepository.save(payment);
 
         } catch (Exception ex) {
-            throw ex;        
+            // some downstream step failed; todo -> classify and persist
+            payment.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+            
+            throw ex;
+            
         }
     }
 

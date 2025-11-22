@@ -22,7 +22,10 @@ public class Payment {
     private Long id;
 
     @Column(name = "reservation_id")
-    private Long reservationId; 
+    private Long reservationId;
+
+    @Column(name = "hold_id")
+    private Long holdId;
 
     @Column(name = "amount")
     private Long amount;

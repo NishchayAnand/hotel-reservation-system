@@ -55,6 +55,9 @@ public class Reservation {
 
     private String currency;
 
+    @Column(name = "payment_id")
+    private Long paymentId;
+
     @Column(name = "hold_id")
     private Long holdId;
 
