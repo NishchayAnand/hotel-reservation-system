@@ -23,10 +23,12 @@ import com.nivara.payment_service.model.entity.Payment;
 import com.nivara.payment_service.model.enums.HoldStatus;
 import com.nivara.payment_service.model.enums.PaymentStatus;
 import com.nivara.payment_service.repository.PaymentRepository;
+import com.nivara.payment_service.util.RazorpaySignatureVerifier;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 
 @Service
@@ -38,6 +40,7 @@ public class PaymentServiceImpl implements PaymentService {
     private PaymentRepository paymentRepository;
     private InventoryServiceClient inventoryServiceClient;
     private RazorpayClient razorpayClient;
+    private RazorpaySignatureVerifier signatureVerifier;
 
     /*
      * Creates a Razorpay Order for the given reservation.
@@ -204,7 +207,7 @@ public class PaymentServiceImpl implements PaymentService {
         
         // ---------- Step 4: Create provider order and update payment to PENDING ----------
         try {
-            // build order request JSOn according to Razorpay Orders API
+            // build order request JSON according to Razorpay Orders API
             JSONObject orderRequest = new JSONObject();
             orderRequest.put("amount", requestBody.amount() * 100); // amount MUST be in paise/smallest unit
             orderRequest.put("currency", requestBody.currency() != null ? requestBody.currency() : "INR");
@@ -227,7 +230,7 @@ public class PaymentServiceImpl implements PaymentService {
             } else {
                 log.warn("paymentRecord is null; skipping update to FAILED for reservation {}", requestBody.reservationId());
                 return CreatePaymentResponseDTO.builder()
-                    .status(PaymentStatus.FAILED)
+                    .status(PaymentStatus.FAILED_CREATION)
                     .message("Payment record does not exist.")
                     .build();
             }
@@ -235,14 +238,14 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (RazorpayException ex) {
             log.error("Failed to create payment order for reservation {}: {}", requestBody.reservationId(), ex.getMessage(), ex);
             if (paymentRecord != null) {
-                paymentRecord.setStatus(PaymentStatus.FAILED);
+                paymentRecord.setStatus(PaymentStatus.FAILED_ORDER_CREATION);
                 paymentRepository.save(paymentRecord);
             } else {
                 log.warn("paymentRecord is null; skipping update to FAILED for reservation {}", requestBody.reservationId());
             }
 
             return CreatePaymentResponseDTO.builder()
-                .status(PaymentStatus.FAILED)
+                .status(PaymentStatus.FAILED_UNKNOWN)
                 .message("Payment gateway error. Retry later")
                 .build();
         }
@@ -258,6 +261,7 @@ public class PaymentServiceImpl implements PaymentService {
      * 4. Mark payment as SUCCESS / FAILED_*
      */
     @Override
+    @Transactional
     public void handlePaymentCallback(ConfirmPaymentRequest requestBody) {
         // Step 1: Find payment by Razorpay order id
         Payment payment = paymentRepository
@@ -266,7 +270,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         // Step 2: Verify signature
         boolean isValid = signatureVerifier.isValidSignature(
-            requestBody.razorpayOrderId(),
+            payment.getProviderOrderId(), // do not use razorpayOrderId returned by Checkout
             requestBody.razorpayPaymentId(),
             requestBody.razorpaySignature()
         );

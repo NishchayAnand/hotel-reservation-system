@@ -34,6 +34,12 @@ public class Payment {
     @Column(name = "provider_order_id")
     private String providerOrderId;
 
+    @Column(name = "provider_payment_id")
+    private String providerPaymentId;
+
+    @Column(name = "provider_signature")
+    private String providerSignature;
+
     @Column(name = "guest_name")
     private String guestName;
 
