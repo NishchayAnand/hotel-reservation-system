@@ -60,19 +60,11 @@ public class Hold {
     private Instant expiresAt;
 
     public boolean isExpired() {
-        if (expiresAt == null) {
-            return false;
-        }
-        Instant now = Instant.now();
-        return !now.isBefore(expiresAt); // true when now >= expiresAt
+        return status == HoldStatus.ACTIVE && Instant.now().isAfter(expiresAt);
     }
 
     public boolean isConsumed() {
         return status == HoldStatus.CONSUMED;
     }
 
-
-    public boolean isActive() {
-        return status == HoldStatus.ACTIVE && !isExpired();
-    }
 }

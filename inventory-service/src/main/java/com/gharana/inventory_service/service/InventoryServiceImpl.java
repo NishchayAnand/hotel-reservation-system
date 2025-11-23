@@ -2,14 +2,12 @@ package com.gharana.inventory_service.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,14 +20,13 @@ import org.springframework.stereotype.Service;
 
 import com.gharana.inventory_service.model.entity.InventoryRecord;
 import com.gharana.inventory_service.model.enums.HoldStatus;
+import com.gharana.inventory_service.exception.HoldExpiredException;
 import com.gharana.inventory_service.exception.HoldNotFoundException;
 import com.gharana.inventory_service.exception.HoldReleasedException;
 import com.gharana.inventory_service.exception.InventoryUnavailableException;
 import com.gharana.inventory_service.model.dto.AvailableRoomTypeDTO;
 import com.gharana.inventory_service.model.dto.ConsumeHoldResponseDTO;
 import com.gharana.inventory_service.model.dto.HoldDTO;
-import com.gharana.inventory_service.model.dto.HoldNotConsumableException;
-import com.gharana.inventory_service.model.dto.ReleaseHoldResponseDTO;
 import com.gharana.inventory_service.model.dto.ReservationItemDTO;
 import com.gharana.inventory_service.model.entity.Hold;
 import com.gharana.inventory_service.model.entity.HoldItem;
@@ -194,56 +191,28 @@ public class InventoryServiceImpl implements InventoryService {
         Hold hold = holdRepository.findByIdForUpdate(holdId)
             .orElseThrow(() -> new HoldNotFoundException(holdId));
 
-        // Step 2: Idempotency check: if already CONSUMED for same reservation & payment - return OK
+        // Step 2: Idempotency check: if already CONSUMED, return OK
         if(hold.isConsumed()) {
-            if( Objects.equals(hold.getReservationId(), reservationId) && 
-                Objects.equals(hold.getPaymentId(), paymentId)) {
-                
-                return new ConsumeHoldResponseDTO(
-                    hold.getId(),
-                    hold.getStatus(),
-                    hold.getReservationId(),
-                    hold.getPaymentId()
-                );
-            }
-
-            // consumed but with different reservation/payment - treat as conflict
-            throw new HoldNotConsumableException(
-                    "Hold " + holdId + " already consumed for reservation " +
-                    hold.getReservationId() + " and payment " + hold.getPaymentId()
+            return new ConsumeHoldResponseDTO(
+                hold.getId(),
+                hold.getStatus(),
+                hold.getReservationId(),
+                hold.getPaymentId()
             );
         }
 
-        // 3. Validate hold is ACTIVE and not expired
-        if (!hold.isActive()) {
-            throw new HoldNotConsumableException(
-                    "Hold " + holdId + " is not ACTIVE (status=" + hold.getStatus() + ")"
-            );
-        }
-
+        // 3. Validate if hold has expired 
         if (hold.isExpired()) {
+            // save status update so future calls see it as EXPIRED - should we do this?
             hold.setStatus(HoldStatus.EXPIRED);
-            // save status update so future calls see it as EXPIRED
             holdRepository.save(hold);
 
-            throw new HoldNotConsumableException(
-                    "Hold " + holdId + " has expired and cannot be consumed"
-            );
+            throw new HoldExpiredException(holdId, hold.getExpiresAt());
         }
 
-        // 4. Optional: sanity checks for reservationId/payments
-        if (hold.getReservationId() != null
-                && !Objects.equals(hold.getReservationId(), reservationId)) {
-            throw new HoldNotConsumableException(
-                    "Hold " + holdId + " is already linked to reservation " + hold.getReservationId()
-            );
-        }
-
-        // 5. Link to reservation & payment and mark as CONSUMED
-        hold.setReservationId(reservationId);
+        // 5. Link to payment and mark as CONSUMED
         hold.setPaymentId(paymentId);
         hold.setStatus(HoldStatus.CONSUMED);
-
         Hold saved = holdRepository.save(hold);
 
         // 6. Return result
@@ -256,70 +225,70 @@ public class InventoryServiceImpl implements InventoryService {
 
     }
 
-    @Override
-    @Transactional
-    public ReleaseHoldResponseDTO releaseHold(ReleaseHoldRequest request) {
-        Long holdId = request.holdId();
+    // @Override
+    // @Transactional
+    // public ReleaseHoldResponseDTO releaseHold(ReleaseHoldRequest request) {
+    //     Long holdId = request.holdId();
 
-        // 1. Load hold WITH LOCK
-        Hold hold = holdRepository.findByIdForUpdate(holdId)
-            .orElseThrow(() -> new IllegalArgumentException("Hold not found: " + holdId));
+    //     // 1. Load hold WITH LOCK
+    //     Hold hold = holdRepository.findByIdForUpdate(holdId)
+    //         .orElseThrow(() -> new IllegalArgumentException("Hold not found: " + holdId));
 
-        // 2. Handle status / idempotency
-        if (hold.getStatus() == HoldStatus.RELEASED || hold.getStatus() == HoldStatus.EXPIRED) {
-            // idempotent behaviour: nothing to do, just return current state
-            return new ReleaseHoldResponse(hold.getId(), hold.getStatus());
-        }
+    //     // 2. Handle status / idempotency
+    //     if (hold.getStatus() == HoldStatus.RELEASED || hold.getStatus() == HoldStatus.EXPIRED) {
+    //         // idempotent behaviour: nothing to do, just return current state
+    //         return new ReleaseHoldResponse(hold.getId(), hold.getStatus());
+    //     }
 
-        if (hold.getStatus() == HoldStatus.CONSUMED) {
-            // rooms already permanently consumed into a reservation;
-            // cannot release them back to inventory
-            throw new IllegalStateException("Cannot release a consumed hold: " + holdId);
-        }
+    //     if (hold.getStatus() == HoldStatus.CONSUMED) {
+    //         // rooms already permanently consumed into a reservation;
+    //         // cannot release them back to inventory
+    //         throw new IllegalStateException("Cannot release a consumed hold: " + holdId);
+    //     }
 
-        if (hold.getStatus() != HoldStatus.HELD) {
-            throw new IllegalStateException("Unexpected hold status: " + hold.getStatus());
-        }
+    //     if (hold.getStatus() != HoldStatus.HELD) {
+    //         throw new IllegalStateException("Unexpected hold status: " + hold.getStatus());
+    //     }
 
-        // 3. Restore inventory for each item in the hold
-        LocalDate startDate = hold.getCheckInDate().toLocalDate();
-        LocalDate endDateExclusive = hold.getCheckOutDate().toLocalDate();
+    //     // 3. Restore inventory for each item in the hold
+    //     LocalDate startDate = hold.getCheckInDate().toLocalDate();
+    //     LocalDate endDateExclusive = hold.getCheckOutDate().toLocalDate();
 
-        for (HoldItem item : hold.getItems()) {
-            Long roomTypeId = item.getRoomTypeId();
-            int qty = item.getQuantity();
+    //     for (HoldItem item : hold.getItems()) {
+    //         Long roomTypeId = item.getRoomTypeId();
+    //         int qty = item.getQuantity();
 
-            // We want [startDate, endDateExclusive) so we use endDateExclusive.minusDays(1)
-            List<RoomInventory> inventories = roomInventoryRepository.findForUpdate(
-                hold.getHotelId(),
-                roomTypeId,
-                startDate,
-                endDateExclusive.minusDays(1)
-            );
+    //         // We want [startDate, endDateExclusive) so we use endDateExclusive.minusDays(1)
+    //         List<RoomInventory> inventories = roomInventoryRepository.findForUpdate(
+    //             hold.getHotelId(),
+    //             roomTypeId,
+    //             startDate,
+    //             endDateExclusive.minusDays(1)
+    //         );
 
-            if (inventories.size() !=
-                (int) startDate.datesUntil(endDateExclusive).count()) {
-                throw new IllegalStateException(
-                    "Room inventory rows mismatch for holdId " + holdId + ", roomTypeId " + roomTypeId
-                );
-            }
+    //         if (inventories.size() !=
+    //             (int) startDate.datesUntil(endDateExclusive).count()) {
+    //             throw new IllegalStateException(
+    //                 "Room inventory rows mismatch for holdId " + holdId + ", roomTypeId " + roomTypeId
+    //             );
+    //         }
 
-            // Increment availableRooms back
-            for (RoomInventory inv : inventories) {
-                inv.setAvailableRooms(inv.getAvailableRooms() + qty);
-            }
-        }
+    //         // Increment availableRooms back
+    //         for (RoomInventory inv : inventories) {
+    //             inv.setAvailableRooms(inv.getAvailableRooms() + qty);
+    //         }
+    //     }
 
-        // 4. Update hold status
-        hold.setStatus(HoldStatus.RELEASED);
-        hold.setReleasedAt(OffsetDateTime.now(clock));
-        // optionally store reason if you have a field:
-        // hold.setReleaseReason(request.reason());
+    //     // 4. Update hold status
+    //     hold.setStatus(HoldStatus.RELEASED);
+    //     hold.setReleasedAt(OffsetDateTime.now(clock));
+    //     // optionally store reason if you have a field:
+    //     // hold.setReleaseReason(request.reason());
 
-        // 5. Save (flush happens automatically at transaction commit)
-        holdRepository.save(hold);
+    //     // 5. Save (flush happens automatically at transaction commit)
+    //     holdRepository.save(hold);
 
-        return new ReleaseHoldResponse(hold.getId(), hold.getStatus());
-    }
+    //     return new ReleaseHoldResponse(hold.getId(), hold.getStatus());
+    // }
 
 }
