@@ -3,9 +3,7 @@ package com.nivara.reservation_service.service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,7 +22,6 @@ import com.nivara.reservation_service.exception.ReservationNotFoundException;
 import com.nivara.reservation_service.model.dto.ConfirmReservationResponseDTO;
 import com.nivara.reservation_service.model.dto.CreateHoldRequestDTO;
 import com.nivara.reservation_service.model.dto.CreateHoldResponseDTO;
-import com.nivara.reservation_service.model.dto.CreateReservationRequestDTO;
 import com.nivara.reservation_service.model.dto.ReservationItemDTO;
 import com.nivara.reservation_service.model.entity.Reservation;
 import com.nivara.reservation_service.model.entity.ReservationItem;
@@ -64,8 +61,8 @@ public class ReservationServiceImpl implements ReservationService {
             .amount(amount)
             .currency(currency)
             .status(ReservationStatus.PENDING)
-            .createdAt(Instant.now())
-            .updatedAt(Instant.now())
+            .createdAt(OffsetDateTime.now())
+            .updatedAt(OffsetDateTime.now())
             .build();
 
         List<ReservationItem> items = reservationItems.stream()
@@ -116,7 +113,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         } catch (HoldReleasedException hise) {
             saved.setStatus(ReservationStatus.HOLD_EXPIRED);
-            saved.setUpdatedAt(Instant.now());
+            saved.setUpdatedAt(OffsetDateTime.now());
             reservationRepository.save(saved);
 
             log.info("Hold expired for reservation: {}", reservation.getId());
@@ -125,7 +122,7 @@ public class ReservationServiceImpl implements ReservationService {
         } catch (InventoryUnavailableException iue) {
             // non-retryable: mark reservation FAILED and propagate (map to 4xx at controller)
             saved.setStatus(ReservationStatus.FAILED);
-            saved.setUpdatedAt(Instant.now());
+            saved.setUpdatedAt(OffsetDateTime.now());
             reservationRepository.save(saved);
             log.info("Inventory unavailable for reservation {}: {}", reservation.getId(), iue.getMessage());
             throw iue;
@@ -133,7 +130,7 @@ public class ReservationServiceImpl implements ReservationService {
         } catch (RemoteServerException rse) {
             // retryable: Resilience4j will have retried; when it bubbles here it means retries were exhausted mark as transient failure
             saved.setStatus(ReservationStatus.FAILED);
-            saved.setUpdatedAt(Instant.now());
+            saved.setUpdatedAt(OffsetDateTime.now());
             reservationRepository.save(saved);
             log.error("Inventory service transient failure for reservation {}, retries exhausted: {}", reservation.getId(), rse.getMessage());
             throw rse;
@@ -143,7 +140,7 @@ public class ReservationServiceImpl implements ReservationService {
         // if hold status = HELD and hold is already expired
         if ( "HELD".equalsIgnoreCase(holdResponse.status().toString()) && holdResponse.expiresAt().isBefore(Instant.now()) ) {
             saved.setStatus(ReservationStatus.HOLD_EXPIRED);
-            saved.setUpdatedAt(Instant.now());
+            saved.setUpdatedAt(OffsetDateTime.now());
             reservationRepository.save(saved);
 
             log.info("Hold expired for reservation {} (holdId={})", reservation.getId(), holdResponse.holdId());
@@ -174,7 +171,7 @@ public class ReservationServiceImpl implements ReservationService {
     private CreateHoldResponseDTO createInventoryHoldFallback(CreateHoldRequestDTO req, Throwable ex) {
         reservationRepository.findById(req.reservationId()).ifPresent(reservation -> {
             reservation.setStatus(ReservationStatus.FAILED);
-            reservation.setUpdatedAt(Instant.now());
+            reservation.setUpdatedAt(OffsetDateTime.now());
             reservationRepository.save(reservation);
         });
         log.error("createHold failed for reservationId={}", req.reservationId(), ex);
@@ -191,17 +188,17 @@ public class ReservationServiceImpl implements ReservationService {
     public ConfirmReservationResponseDTO confirmReservation(Long reservationId, Long paymentId) {
         // 1. Load reservation
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new ReservationNotFoundException("Reservation not found: " + reservationId));
+                .orElseThrow(() -> new ReservationNotFoundException(reservationId));
 
-        // 2. Idempotency: if already CONFIRMED with same paymentId, just return
+        // 2. Idempotency Check: if already CONFIRMED, return OK
         if (reservation.getStatus() == ReservationStatus.CONFIRMED) {
-            if (!Objects.equals(reservation.getPaymentId(), paymentId)) {
-                // Something suspicious: trying to confirm same reservation with a different payment
-                throw new IllegalStateException(
-                        "Reservation already confirmed with a different paymentId. " +
-                        "reservationId=" + reservation.getId()
-                );
-            }
+            // if (!Objects.equals(reservation.getPaymentId(), paymentId)) {
+            //     // Something suspicious: trying to confirm same reservation with a different payment
+            //     throw new IllegalStateException(
+            //             "Reservation already confirmed with a different paymentId. " +
+            //             "reservationId=" + reservation.getId()
+            //     );
+            // }
 
             return new ConfirmReservationResponseDTO(
                     reservation.getId(),
@@ -232,14 +229,13 @@ public class ReservationServiceImpl implements ReservationService {
         //     );
         // }
 
-        // 5. Apply confirmation
+        // 3. Apply confirmation
         reservation.setPaymentId(paymentId);
         reservation.setStatus(ReservationStatus.CONFIRMED);
         reservation.setUpdatedAt(OffsetDateTime.now());
-
         Reservation saved = reservationRepository.save(reservation);
 
-        // 6. Build response
+        // 4. Build response
         return new ConfirmReservationResponseDTO(
                 saved.getId(),
                 saved.getStatus().name(),
