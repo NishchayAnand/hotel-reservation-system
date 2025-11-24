@@ -11,7 +11,6 @@ import jakarta.persistence.LockModeType;
 
 import com.gharana.inventory_service.model.entity.InventoryRecord;
 
-
 public interface InventoryRepository extends JpaRepository<InventoryRecord, Long> {
 
     @Query("SELECT ir.hotelId, ir.roomTypeId, MIN(ir.totalCount - ir.reservedCount) " + 

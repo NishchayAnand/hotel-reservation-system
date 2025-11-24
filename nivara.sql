@@ -395,15 +395,6 @@ FROM to_insert;
 
 RESERVATION DB
 
-CREATE TYPE reservation_status AS ENUM (
-    'PENDING',
-    'AWAITING_PAYMENT',
-    'CONFIRMED',
-    'FAILED',
-    'CANCELLED',
-    'HOLD_EXPIRED'
-);
-
 CREATE TABLE reservations (
     id              BIGSERIAL PRIMARY KEY,
     request_id      VARCHAR(255)        NOT NULL UNIQUE,
@@ -412,6 +403,7 @@ CREATE TABLE reservations (
     check_out_date  DATE                NOT NULL,
     amount          BIGINT,
     currency        VARCHAR(10),
+    payment_id      BIGINT
     hold_id         BIGINT,
     expires_at      TIMESTAMPTZ,
     status          VARCHAR(32)         NOT NULL DEFAULT 'PENDING',
@@ -434,18 +426,19 @@ CREATE TABLE reservation_items (
 
 PAYMENT SERVICE
 
-CREATE TYPE payment_status AS ENUM ('CREATED', 'PENDING', 'COMPLETED', 'FAILED');
-
 CREATE TABLE payments (
     id                  BIGSERIAL PRIMARY KEY,
     reservation_id      BIGINT          NOT NULL UNIQUE,
+    hold_id             BIGINT          NOT NULL UNIQUE,
     amount              BIGINT          NOT NULL CHECK (amount >= 0),
     currency            VARCHAR(3)      NOT NULL DEFAULT 'INR',
-    status              payment_status  NOT NULL DEFAULT 'CREATED',
+    status              VARCHAR(32)     NOT NULL DEFAULT 'INITIATED',
     provider_order_id   VARCHAR(255),
-    customer_name       VARCHAR(255),
-    customer_email      VARCHAR(255),
-    customer_phone      VARCHAR(255)
+    provider_payment_id VARCHAR(255),
+    provider_signature  VARCHAR(255),
+    guest_name          VARCHAR(255),
+    guest_email         VARCHAR(255),
+    guest_phone         VARCHAR(255)
 );
 
 */

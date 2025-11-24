@@ -32,7 +32,8 @@ public class InventoryController {
 
     @PostMapping("/get-availability")
     public ResponseEntity<List<AvailableRoomTypeDTO>> getRoomAvailability(@RequestBody RoomAvailabilityRequestDTO request) {
-            return ResponseEntity.ok().body(inventoryService.getAvailableRoomTypes(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate()));
+            List<AvailableRoomTypeDTO> responseBody = inventoryService.getAvailableRoomTypes(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate());
+            return ResponseEntity.ok().body(responseBody);
     }
 
     @PostMapping("/holds")
