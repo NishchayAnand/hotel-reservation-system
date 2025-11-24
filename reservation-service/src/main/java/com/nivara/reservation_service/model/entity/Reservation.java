@@ -2,7 +2,6 @@ package com.nivara.reservation_service.model.entity;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 import com.nivara.reservation_service.model.enums.ReservationStatus;
@@ -70,9 +69,9 @@ public class Reservation {
     private ReservationStatus status;
 
     @Column(name = "created_at")
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 
 }

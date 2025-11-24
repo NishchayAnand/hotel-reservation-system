@@ -2,7 +2,6 @@ package com.nivara.reservation_service.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -61,8 +60,8 @@ public class ReservationServiceImpl implements ReservationService {
             .amount(amount)
             .currency(currency)
             .status(ReservationStatus.PENDING)
-            .createdAt(OffsetDateTime.now())
-            .updatedAt(OffsetDateTime.now())
+            .createdAt(Instant.now())
+            .updatedAt(Instant.now())
             .build();
 
         List<ReservationItem> items = reservationItems.stream()
@@ -113,7 +112,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         } catch (HoldReleasedException hise) {
             saved.setStatus(ReservationStatus.HOLD_EXPIRED);
-            saved.setUpdatedAt(OffsetDateTime.now());
+            saved.setUpdatedAt(Instant.now());
             reservationRepository.save(saved);
 
             log.info("Hold expired for reservation: {}", reservation.getId());
@@ -122,7 +121,7 @@ public class ReservationServiceImpl implements ReservationService {
         } catch (InventoryUnavailableException iue) {
             // non-retryable: mark reservation FAILED and propagate (map to 4xx at controller)
             saved.setStatus(ReservationStatus.FAILED);
-            saved.setUpdatedAt(OffsetDateTime.now());
+            saved.setUpdatedAt(Instant.now());
             reservationRepository.save(saved);
             log.info("Inventory unavailable for reservation {}: {}", reservation.getId(), iue.getMessage());
             throw iue;
@@ -130,7 +129,7 @@ public class ReservationServiceImpl implements ReservationService {
         } catch (RemoteServerException rse) {
             // retryable: Resilience4j will have retried; when it bubbles here it means retries were exhausted mark as transient failure
             saved.setStatus(ReservationStatus.FAILED);
-            saved.setUpdatedAt(OffsetDateTime.now());
+            saved.setUpdatedAt(Instant.now());
             reservationRepository.save(saved);
             log.error("Inventory service transient failure for reservation {}, retries exhausted: {}", reservation.getId(), rse.getMessage());
             throw rse;
@@ -140,7 +139,7 @@ public class ReservationServiceImpl implements ReservationService {
         // if hold status = HELD and hold is already expired
         if ( "HELD".equalsIgnoreCase(holdResponse.status().toString()) && holdResponse.expiresAt().isBefore(Instant.now()) ) {
             saved.setStatus(ReservationStatus.HOLD_EXPIRED);
-            saved.setUpdatedAt(OffsetDateTime.now());
+            saved.setUpdatedAt(Instant.now());
             reservationRepository.save(saved);
 
             log.info("Hold expired for reservation {} (holdId={})", reservation.getId(), holdResponse.holdId());
@@ -171,7 +170,7 @@ public class ReservationServiceImpl implements ReservationService {
     private CreateHoldResponseDTO createInventoryHoldFallback(CreateHoldRequestDTO req, Throwable ex) {
         reservationRepository.findById(req.reservationId()).ifPresent(reservation -> {
             reservation.setStatus(ReservationStatus.FAILED);
-            reservation.setUpdatedAt(OffsetDateTime.now());
+            reservation.setUpdatedAt(Instant.now());
             reservationRepository.save(reservation);
         });
         log.error("createHold failed for reservationId={}", req.reservationId(), ex);
@@ -232,7 +231,7 @@ public class ReservationServiceImpl implements ReservationService {
         // 3. Apply confirmation
         reservation.setPaymentId(paymentId);
         reservation.setStatus(ReservationStatus.CONFIRMED);
-        reservation.setUpdatedAt(OffsetDateTime.now());
+        reservation.setUpdatedAt(Instant.now());
         Reservation saved = reservationRepository.save(reservation);
 
         // 4. Build response

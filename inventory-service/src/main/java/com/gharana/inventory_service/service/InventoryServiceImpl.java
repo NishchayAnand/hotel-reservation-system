@@ -132,15 +132,15 @@ public class InventoryServiceImpl implements InventoryService {
         inventoryRepository.saveAll(allInventoryRecordsToSave);
 
         // Step 4: Create Hold and HoldItems, perist hold (in same transaction)
-        Instant expiresAt = Instant.now().plusSeconds(defaultHoldTtlSeconds);
-
         Hold hold = Hold.builder()
             .reservationId(reservationId)
             .hotelId(hotelId)
             .checkInDate(checkInDate)
             .checkOutDate(checkOutDate)
             .status(HoldStatus.ACTIVE)
-            .expiresAt(expiresAt)
+            .expiresAt(Instant.now().plusSeconds(defaultHoldTtlSeconds))
+            .createdAt(Instant.now())
+            .updatedAt(Instant.now())
             .build();
         
         List<HoldItem> heldItems = new ArrayList<>();
@@ -173,7 +173,7 @@ public class InventoryServiceImpl implements InventoryService {
             throw new RuntimeException("Unknown error occured while persisting hold");
         }
         
-        log.info("Created hold {} for reservation {} (expiresAt={})", saved.getId(), reservationId, expiresAt);
+        log.info("Created hold {} for reservation {} (expiresAt={})", saved.getId(), saved.getReservationId(), saved.getExpiresAt());
         return saved;
 
     }
@@ -205,6 +205,7 @@ public class InventoryServiceImpl implements InventoryService {
         if (hold.isExpired()) {
             // save status update so future calls see it as EXPIRED - should we do this?
             hold.setStatus(HoldStatus.EXPIRED);
+            hold.setUpdatedAt(Instant.now());
             holdRepository.save(hold);
 
             throw new HoldExpiredException(holdId, hold.getExpiresAt());
@@ -213,6 +214,7 @@ public class InventoryServiceImpl implements InventoryService {
         // 5. Link to payment and mark as CONSUMED
         hold.setPaymentId(paymentId);
         hold.setStatus(HoldStatus.CONSUMED);
+        hold.setUpdatedAt(Instant.now());
         Hold saved = holdRepository.save(hold);
 
         // 6. Return result

@@ -159,6 +159,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .guestName(requestBody.guestName())
                 .guestEmail(requestBody.guestEmail())
                 .guestPhone(requestBody.guestPhone())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build();
 
             try {
@@ -253,6 +255,7 @@ public class PaymentServiceImpl implements PaymentService {
             if (paymentRecord != null) {
                 paymentRecord.setProviderOrderId(order.get("id"));
                 paymentRecord.setStatus(PaymentStatus.PENDING);
+                paymentRecord.setUpdatedAt(Instant.now());
                 paymentRepository.save(paymentRecord);
 
                 return CreatePaymentResponseDTO.builder()
@@ -273,6 +276,7 @@ public class PaymentServiceImpl implements PaymentService {
             log.error("Failed to create payment order for reservation {}: {}", requestBody.reservationId(), ex.getMessage(), ex);
             if (paymentRecord != null) {
                 paymentRecord.setStatus(PaymentStatus.FAILED);
+                paymentRecord.setUpdatedAt(Instant.now());
                 paymentRepository.save(paymentRecord);
             } else {
                 log.warn("paymentRecord is null; skipping update to FAILED for reservation {}", requestBody.reservationId());
@@ -312,6 +316,7 @@ public class PaymentServiceImpl implements PaymentService {
         if(!isValid) {
             payment.setStatus(PaymentStatus.FAILED);
             paymentRepository.save(payment);
+            payment.setUpdatedAt(Instant.now());
             throw new IllegalStateException("Invalid Razorpay signature");
         }
 
@@ -319,6 +324,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setProviderPaymentId(requestBody.razorpayPaymentId());
         payment.setProviderSignature(requestBody.razorpaySignature());
         payment.setStatus(PaymentStatus.AUTHORIZED);
+        payment.setUpdatedAt(Instant.now());
         paymentRepository.save(payment);
 
         // Step 3: Orchestrate with downstream services
@@ -331,11 +337,13 @@ public class PaymentServiceImpl implements PaymentService {
 
             // Step 4: Mark final success
             payment.setStatus(PaymentStatus.COMPLETED);
+            payment.setUpdatedAt(Instant.now());
             paymentRepository.save(payment);
 
         } catch (Exception ex) {
             // some downstream step failed; todo -> classify and persist
             payment.setStatus(PaymentStatus.FAILED);
+            payment.setUpdatedAt(Instant.now());
             paymentRepository.save(payment);
             
             throw ex;

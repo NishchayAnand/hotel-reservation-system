@@ -1,5 +1,7 @@
 package com.nivara.payment_service.model.entity;
 
+import java.time.Instant;
+
 import com.nivara.payment_service.model.enums.PaymentStatus;
 
 import jakarta.persistence.Column;
@@ -51,5 +53,11 @@ public class Payment {
 
     @Column(name = "guest_phone")
     private String guestPhone;
+
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
 }

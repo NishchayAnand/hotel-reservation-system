@@ -288,13 +288,15 @@ FROM to_insert;
 CREATE TYPE hold_status AS ENUM ('HELD', 'CONFIRMED', 'RELEASED');
 
 CREATE TABLE HOLDS (
-    id  BIGSERIAL PRIMARY KEY,
-    reservation_id BIGINT UNIQUE NOT NULL,
-    hotel_id    BIGINT NOT NULL,
-    check_in_date DATE NOT NULL,
-    check_out_date DATE NOT NULL,
-    status VARCHAR(32) NOT NULL DEFAULT 'HELD',
-    expires_at  TIMESTAMPTZ NOT NULL
+    id              BIGSERIAL PRIMARY KEY,
+    reservation_id  BIGINT UNIQUE NOT NULL,
+    hotel_id        BIGINT NOT NULL,
+    check_in_date   DATE NOT NULL,
+    check_out_date  DATE NOT NULL,
+    status          VARCHAR(32) NOT NULL DEFAULT 'HELD',
+    expires_at      TIMESTAMPTZ NOT NULL,
+    created_at      TIMESTAMPTZ         NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ         NOT NULL DEFAULT now()
 );
 
 CREATE TABLE hold_items (
@@ -438,7 +440,9 @@ CREATE TABLE payments (
     provider_signature  VARCHAR(255),
     guest_name          VARCHAR(255),
     guest_email         VARCHAR(255),
-    guest_phone         VARCHAR(255)
+    guest_phone         VARCHAR(255),
+    created_at          TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
 
 */

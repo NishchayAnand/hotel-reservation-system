@@ -2,7 +2,6 @@ package com.nivara.reservation_service.model.dto;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 import com.nivara.reservation_service.model.enums.ReservationStatus;
@@ -23,6 +22,6 @@ public class ReservationDTO {
     Long holdId;
     Instant expiresAt;
     ReservationStatus status;
-    OffsetDateTime createdAt;
-    OffsetDateTime updatedAt;
+    Instant createdAt;
+    Instant updatedAt;
 }

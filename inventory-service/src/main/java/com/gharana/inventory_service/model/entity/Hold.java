@@ -59,6 +59,12 @@ public class Hold {
     @Column(name = "expires_at")
     private Instant expiresAt;
 
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     public boolean isExpired() {
         return status == HoldStatus.ACTIVE && Instant.now().isAfter(expiresAt);
     }
