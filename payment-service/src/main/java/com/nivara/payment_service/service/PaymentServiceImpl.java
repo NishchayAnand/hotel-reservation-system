@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -30,11 +31,12 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 
 @Service
-@AllArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
+
+    @Value("${razorpay.key-id:}")
+    private String razorpayKeyId;
 
     private static final Logger log = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
@@ -43,6 +45,20 @@ public class PaymentServiceImpl implements PaymentService {
     private ReservationServiceClient reservationServiceClient;
     private RazorpayClient razorpayClient;
     private RazorpaySignatureVerifier signatureVerifier;
+
+    public PaymentServiceImpl (
+        PaymentRepository paymentRepository,
+        InventoryServiceClient inventoryServiceClient,
+        ReservationServiceClient reservationServiceClient,
+        RazorpayClient razorpayClient,
+        RazorpaySignatureVerifier signatureVerifier
+    ) {
+        this.paymentRepository = paymentRepository;
+        this.inventoryServiceClient = inventoryServiceClient;
+        this.reservationServiceClient = reservationServiceClient;
+        this.razorpayClient = razorpayClient;
+        this.signatureVerifier = signatureVerifier;
+    }
 
     /*
      * Creates a Razorpay Order for the given reservation.
@@ -64,12 +80,17 @@ public class PaymentServiceImpl implements PaymentService {
         
         switch (holdStatus) {
 
+            case EXPIRED -> {
+                log.info("Hold {} is EXPIRED.");
+                throw new HoldReleaseException("Hold has expired. Cannot proceed with payment.");
+            }
+
             case RELEASED -> {
                 log.info("Hold {} is RELEASED. Inventory was released for re-booking.");
                 throw new HoldReleaseException("Hold has been released. Cannot proceed with payment.");
             }
 
-            case HELD -> {
+            case ACTIVE -> {
                 Instant now = Instant.now();
                 Instant expiresAt = hold.getExpiresAt();
 
@@ -87,7 +108,7 @@ public class PaymentServiceImpl implements PaymentService {
                 log.info("Hold {} is HELD and valid at least 2 more minutes. Proceeding to payment creation.", hold.getId()); 
             }
 
-            case CONFIRMED -> {
+            case CONSUMED -> {
                 // Do NOT throw here. Just log
                 log.info("Hold {} is already CONFIRMED. Payment was processed earlier", hold.getId());
                 // We'll rely on the payment idempotency check below to return the existing payment info.
@@ -153,6 +174,7 @@ public class PaymentServiceImpl implements PaymentService {
         // ---------- Step 3: Persist payment intent (CREATED) ----------
             Payment toCreate = Payment.builder()
                 .reservationId(requestBody.reservationId())
+                .holdId(requestBody.holdId())
                 .amount(requestBody.amount())
                 .currency(requestBody.currency())
                 .status(PaymentStatus.INITIATED)
@@ -260,6 +282,7 @@ public class PaymentServiceImpl implements PaymentService {
 
                 return CreatePaymentResponseDTO.builder()
                     .providerOrderId(order.get("id"))
+                    .providerKeyId(razorpayKeyId)
                     .status(PaymentStatus.PENDING)
                     .message("Payment order created")
                     .build();
@@ -303,7 +326,7 @@ public class PaymentServiceImpl implements PaymentService {
     public void handlePaymentCallback(ConfirmPaymentRequest requestBody) {
         // Step 1: Find payment by Razorpay order id
         Payment payment = paymentRepository
-            .findByRazorpayOrderId(requestBody.razorpayOrderId())
+            .findByProviderOrderId(requestBody.razorpayOrderId())
             .orElseThrow(() -> new IllegalArgumentException("Payment not found for order id"));
 
         // Step 2: Verify signature

@@ -8,5 +8,5 @@ import com.nivara.payment_service.model.entity.Payment;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     public Optional<Payment> findByReservationId(Long reservationId);
-    public Optional<Payment> findByRazorpayOrderId(String razorpayOrderId);
+    public Optional<Payment> findByProviderOrderId(String razorpayOrderId);
 }

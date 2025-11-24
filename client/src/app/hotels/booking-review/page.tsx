@@ -4,7 +4,6 @@ import { Reservation } from "@/types/reservation";
 import { Hotel } from "@/types/hotel";
 
 import { MapPinIcon } from "@heroicons/react/24/solid";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
 import { ClockIcon } from "@heroicons/react/24/solid";
 
 import { useSearchParams } from "next/navigation";
@@ -215,8 +214,8 @@ export default function ReviewPage() {
 
     // validation: require guest details
     if( !guestName?.trim() || !guestEmail?.trim() || !guestPhone?.trim() ) {
-      toast.error("Name, email and phone are required");
-      setPaymentError("Name, email and phone are required");
+      toast("Name, Email and Phone are required");
+      setPaymentError("Name, Email and P  hone are required");
       setCreatingPayment(false);
       return;
     }
@@ -227,7 +226,7 @@ export default function ReviewPage() {
       const payload = {
         reservationId: reservation.id,
         holdId: reservation.holdId,
-        amount: Math.round((total ?? 0) * 100), // send amount in cents/paise to make server expectation
+        amount: Math.round((total ?? 0)),
         currency: reservation.currency ?? "INR",
         guestName: guestName,
         guestEmail: guestEmail,
@@ -244,7 +243,9 @@ export default function ReviewPage() {
 
       if(!res.ok) {
         const errBody = await res.json().catch(() => null);
-        throw new Error(errBody?.message ?? `Create payment failed: ${res.status}`);
+        const message = errBody?.message ?? `Create payment failed: ${res.status}`;
+        //toast(message);
+        throw new Error(message);
       }
 
       const data = await res.json();
@@ -257,7 +258,7 @@ export default function ReviewPage() {
 
       await loadRazorpay(); // pause here until the Razorpay script is loaded, or throw an error if it fails.
 
-      const options = {
+      const options =   {
         key,
         order_id: orderId,
         amount: amountPaise,
@@ -309,7 +310,7 @@ export default function ReviewPage() {
           ondismiss: () => {
             // is called only when the modal is closed by the user
             // helps you detect when a user cancels or exits the payment flow
-            console.log("Checkout modal was closed by the user");
+            toast("Payment not completed. Checkout modal was closed by the user.");
           }
         },
         theme: { color: "#111827" }

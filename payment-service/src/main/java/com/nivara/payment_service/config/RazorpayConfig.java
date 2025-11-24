@@ -23,7 +23,7 @@ public class RazorpayConfig {
     }
 
     @Bean
-    public RazorpaySignatureVerifier razorpaySignatureVerifier(@Value("${razorpay.secret}") String secret) {
+    public RazorpaySignatureVerifier razorpaySignatureVerifier(@Value("${razorpay.key-secret}") String secret) {
         return new RazorpaySignatureVerifier(secret);
     }
 

@@ -9,6 +9,7 @@ import lombok.Data;
 @Builder
 public class CreatePaymentResponseDTO {
     private final String providerOrderId;   // Razorpay order id
+    private final String providerKeyId;
     private final PaymentStatus status;      // e.g. PENDING, COMPLETED, FAILED
     private String message;
 }
