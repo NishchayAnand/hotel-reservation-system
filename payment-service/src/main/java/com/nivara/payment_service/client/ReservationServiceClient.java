@@ -5,13 +5,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.nivara.payment_service.model.dto.ConfirmReservationResponseDTO;
+
 @FeignClient(name = "reservation-service", url = "http://localhost:8084/api/reservations")
 public interface ReservationServiceClient {
 
     @PostMapping("/{reservationId}/confirm")
-    void confirmReservation(
-        @PathVariable Long reservationId,
-        @RequestParam Long paymentId
-    );
+    ConfirmReservationResponseDTO confirmReservation(@PathVariable Long reservationId, @RequestParam Long paymentId);
 
 }

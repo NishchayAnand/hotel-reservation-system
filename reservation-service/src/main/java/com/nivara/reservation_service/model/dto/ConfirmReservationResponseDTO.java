@@ -1,7 +1,9 @@
 package com.nivara.reservation_service.model.dto;
 
+import com.nivara.reservation_service.model.enums.ReservationStatus;
+
 public record ConfirmReservationResponseDTO(
     Long reservationId,
-    String status,
+    ReservationStatus status,
     Long paymentId
 ) {}

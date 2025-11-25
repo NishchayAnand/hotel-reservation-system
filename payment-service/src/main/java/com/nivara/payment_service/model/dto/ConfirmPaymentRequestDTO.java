@@ -1,6 +1,6 @@
 package com.nivara.payment_service.model.dto;
 
-public record ConfirmPaymentRequest (
+public record ConfirmPaymentRequestDTO (
     Long reservationId,
     Long holdId,
     String providerPaymentId,

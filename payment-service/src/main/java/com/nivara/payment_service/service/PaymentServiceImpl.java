@@ -17,8 +17,13 @@ import com.nivara.payment_service.exception.HoldExpiredException;
 import com.nivara.payment_service.exception.HoldExpiringSoonException;
 import com.nivara.payment_service.exception.HoldReleaseException;
 import com.nivara.payment_service.exception.PaymentFailedException;
+import com.nivara.payment_service.exception.PaymentInvalidException;
+import com.nivara.payment_service.exception.PaymentNotFoundException;
 import com.nivara.payment_service.model.dto.HoldDTO;
-import com.nivara.payment_service.model.dto.ConfirmPaymentRequest;
+import com.nivara.payment_service.model.dto.ConfirmPaymentRequestDTO;
+import com.nivara.payment_service.model.dto.ConfirmPaymentResponseDTO;
+import com.nivara.payment_service.model.dto.ConfirmReservationResponseDTO;
+import com.nivara.payment_service.model.dto.ConsumeHoldResponseDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentRequestDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentResponseDTO;
 import com.nivara.payment_service.model.entity.Payment;
@@ -323,11 +328,11 @@ public class PaymentServiceImpl implements PaymentService {
      */
     @Override
     @Transactional
-    public void handlePaymentCallback(ConfirmPaymentRequest requestBody) {
-        // Step 1: Find payment by Razorpay order id
+    public ConfirmPaymentResponseDTO confirmPayment(ConfirmPaymentRequestDTO requestBody) {
+        // Step 1: Find payment by provider's order id
         Payment payment = paymentRepository
             .findByProviderOrderId(requestBody.providerOrderId())
-            .orElseThrow(() -> new IllegalArgumentException("Payment not found for order id"));
+            .orElseThrow(() -> new PaymentNotFoundException("Payment not found for order id"));
 
         // Step 2: Verify signature
         boolean isValid = signatureVerifier.isValidSignature(
@@ -340,38 +345,53 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStatus(PaymentStatus.FAILED);
             paymentRepository.save(payment);
             payment.setUpdatedAt(Instant.now());
-            throw new IllegalStateException("Invalid Razorpay signature");
+            throw new PaymentInvalidException("Invalid Razorpay signature");
         }
 
-        // Signature valid ->. persist Razorpay fields + mark SUCCESS_CLIENT_CALLBACK
+        // Step 3: Mark payment as AUTHORIZED and persist provider's paymentId and signature  
         payment.setProviderPaymentId(requestBody.providerPaymentId());
         payment.setProviderSignature(requestBody.providerSignature());
         payment.setStatus(PaymentStatus.AUTHORIZED);
         payment.setUpdatedAt(Instant.now());
         paymentRepository.save(payment);
 
-        // Step 3: Orchestrate with downstream services
+        // Step 4: Consume hold via inventory-service
         try {
-            // 3a. Consume hold
-            inventoryServiceClient.consumeHold(payment.getHoldId(), payment.getId());
-
-            // 3b. Confirm reservation
-            reservationServiceClient.confirmReservation(requestBody.reservationId(), payment.getId());
-
-            // Step 4: Mark final success
-            payment.setStatus(PaymentStatus.COMPLETED);
-            payment.setUpdatedAt(Instant.now());
-            paymentRepository.save(payment);
-
+            ConsumeHoldResponseDTO consumeHoldResponse = inventoryServiceClient.consumeHold(payment.getHoldId(), payment.getReservationId(), payment.getId());
+            if(!consumeHoldResponse.isSuccess()) throw new PaymentFailedException("Failed to consume hold: " + consumeHoldResponse.holdId());
+        
         } catch (Exception ex) {
-            // some downstream step failed; todo -> classify and persist
             payment.setStatus(PaymentStatus.FAILED);
             payment.setUpdatedAt(Instant.now());
             paymentRepository.save(payment);
-            
+            throw ex;
+
+        }
+
+        // Step 5: Confirm reservation via reservation-service
+        try {
+            ConfirmReservationResponseDTO confirmReservationResponse = reservationServiceClient.confirmReservation(payment.getReservationId(), payment.getId());
+            if(!confirmReservationResponse.isSuccess()) throw new PaymentFailedException("Failed to confirm reservation: " + confirmReservationResponse.reservationId());
+        
+        } catch (Exception ex) {
+            payment.setStatus(PaymentStatus.FAILED);
+            payment.setUpdatedAt(Instant.now());
+            paymentRepository.save(payment);
             throw ex;
             
         }
+
+        // Step 6: Mark payment as COMPLETED
+        payment.setStatus(PaymentStatus.COMPLETED);
+        payment.setUpdatedAt(Instant.now());
+        paymentRepository.save(payment);
+
+        return new ConfirmPaymentResponseDTO(
+            payment.getId(), 
+            PaymentStatus.COMPLETED, 
+            "Payment confirmed"
+        );
+
     }
 
 }

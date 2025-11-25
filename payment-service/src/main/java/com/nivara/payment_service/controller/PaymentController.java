@@ -6,7 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nivara.payment_service.model.dto.ConfirmPaymentRequest;
+import com.nivara.payment_service.model.dto.ConfirmPaymentRequestDTO;
+import com.nivara.payment_service.model.dto.ConfirmPaymentResponseDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentRequestDTO;
 import com.nivara.payment_service.model.dto.CreatePaymentResponseDTO;
 import com.nivara.payment_service.service.PaymentService;
@@ -27,9 +28,9 @@ public class PaymentController {
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<Void> confirmPaymentCallback(@RequestBody ConfirmPaymentRequest requestBody) {
-        paymentService.handlePaymentCallback(requestBody);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<ConfirmPaymentResponseDTO> confirmPaymentCallback(@RequestBody ConfirmPaymentRequestDTO requestBody) {
+        ConfirmPaymentResponseDTO responseBody = paymentService.confirmPayment(requestBody);
+        return ResponseEntity.ok().body(responseBody);
     }
 
 }

@@ -214,7 +214,7 @@ export default function ReviewPage() {
 
     // validation: require guest details
     if( !guestName?.trim() || !guestEmail?.trim() || !guestPhone?.trim() ) {
-      toast("Name, Email and Phone are required");
+      //toast("Name, Email and Phone are required");
       setPaymentError("Name, Email and P  hone are required");
       setCreatingPayment(false);
       return;
@@ -300,7 +300,8 @@ export default function ReviewPage() {
               
             } catch (err: any) {
               console.error("Failed to finalize reservation after payment:", err);
-              toast.error(err?.message ?? "Payment succeeded but finalizing reservation failed");
+              //toast.error(err?.message ?? "Payment succeeded but finalizing reservation failed");
+              setPaymentError("Failed to finalize reservation after payment: " + err);
             } finally {
               setCreatingPayment(false);
             }

@@ -201,7 +201,7 @@ public class ReservationServiceImpl implements ReservationService {
 
             return new ConfirmReservationResponseDTO(
                     reservation.getId(),
-                    reservation.getStatus().name(),
+                    reservation.getStatus(),
                     reservation.getPaymentId()
             );
         }
@@ -237,7 +237,7 @@ public class ReservationServiceImpl implements ReservationService {
         // 4. Build response
         return new ConfirmReservationResponseDTO(
                 saved.getId(),
-                saved.getStatus().name(),
+                saved.getStatus(),
                 saved.getPaymentId()
         );
     }

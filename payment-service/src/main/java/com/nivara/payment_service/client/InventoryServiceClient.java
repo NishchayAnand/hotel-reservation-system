@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.nivara.payment_service.model.dto.ConsumeHoldResponseDTO;
 import com.nivara.payment_service.model.dto.HoldDTO;
 
 @FeignClient(name = "inventory-service", url = "http://localhost:8082/api/inventory")
@@ -15,6 +16,10 @@ public interface InventoryServiceClient {
     HoldDTO getHold(@RequestParam Long holdId);
 
     @PostMapping("holds/{holdId}/consume")
-    void consumeHold(@PathVariable Long holdId, @RequestParam Long paymentId);
+    ConsumeHoldResponseDTO consumeHold(
+        @PathVariable Long holdId, 
+        @RequestParam Long reservationId, 
+        @RequestParam Long paymentId
+    );
 
 }
