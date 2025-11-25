@@ -19,6 +19,7 @@ public class ReservationDTO {
     List<ReservationItemDTO> reservedItems;
     Long amount;
     String currency;
+    Long paymentId;
     Long holdId;
     Instant expiresAt;
     ReservationStatus status;

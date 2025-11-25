@@ -7,6 +7,7 @@ export type Reservation = {
     checkOutDate: string;
     amount: number;
     currency: string;
+    paymentId: number;
     holdId: number;
     expiresAt: string;
     status: string;

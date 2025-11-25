@@ -24,7 +24,6 @@ import SkeletonCard from "@/components/ui/skeleton-card";
 import HotelDetailsSkeleton from "@/components/ui/hotel-details-skeleton";
 import HotelFaqs from "@/components/ui/hotel-faqs";
 import { useRouter } from "next/navigation";
-import { request } from "http";
 
 // static image list for the carousel
 const DEFAULT_CAROUSEL = [
@@ -184,7 +183,7 @@ export default function HotelPage() {
             const created = await res.json();
 
             const paramString = new URLSearchParams({ reservationId: created.reservationId }).toString();
-            router.push(`/hotels/booking-review?${paramString}`);
+            router.push(`/bookings/review?${paramString}`);
 
         } catch (err) {
             console.error("create reservation failed", err);

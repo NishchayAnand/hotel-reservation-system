@@ -3,35 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-
-type ReservationItem = {
-  name?: string;
-  roomTypeId?: number;
-  qty?: number;
-  rate?: number;
-};
-
-type Reservation = {
-  id?: number;
-  hotelId?: number;
-  hotelName?: string;
-  checkInDate?: string;
-  checkOutDate?: string;
-  amount?: number;
-  currency?: string;
-  status?: string;
-  items?: ReservationItem[];
-  customerName?: string;
-  customerEmail?: string;
-  customerPhone?: string;
-  holdId?: number;
-  paymentId?: string;
-};
+import { Reservation } from "@/types/reservation";
 
 export default function ConfirmationPage() {
+
   const searchParams = useSearchParams();
   const reservationId = searchParams.get("reservationId") ?? "";
-  const paymentId = searchParams.get("paymentId") ?? "";
+
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState<boolean>(!!reservationId);
   const [error, setError] = useState<string | null>(null);
@@ -43,17 +21,18 @@ export default function ConfirmationPage() {
       setLoading(true);
       setError(null);
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_RESERVATION_SERVICE_URL || "http://localhost:8083";
-        const res = await fetch(`${baseUrl}/api/reservations/${encodeURIComponent(reservationId)}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_RESERVATION_SERVICE_URL || "http://localhost:8084";
+        const res = await fetch(`${baseUrl}/api/reservations/${reservationId}`, {
           signal: abort.signal,
           headers: { Accept: "application/json" },
         });
+
         if (!res.ok) {
           const body = await res.json().catch(() => null);
           throw new Error(body?.message ?? `Failed to fetch reservation (${res.status})`);
         }
         const data = await res.json();
-        setReservation({ ...data, paymentId });
+        setReservation({ ...data });
       } catch (err: any) {
         if (err.name !== "AbortError") setError(err.message ?? "Failed to load reservation");
       } finally {
@@ -62,7 +41,7 @@ export default function ConfirmationPage() {
     };
     fetchReservation();
     return () => abort.abort();
-  }, [reservationId, paymentId]);
+  }, [reservationId]);
 
   const fmt = useMemo(() => {
     const currency = reservation?.currency ?? "INR";
@@ -98,7 +77,7 @@ export default function ConfirmationPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="text-sm text-gray-600">Reservation #{reservation.id}</div>
-                      <div className="text-lg font-medium">{reservation.hotelName ?? `Hotel #${reservation.hotelId ?? "—"}`}</div>
+                      <div className="text-lg font-medium">{`Hotel #${reservation.hotelId ?? "—"}`}</div>
                     </div>
                     <div className="text-right text-sm text-gray-600">
                       <div>{formatDate(reservation.checkInDate)} → {formatDate(reservation.checkOutDate)}</div>
@@ -107,27 +86,27 @@ export default function ConfirmationPage() {
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-gray-700">
-                    <div>
+                    {/* <div>
                       <div className="text-xs text-gray-500">Guest</div>
                       <div className="font-medium">{reservation.customerName ?? "—"}</div>
                       <div className="text-xs text-gray-500">{reservation.customerEmail ?? "—"}</div>
-                    </div>
+                    </div> */}
                     <div>
                       <div className="text-xs text-gray-500">Payment</div>
                       <div className="font-medium">{reservation.amount ? fmt.format(reservation.amount) : "—"}</div>
-                      <div className="text-xs text-gray-500 mt-1">Payment ID: {reservation.paymentId ?? paymentId ?? "—"}</div>
+                      <div className="text-xs text-gray-500 mt-1">Payment ID: {reservation.paymentId ?? "—"}</div>
                     </div>
                   </div>
 
                   <div className="mt-4">
                     <h3 className="text-sm font-medium text-gray-700">Room summary</h3>
                     <ul className="mt-2 divide-y">
-                      {reservation.items && reservation.items.length > 0 ? (
-                        reservation.items.map((it, i) => (
+                      {reservation.reservedItems && reservation.reservedItems.length > 0 ? (
+                        reservation.reservedItems.map((it, i) => (
                           <li key={i} className="py-2 flex justify-between items-center">
                             <div>
-                              <div className="font-medium">{it.name ?? `Room ${it.roomTypeId ?? "—"}`}</div>
-                              <div className="text-xs text-gray-500">{(it.qty ?? 0)} {it.qty === 1 ? "room" : "rooms"}</div>
+                              <div className="font-medium">{it.name ?? `Room ${it.id ?? "—"}`}</div>
+                              <div className="text-xs text-gray-500">{(it.quantity ?? 0)} {it.quantity === 1 ? "room" : "rooms"}</div>
                             </div>
                             <div className="text-right text-sm font-medium">{fmt.format(it.rate ?? 0)}</div>
                           </li>

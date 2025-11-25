@@ -29,6 +29,7 @@ public final class ReservationMapper {
             .reservedItems(reservedItems)
             .amount(reservation.getAmount())
             .currency(reservation.getCurrency())
+            .paymentId(reservation.getPaymentId())
             .holdId(reservation.getHoldId())
             .expiresAt(reservation.getExpiresAt())
             .status(reservation.getStatus())

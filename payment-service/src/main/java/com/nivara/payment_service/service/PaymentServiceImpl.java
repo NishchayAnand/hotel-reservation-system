@@ -387,6 +387,7 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.save(payment);
 
         return new ConfirmPaymentResponseDTO(
+            payment.getReservationId(),
             payment.getId(), 
             PaymentStatus.COMPLETED, 
             "Payment confirmed"

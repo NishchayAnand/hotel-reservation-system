@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { Reservation } from "@/types/reservation";
 import { Hotel } from "@/types/hotel";
 
@@ -42,6 +44,8 @@ const formatRemaining = (ms: number) => {
 };
 
 export default function ReviewPage() {
+
+  const router = useRouter();
 
   const searchParams = useSearchParams();
   const reservationId = searchParams.get("reservationId") ?? "";
@@ -296,7 +300,13 @@ export default function ReviewPage() {
               }
 
               // on success
-              toast.info(`Reservation Confirmed: ${reservation.id}`);
+              const finalizeData = await finalizeRes.json();
+              const paramString = new URLSearchParams({ 
+                reservationId: finalizeData.reservationId,
+                paymentId: finalizeData.paymentId 
+              }).toString();
+
+              router.push(`/bookings/confirmation?${paramString}`);
               
             } catch (err: any) {
               console.error("Failed to finalize reservation after payment:", err);
