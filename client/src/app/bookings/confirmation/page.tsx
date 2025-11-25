@@ -56,10 +56,10 @@ export default function ConfirmationPage() {
   };
 
   return (
-    <main className="max-w-4xl mx-auto mt-24 p-6">
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="p-6 border-b">
-          <h1 className="text-2xl font-semibold text-green-700">Booking Confirmed</h1>
+    <main className="w-full min-h-screen flex flex-col pt-24 px-6">
+      <div className="bg-white max-w-4xl mx-auto border rounded-lg overflow-hidden">
+        <div className="p-6">
+          <h1 className="text-3xl font-semibold">Booking Confirmed</h1>
           <p className="text-sm text-gray-500 mt-1">Thank you — your payment was successful.</p>
         </div>
 
@@ -75,46 +75,11 @@ export default function ConfirmationPage() {
               ) : (
                 <>
                   <div className="flex items-start justify-between">
-                    <div>
-                      <div className="text-sm text-gray-600">Reservation #{reservation.id}</div>
-                      <div className="text-lg font-medium">{`Hotel #${reservation.hotelId ?? "—"}`}</div>
-                    </div>
+                    <div>Reservation ID: {reservation?.id ?? "—"}</div>
                     <div className="text-right text-sm text-gray-600">
                       <div>{formatDate(reservation.checkInDate)} → {formatDate(reservation.checkOutDate)}</div>
                       <div className="mt-1">{reservation.status ?? "CONFIRMED"}</div>
                     </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-gray-700">
-                    {/* <div>
-                      <div className="text-xs text-gray-500">Guest</div>
-                      <div className="font-medium">{reservation.customerName ?? "—"}</div>
-                      <div className="text-xs text-gray-500">{reservation.customerEmail ?? "—"}</div>
-                    </div> */}
-                    <div>
-                      <div className="text-xs text-gray-500">Payment</div>
-                      <div className="font-medium">{reservation.amount ? fmt.format(reservation.amount) : "—"}</div>
-                      <div className="text-xs text-gray-500 mt-1">Payment ID: {reservation.paymentId ?? "—"}</div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <h3 className="text-sm font-medium text-gray-700">Room summary</h3>
-                    <ul className="mt-2 divide-y">
-                      {reservation.reservedItems && reservation.reservedItems.length > 0 ? (
-                        reservation.reservedItems.map((it, i) => (
-                          <li key={i} className="py-2 flex justify-between items-center">
-                            <div>
-                              <div className="font-medium">{it.name ?? `Room ${it.id ?? "—"}`}</div>
-                              <div className="text-xs text-gray-500">{(it.quantity ?? 0)} {it.quantity === 1 ? "room" : "rooms"}</div>
-                            </div>
-                            <div className="text-right text-sm font-medium">{fmt.format(it.rate ?? 0)}</div>
-                          </li>
-                        ))
-                      ) : (
-                        <li className="py-2 text-sm text-gray-500">No room details available.</li>
-                      )}
-                    </ul>
                   </div>
                 </>
               )}
@@ -132,29 +97,11 @@ export default function ConfirmationPage() {
               <div className="text-2xl font-semibold mt-1">{reservation?.amount ? fmt.format(reservation.amount) : "—"}</div>
               <div className="text-xs text-gray-400 mt-2">Includes taxes & fees (estimated)</div>
             </div>
-
-            <div className="p-4 border rounded-lg bg-white">
-              <div className="flex flex-col gap-2">
-                <Link href={`/hotels/${reservation?.hotelId ?? ""}`} className="inline-block text-center w-full bg-gray-100 py-2 rounded text-sm hover:bg-gray-200">
-                  View hotel
-                </Link>
-                <button
-                  onClick={() => window.print()}
-                  className="w-full inline-block bg-white border py-2 rounded text-sm hover:bg-gray-50"
-                >
-                  Print confirmation
-                </button>
-                <Link href="/bookings" className="inline-block text-center w-full bg-black text-white py-2 rounded text-sm hover:opacity-90">
-                  View my bookings
-                </Link>
-              </div>
-            </div>
           </aside>
         </div>
       </div>
 
       <footer className="max-w-4xl mx-auto mt-6 text-center text-xs text-gray-400">
-        <div>Reservation ID: {reservation?.id ?? "—"}</div>
         <div className="mt-1">If you need to modify your booking, visit your bookings page or contact support.</div>
       </footer>
     </main>
