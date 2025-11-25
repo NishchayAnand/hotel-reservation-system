@@ -283,9 +283,9 @@ export default function ReviewPage() {
                   body: JSON.stringify({
                     reservationId: reservation.id,
                     holdId: reservation.holdId,
-                    paymentId: razorpayResponse.razorpay_payment_id,
-                    orderId: razorpayResponse.razorpay_order_id,
-                    signature: razorpayResponse.razorpay_signature
+                    providerPaymentId: razorpayResponse.razorpay_payment_id,
+                    providerOrderId: razorpayResponse.razorpay_order_id,
+                    providerSignature: razorpayResponse.razorpay_signature
                   })
                 }
               );
@@ -310,7 +310,7 @@ export default function ReviewPage() {
           ondismiss: () => {
             // is called only when the modal is closed by the user
             // helps you detect when a user cancels or exits the payment flow
-            toast("Payment not completed. Checkout modal was closed by the user.");
+            toast("Payment not completed. Checkout modal was closed by the user");
           }
         },
         theme: { color: "#111827" }

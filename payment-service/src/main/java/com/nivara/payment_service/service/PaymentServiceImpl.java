@@ -326,14 +326,14 @@ public class PaymentServiceImpl implements PaymentService {
     public void handlePaymentCallback(ConfirmPaymentRequest requestBody) {
         // Step 1: Find payment by Razorpay order id
         Payment payment = paymentRepository
-            .findByProviderOrderId(requestBody.razorpayOrderId())
+            .findByProviderOrderId(requestBody.providerOrderId())
             .orElseThrow(() -> new IllegalArgumentException("Payment not found for order id"));
 
         // Step 2: Verify signature
         boolean isValid = signatureVerifier.isValidSignature(
             payment.getProviderOrderId(), // do not use razorpayOrderId returned by Checkout
-            requestBody.razorpayPaymentId(),
-            requestBody.razorpaySignature()
+            requestBody.providerPaymentId(),
+            requestBody.providerSignature()
         );
 
         if(!isValid) {
@@ -344,8 +344,8 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // Signature valid ->. persist Razorpay fields + mark SUCCESS_CLIENT_CALLBACK
-        payment.setProviderPaymentId(requestBody.razorpayPaymentId());
-        payment.setProviderSignature(requestBody.razorpaySignature());
+        payment.setProviderPaymentId(requestBody.providerPaymentId());
+        payment.setProviderSignature(requestBody.providerSignature());
         payment.setStatus(PaymentStatus.AUTHORIZED);
         payment.setUpdatedAt(Instant.now());
         paymentRepository.save(payment);
