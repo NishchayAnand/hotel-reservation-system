@@ -169,6 +169,12 @@ INSERT INTO room_types (hotel_id, name, description, bed_type, bed_count) VALUES
   (6, 'Family Cottage',   'Spacious cottage for families',            'DOUBLE', 3),
   (6, 'Beach Hut',        'Rustic hut-style accommodation near sand','SINGLE', 1);
 
+CREATE TABLE room_amenities (
+    room_type_id    bigint NOT NULL REFERENCES room_types(id) ON DELETE CASCADE,
+    amenity_id      bigint NOT NULL REFERENCES amenities(id) ON DELETE CASCADE,
+    PRIMARY KEY (room_type_id, amenity_id)
+);
+
 INSERT INTO room_amenities (room_type_id, amenity_id) VALUES
   -- hotel 1 (room_type_id 1..3)
   (1, 1), (1, 5), (1, 4),
@@ -258,8 +264,8 @@ WITH combos AS (
 ),
 dates AS (
   SELECT generate_series(
-           current_date,
-           (current_date + INTERVAL '2 months') - INTERVAL '1 day',
+           current_date + 1,
+           (current_date + 1 + INTERVAL '2 months') - INTERVAL '1 day',
            INTERVAL '1 day'
          )::date AS reservation_date
 ),
@@ -405,7 +411,7 @@ CREATE TABLE reservations (
     check_out_date  DATE                NOT NULL,
     amount          BIGINT,
     currency        VARCHAR(10),
-    payment_id      BIGINT
+    payment_id      BIGINT,
     hold_id         BIGINT,
     expires_at      TIMESTAMPTZ,
     status          VARCHAR(32)         NOT NULL DEFAULT 'PENDING',

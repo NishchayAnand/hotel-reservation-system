@@ -1,6 +1,6 @@
 spring:
     application:
-      name: hotel-service
+      name: inventory-service
     datasource:
       url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54602}/${DB_NAME:inventorydb}
       username: ${DB_USERNAME:postgres}
