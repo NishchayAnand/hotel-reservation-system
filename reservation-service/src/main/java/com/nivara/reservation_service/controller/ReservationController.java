@@ -27,6 +27,11 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
+    }
+
     @PostMapping
     public ResponseEntity<CreateReservationResponseDTO> createReservation(
         @RequestHeader(value = "X-Request-Id") String requestId,

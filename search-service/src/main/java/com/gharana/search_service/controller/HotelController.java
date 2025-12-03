@@ -25,6 +25,11 @@ public class HotelController {
 
     private final SearchService searchService;
 
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
+    }
+
     @GetMapping("/hotel-listing")
     public ResponseEntity<List<AvailableHotelDTO>> getAvailableHotelsByLocationId(@RequestParam Long locationId, 
                                 @RequestParam LocalDate checkInDate, 

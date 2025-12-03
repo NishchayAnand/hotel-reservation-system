@@ -56,8 +56,8 @@ export default function HotelPage() {
             setLoading(true);
             try {
                 const [hotelResponse, roomTypeResponse] = await Promise.all([
-                    fetch(`http://localhost:8081/api/hotels/${hotelId}`),
-                    fetch(`http://localhost:8080/api/hotels/hotel-details/${hotelId}/room-types`
+                    fetch(`${process.env.HOTEl_API_BASE_URL || "http://localhost:8081"}/api/hotels/${hotelId}`),
+                    fetch(`${process.env.SEARCH_API_BASE_URL || "http://localhost:8080"}/api/hotels/hotel-details/${hotelId}/room-types`
                         + `?checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`)
                 ]);
 
@@ -165,7 +165,7 @@ export default function HotelPage() {
                 currency: "INR"
             };
 
-            const baseUrl = process.env.NEXT_PUBLIC_RESERVATION_SERVICE_URL || "http://localhost:8084";
+            const baseUrl = process.env.RESERVATION_API_BASE_URL || "http://localhost:8084";
             const res = await fetch(`${baseUrl}/api/reservations`, {
                 method: "POST",
                 headers: {

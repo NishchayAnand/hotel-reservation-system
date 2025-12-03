@@ -30,6 +30,11 @@ public class InventoryController {
 
     private final InventoryService inventoryService;
 
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
+    }
+
     @PostMapping("/get-availability")
     public ResponseEntity<List<AvailableRoomTypeDTO>> getRoomAvailability(@RequestBody RoomAvailabilityRequestDTO request) {
             List<AvailableRoomTypeDTO> responseBody = inventoryService.getAvailableRoomTypes(request.getHotelIds(), request.getCheckInDate(), request.getCheckOutDate());

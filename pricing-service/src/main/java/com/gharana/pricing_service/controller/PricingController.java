@@ -1,6 +1,7 @@
 package com.gharana.pricing_service.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
@@ -21,6 +22,11 @@ import lombok.AllArgsConstructor;
 public class PricingController {
 
     private final PricingService pricingService;
+
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
+    }
 
     @PostMapping("/hotels")
     public ResponseEntity<List<MinHotelPriceQuoteDTO>> getMinHotelPricePerNight(@RequestBody PricingQueryRequestDTO req) {

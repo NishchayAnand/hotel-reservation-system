@@ -1,6 +1,7 @@
 package com.nivara.payment_service.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,11 @@ import lombok.AllArgsConstructor;
 public class PaymentController {
 
     private final PaymentService paymentService;
+
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
+    }
 
     @PostMapping("")
     public ResponseEntity<CreatePaymentResponseDTO> createPayment(@RequestBody CreatePaymentRequestDTO requestBody) {

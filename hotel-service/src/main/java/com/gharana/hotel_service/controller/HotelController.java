@@ -42,4 +42,9 @@ public class HotelController {
         return ResponseEntity.ok().body(hotelService.getRoomTypesByIds(hotelId, roomTypeIds));
     }
 
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
+    }
+
 }
