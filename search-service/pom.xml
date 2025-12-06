@@ -101,6 +101,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<finalName>search-service</finalName>
 	</build>
 
 </project>

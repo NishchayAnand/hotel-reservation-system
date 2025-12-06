@@ -122,6 +122,8 @@
 				</configuration>
 			</plugin>
 		</plugins>
+
+		<finalName>reservation-service</finalName>
 	</build>
 
 </project>

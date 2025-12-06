@@ -2,7 +2,7 @@ spring:
     application:
       name: hotel-service
     datasource:
-      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54602}/${DB_NAME:hoteldb}
+      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54602}/hoteldb
       username: ${DB_USERNAME:postgres}
       password: ${DB_PASSWORD:postgres}
     jpa:
@@ -14,4 +14,5 @@ spring:
           highlight_sql: true
       
 server:
+    address: 0.0.0.0
     port: 8081

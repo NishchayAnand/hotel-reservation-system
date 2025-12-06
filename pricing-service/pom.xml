@@ -94,6 +94,8 @@
 				</configuration>
 			</plugin>
 		</plugins>
+
+		<finalName>pricing-service</finalName>
 	</build>
 
 </project>

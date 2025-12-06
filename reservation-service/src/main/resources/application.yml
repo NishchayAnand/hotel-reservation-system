@@ -2,7 +2,7 @@ spring:
     application:
       name: reservation-service
     datasource:
-      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54602}/${DB_NAME:reservationdb}
+      url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:54602}/$reservationdb
       username: ${DB_USERNAME:postgres}
       password: ${DB_PASSWORD:postgres}
     jpa:
@@ -14,7 +14,7 @@ spring:
           highlight_sql: true
 
 server:
-  port: 8084
+  port: 8085
 
 resilience4j:
   retry:
