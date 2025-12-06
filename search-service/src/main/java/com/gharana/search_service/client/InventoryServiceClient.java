@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.gharana.search_service.dto.RoomAvailabilityRequest;
 import com.gharana.search_service.dto.RoomAvailabilityDTO;
 
-@FeignClient(name = "inventory-service", url = "http://localhost:8082/api/inventory")
+@FeignClient(name = "inventory-service", url = "${service.inventory-service.base-url}/api/inventory")
 public interface InventoryServiceClient {
 
     @PostMapping("/get-availability")

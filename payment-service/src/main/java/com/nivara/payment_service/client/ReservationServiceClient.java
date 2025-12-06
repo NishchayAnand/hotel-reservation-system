@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.nivara.payment_service.model.dto.ConfirmReservationResponseDTO;
 
-@FeignClient(name = "reservation-service", url = "http://localhost:8085/api/reservations")
+@FeignClient(name = "reservation-service", url = "${service.reservation-service.base-url}/api/reservations")
 public interface ReservationServiceClient {
 
     @PostMapping("/{reservationId}/confirm")

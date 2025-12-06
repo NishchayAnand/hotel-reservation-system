@@ -2,5 +2,14 @@ spring:
   application:
     name: search-service
 
+service:
+  hotel-service:
+    base-url: ${HOTEL_SERVICE_BASE_URL:http://localhost:8081}
+  inventory-service:
+    base-url: ${INVENTORY_SERVICE_BASE_URL:http://localhost:8082}
+  pricing-service:
+    base-url: ${PRICING_SERVICE_BASE_URL:http://localhost:8083}
+
 server:
+  address: 0.0.0.0
   port: 8084

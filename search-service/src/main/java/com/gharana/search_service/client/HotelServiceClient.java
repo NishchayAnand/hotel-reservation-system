@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.gharana.search_service.dto.HotelDTO;
 import com.gharana.search_service.dto.RoomTypeDTO;
 
-@FeignClient(name = "hotel-service", url = "http://localhost:8081/api/hotels")
+@FeignClient(name = "hotel-service", url = "${service.hotel-service.base-url}/api/hotels")
 public interface HotelServiceClient {
 
     @GetMapping("")

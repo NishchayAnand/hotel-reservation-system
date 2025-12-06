@@ -13,7 +13,12 @@ spring:
           show-sql: true
           highlight_sql: true
 
+service:
+  inventory-service:
+    base-url: ${INVENTORY_SERVICE_BASE_URL}
+
 server:
+  address: 0.0.0.0
   port: 8085
 
 resilience4j:

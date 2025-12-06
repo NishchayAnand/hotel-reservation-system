@@ -12,7 +12,7 @@ import com.nivara.reservation_service.model.dto.CreateHoldResponseDTO;
 
 @FeignClient(
     name = "inventory-service", 
-    url = "http://localhost:8082/api/inventory",
+    url = "${service.inventory-service.base-url}/api/inventory",
     configuration = InventoryFeignConfig.class
 )
 public interface InventoryClient {

@@ -10,7 +10,7 @@ import com.gharana.search_service.dto.AvgRoomTypePriceQuoteDTO;
 import com.gharana.search_service.dto.MinHotelPriceQuoteDTO;
 import com.gharana.search_service.dto.PricingQueryRequestDTO;
 
-@FeignClient(name="pricing-service", url="http://localhost:8083/api/pricing")
+@FeignClient(name="pricing-service", url="${service.pricing-service.base-url}/api/pricing")
 public interface PricingServiceClient {
 
     @PostMapping("/hotels")

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.nivara.payment_service.model.dto.ConsumeHoldResponseDTO;
 import com.nivara.payment_service.model.dto.HoldDTO;
 
-@FeignClient(name = "inventory-service", url = "http://localhost:8082/api/inventory")
+@FeignClient(name = "inventory-service", url = "${service.inventory-service.base-url}/api/inventory")
 public interface InventoryServiceClient {
 
     @GetMapping("/holds/{holdId}")

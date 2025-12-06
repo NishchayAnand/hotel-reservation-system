@@ -12,9 +12,16 @@ spring:
           format_sql: true
           show-sql: true
           highlight_sql: true
-      
+
+service:
+  inventory-service:
+    base-url: ${INVENTORY_SERVICE_BASE_URL}
+  reservation-service:
+    base-url: ${RESERVATION_SERVICE_BASE_URL}
+
 server:
-    port: 8086  
+  address: 0.0.0.0
+  port: 8086  
 
 razorpay:
   key-id: ${RAZORPAY_KEY_ID}
