@@ -43,6 +43,10 @@ const formatRemaining = (ms: number) => {
   return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 };
 
+const paymentAPIUrl = process.env.NEXT_PUBLIC_PAYMENT_API_BASE_URL;
+const reservationAPIUrl = process.env.NEXT_PUBLIC_RESERVATION_API_BASE_URL;
+const hotelAPIUrl = process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL;
+
 export default function ReviewPage() {
 
   const router = useRouter();
@@ -80,7 +84,7 @@ export default function ReviewPage() {
       setLoading(true);
       setError(null);
       try {
-        const baseUrl = process.env.RESERVATION_API_BASE_URL || "http://localhost:8084";
+        const baseUrl = reservationAPIUrl || "http://localhost:8084";
         const res = await fetch(`${baseUrl}/api/reservations/${reservationId}`, {
           method: "GET",
           signal: abort.signal,
@@ -172,7 +176,7 @@ export default function ReviewPage() {
       setHotelError(null);
 
       try {
-        const baseUrl = process.env.HOTEL_API_BASE_URL || "http://localhost:8081";
+        const baseUrl = hotelAPIUrl || "http://localhost:8081";
         const res = await fetch(`${baseUrl}/api/hotels/${encodeURIComponent(reservation.hotelId)}`, {
           method: "GET",
           signal: abort.signal,
@@ -226,7 +230,7 @@ export default function ReviewPage() {
 
     try {
 
-      const baseUrl = process.env.PAYMENT_API_BASE_URL || "http://localhost:8085";
+      const baseUrl = paymentAPIUrl || "http://localhost:8085";
       const payload = {
         reservationId: reservation.id,
         holdId: reservation.holdId,
@@ -278,7 +282,7 @@ export default function ReviewPage() {
           (async () => {
             try {
               // finalize reservation using payment-service as the orchestrator
-              const payBase = process.env.RESERVATION_API_BASE_URL || "http://localhost:8085";
+              const payBase = reservationAPIUrl || "http://localhost:8085";
               const finalizeRes = await fetch(
                 `${payBase}/api/payments/confirm`,
                 {

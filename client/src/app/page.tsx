@@ -15,7 +15,7 @@ interface Location {
 export default async function Home() {
 
   // server-side fetch
-  const res = await fetch(`${process.env.HOTEl_API_BASE_URL || "http://localhost:8081"}/api/locations`);
+  const res = await fetch(`${process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL || "http://localhost:8081"}/api/locations`);
   const locations = res.ok ? await res.json() : [];
 
   const destinations = Array.isArray(locations)

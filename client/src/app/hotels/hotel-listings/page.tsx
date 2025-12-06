@@ -8,6 +8,9 @@ import SkeletonCard from "@/components/ui/skeleton-card";
 import type { Hotel } from "@/types/hotel";
 import { useEffect, useState } from "react";
 
+const searchAPIUrl = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL;
+
+
 export default function SearchPage() {
 
   const searchParams = useSearchParams();
@@ -22,10 +25,11 @@ export default function SearchPage() {
     
     const qs = searchParams.toString();
 
+    console.log(searchAPIUrl);
     const fetchHotels = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${process.env.SEARCH_API_BASE_URL || "http://localhost:8080"}/api/hotels/hotel-listing?${qs}`);
+        const res = await fetch(`${searchAPIUrl || "http://localhost:8080"}/api/hotels/hotel-listing?${qs}`);
         if(!res.ok) {
           setHotels([]);
           return;
