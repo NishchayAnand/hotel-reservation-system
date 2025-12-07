@@ -22,7 +22,7 @@ export default function ConfirmationPage() {
       setLoading(true);
       setError(null);
       try {
-        const baseUrl = process.env.RESERVATION_API_BASE_URL || "http://localhost:8084";
+        const baseUrl = process.env.RESERVATION_API_BASE_URL || "http://localhost:8085";
         const res = await fetch(`${baseUrl}/api/reservations/${reservationId}`, {
           signal: abort.signal,
           headers: { Accept: "application/json" },

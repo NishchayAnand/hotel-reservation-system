@@ -31,9 +31,9 @@ const DEFAULT_CAROUSEL = [
     "/images/jaipur/the-johri/carousel/photo2.jpg"
 ];
 
-const hotelAPIUrl = process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL;
-const searchAPIUrl = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL;
-const reservationAPIUrl = process.env.NEXT_PUBLIC_RESERVATION_API_BASE_URL;
+const hotelAPIUrl = process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL || "http://localhost:8081";
+const searchAPIUrl = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || "http://localhost:8084";
+const reservationAPIUrl = process.env.NEXT_PUBLIC_RESERVATION_API_BASE_URL || "http://localhost:8085";
 
 export default function HotelPage() {
 
@@ -60,8 +60,8 @@ export default function HotelPage() {
             setLoading(true);
             try {
                 const [hotelResponse, roomTypeResponse] = await Promise.all([
-                    fetch(`${hotelAPIUrl || "http://localhost:8081"}/api/hotels/${hotelId}`),
-                    fetch(`${searchAPIUrl || "http://localhost:8080"}/api/hotels/hotel-details/${hotelId}/room-types`
+                    fetch(`${hotelAPIUrl}/api/hotels/${hotelId}`),
+                    fetch(`${searchAPIUrl}/api/hotels/hotel-details/${hotelId}/room-types`
                         + `?checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`)
                 ]);
 
@@ -169,8 +169,7 @@ export default function HotelPage() {
                 currency: "INR"
             };
 
-            const baseUrl = reservationAPIUrl || "http://localhost:8084";
-            const res = await fetch(`${baseUrl}/api/reservations`, {
+            const res = await fetch(`${reservationAPIUrl}/api/reservations`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

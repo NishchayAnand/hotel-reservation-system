@@ -43,9 +43,9 @@ const formatRemaining = (ms: number) => {
   return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 };
 
-const paymentAPIUrl = process.env.NEXT_PUBLIC_PAYMENT_API_BASE_URL;
-const reservationAPIUrl = process.env.NEXT_PUBLIC_RESERVATION_API_BASE_URL;
-const hotelAPIUrl = process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL;
+const paymentAPIUrl = process.env.NEXT_PUBLIC_PAYMENT_API_BASE_URL || "http://localhost:8086";
+const reservationAPIUrl = process.env.NEXT_PUBLIC_RESERVATION_API_BASE_URL || "http://localhost:8085";
+const hotelAPIUrl = process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL || "http://localhost:8081";
 
 export default function ReviewPage() {
 
@@ -84,8 +84,7 @@ export default function ReviewPage() {
       setLoading(true);
       setError(null);
       try {
-        const baseUrl = reservationAPIUrl || "http://localhost:8084";
-        const res = await fetch(`${baseUrl}/api/reservations/${reservationId}`, {
+        const res = await fetch(`${reservationAPIUrl}/api/reservations/${reservationId}`, {
           method: "GET",
           signal: abort.signal,
           headers: { Accept: "application/json" }
@@ -176,8 +175,7 @@ export default function ReviewPage() {
       setHotelError(null);
 
       try {
-        const baseUrl = hotelAPIUrl || "http://localhost:8081";
-        const res = await fetch(`${baseUrl}/api/hotels/${encodeURIComponent(reservation.hotelId)}`, {
+        const res = await fetch(`${hotelAPIUrl}/api/hotels/${encodeURIComponent(reservation.hotelId)}`, {
           method: "GET",
           signal: abort.signal,
           headers: { Accept: "application/json" }
@@ -230,7 +228,6 @@ export default function ReviewPage() {
 
     try {
 
-      const baseUrl = paymentAPIUrl || "http://localhost:8085";
       const payload = {
         reservationId: reservation.id,
         holdId: reservation.holdId,
@@ -241,7 +238,7 @@ export default function ReviewPage() {
         guestPhone: guestPhone   
       };
 
-      const res = await fetch(`${baseUrl}/api/payments`, {
+      const res = await fetch(`${paymentAPIUrl}/api/payments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -282,9 +279,8 @@ export default function ReviewPage() {
           (async () => {
             try {
               // finalize reservation using payment-service as the orchestrator
-              const payBase = reservationAPIUrl || "http://localhost:8085";
               const finalizeRes = await fetch(
-                `${payBase}/api/payments/confirm`,
+                `${paymentAPIUrl}/api/payments/confirm`,
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
