@@ -297,6 +297,7 @@ CREATE TABLE HOLDS (
     id              BIGSERIAL PRIMARY KEY,
     reservation_id  BIGINT UNIQUE NOT NULL,
     hotel_id        BIGINT NOT NULL,
+    payment_id      BIGINT,
     check_in_date   DATE NOT NULL,
     check_out_date  DATE NOT NULL,
     status          VARCHAR(32) NOT NULL DEFAULT 'HELD',

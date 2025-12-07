@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Reservation } from "@/types/reservation";
 import { CheckCircleIcon, ClockIcon, CalendarDaysIcon, CurrencyRupeeIcon } from "@heroicons/react/24/outline";
 
+const reservationAPIUrl = process.env.NEXT_PUBLIC_RESERVATION_API_BASE_URL || "http://localhost:8085";
+
 export default function ConfirmationPage() {
 
   const searchParams = useSearchParams();
@@ -22,8 +24,7 @@ export default function ConfirmationPage() {
       setLoading(true);
       setError(null);
       try {
-        const baseUrl = process.env.RESERVATION_API_BASE_URL || "http://localhost:8085";
-        const res = await fetch(`${baseUrl}/api/reservations/${reservationId}`, {
+        const res = await fetch(`${reservationAPIUrl}/api/reservations/${reservationId}`, {
           signal: abort.signal,
           headers: { Accept: "application/json" },
         });
