@@ -1,4 +1,3 @@
-
 "use client"
 
 import Image from "next/image";
@@ -42,35 +41,47 @@ export default function HotelCard({hotel, checkInDate, checkOutDate} : HotelCard
 
   return (
     <div 
-      className="h-60 grid grid-cols-6 rounded-2xl border cursor-pointer overflow-hidden"
+      className="flex flex-col md:grid md:grid-cols-6 md:h-60 rounded-2xl border cursor-pointer overflow-hidden"
       onClick={handleNavigate}
     >
             
-      <div id="thumbnail" className="relative col-span-2 h-full">
+      {/* Thumbnail - full width on mobile, 2 cols on desktop */}
+      <div id="thumbnail" className="relative w-full h-48 md:h-full md:col-span-2">
         <Image
           src={thumbnailUrl ?? "/images/jaipur/the-johri/thumbnail/photo1.jpg"}
           alt={name}
           fill={true}
-          className="object-cover overflow-hidden"
+          className="object-cover"
         />
       </div>
 
-      <div className="flex col-span-3 flex-col border-r p-5"> 
-        <h3 id="name" className="text-lg font-semibold">{name}</h3>
-        <p className="mb-4 text-sm text-gray-500">{address} | {rating} of 5</p> 
-        <Separator />
-        <div className="py-2 flex flex-wrap gap-2">
-          {amenities.map(amentiy => <Badge key={amentiy.id}>{amentiy.description}</Badge>)}
+      {/* Hotel info - stacked on mobile, 3 cols on desktop */}
+      <div className="flex flex-col border-r-0 md:border-r md:col-span-3 p-4 md:p-5"> 
+        <h3 id="name" className="text-base md:text-lg font-semibold">{name}</h3>
+        <p className="mb-3 md:mb-4 text-xs md:text-sm text-gray-500">
+          {address} {rating && `| ${rating} of 5`}
+        </p> 
+        <Separator className="hidden md:block" />
+        <div className="py-2 flex flex-wrap gap-1.5 md:gap-2">
+          {amenities.slice(0, 3).map(amenity => (
+            <Badge key={amenity.id} className="text-xs">{amenity.description}</Badge>
+          ))}
+          {amenities.length > 3 && (
+            <Badge variant="outline" className="text-xs">+{amenities.length - 3} more</Badge>
+          )}
         </div>
         <div className="mt-auto"></div>
-        <p className="text-sm text-gray-600">{shortDescription}</p>
+        <p className="text-xs md:text-sm text-gray-600 line-clamp-2">{shortDescription}</p>
       </div>
             
-      <div className="flex flex-col col-span-1 justify-end p-5">
-        <p className="text-lg font-semibold">₹{minAvgRatePerNight}</p>
-        <p className="text-xs text-gray-600 whitespace-nowrap mb-4">per night + Taxes</p>
+      {/* Price and CTA - full width on mobile, 1 col on desktop */}
+      <div className="flex flex-row md:flex-col md:col-span-1 justify-between md:justify-end items-center md:items-stretch p-4 md:p-5 border-t md:border-t-0">
+        <div className="md:mb-4">
+          <p className="text-lg md:text-xl font-semibold">₹{minAvgRatePerNight}</p>
+          <p className="text-xs text-gray-600 whitespace-nowrap">per night + Taxes</p>
+        </div>
         <Button 
-          className="w-full cursor-pointer font-semibold"
+          className="md:w-full cursor-pointer font-semibold text-sm md:text-base"
           onClick={handleNavigate}
         >
           View
@@ -78,5 +89,5 @@ export default function HotelCard({hotel, checkInDate, checkOutDate} : HotelCard
       </div>
             
     </div>
-    );
+  );
 }
