@@ -185,8 +185,16 @@ export default function HotelPage() {
         <main className="min-h-screen">
             
             {/* Hero Section - Responsive Carousel */}
-            <section id="photo-gallery" className="w-full h-[50vh] sm:h-[60vh] lg:h-screen p-4 sm:p-10 lg:p-20 pt-20 sm:pt-20 lg:pt-20">
-                <Carousel>
+            <section id="photo-gallery" className="w-full h-[50vh] sm:h-[60vh] lg:h-screen px-6 lg:px-10 pt-20 pb-2">
+                <div id="carousel-image" className="relative w-full h-full rounded-lg sm:rounded-2xl overflow-hidden">
+                    <Image
+                        src="/images/jaipur/the-johri/carousel/photo1.jpg"
+                        alt={`${hotel?.name}`}
+                        fill={true}
+                        className="object-cover"
+                    />
+                </div>
+                {/* <Carousel>
                     <CarouselContent>
                         {DEFAULT_CAROUSEL.map((src, idx) => (
                             <CarouselItem key={idx}>
@@ -203,14 +211,14 @@ export default function HotelPage() {
                     </CarouselContent>
                     <CarouselPrevious className="hidden sm:flex" />
                     <CarouselNext className="hidden sm:flex" />
-                </Carousel>
+                </Carousel> */}
             </section>
             
             {/* Content Section - Responsive Grid */}
             <section id="grid-container" className="w-full flex flex-col lg:grid lg:grid-cols-3 gap-6 p-4 sm:p-6 lg:p-10">
                 
                 {/* Main Content */}
-                <div id="main-content" className="lg:col-span-2 order-2 lg:order-1">
+                <div id="main-content" className="lg:col-span-2 order-1">
 
                     {/* Hotel Details */}
                     {loading ? (
@@ -261,9 +269,9 @@ export default function HotelPage() {
                 </div>
                 
                 {/* Booking Summary - Sticky on desktop, top on mobile */}
-                <aside id="booking-summary" className="lg:col-span-1 order-1 lg:order-2">
+                <aside id="booking-summary" className="lg:col-span-1 order-2">
                   <div className="lg:sticky lg:top-24">
-                    <Card className="w-full shadow-lg lg:shadow-none">
+                    <Card className="w-full shadow-none">
                         <CardHeader>
                             <CardTitle className="text-base sm:text-lg font-semibold">Booking Summary</CardTitle>
                             <CardDescription>

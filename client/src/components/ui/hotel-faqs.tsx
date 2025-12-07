@@ -3,7 +3,7 @@ import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/co
 
 export default function HotelFaqs() {
     return (
-        <article id="faqs-container"className="flex flex-col gap-4">
+        <article id="faqs-container"className="flex flex-col gap-4 mb-4">
             <h2 className="text-md font-semibold">FAQs</h2>
             <Accordion
                 type="single"
