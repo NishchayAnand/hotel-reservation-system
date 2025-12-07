@@ -15,7 +15,7 @@ spring:
 
 service:
   inventory-service:
-    base-url: ${INVENTORY_SERVICE_BASE_URL}
+    base-url: ${INVENTORY_SERVICE_BASE_URL:http://localhost:8082}
 
 server:
   address: 0.0.0.0
