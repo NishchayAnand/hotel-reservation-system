@@ -33,33 +33,40 @@ export default function RoomTypeCard({roomType, selectedQty, onQuantityChange} :
     const options = Array.from({ length: max }, (_, i) => i + 1);
 
     return (
-        <div className="h-40 grid grid-cols-7 rounded-2xl border cursor-pointer overflow-hidden">
+        <div className="flex flex-col md:grid md:grid-cols-7 md:h-40 rounded-2xl border cursor-pointer overflow-hidden">
             
-            <div id="thumbnail" className="relative col-span-2 h-full">
+            {/* Thumbnail - full width on mobile, 2 cols on desktop */}
+            <div id="thumbnail" className="relative w-full h-48 md:h-full md:col-span-2">
               <Image
                 src="/images/jaipur/the-johri/thumbnail/photo1.jpg"
                 alt="room type image"
                 fill={true}
-                className="object-cover overflow-hidden"
+                className="object-cover"
               />
             </div>
 
-            <div className="flex col-span-3 flex-col border-r p-5"> 
-                <h3 id="name" className="text-lg font-semibold">{roomType.name}</h3>
-                <Separator />
-                <div className="py-2 flex flex-wrap gap-2">
-                    {(roomType?.amenities ?? []).map((amenity) => (
-                        <Badge key={amenity.id}>{amenity.description}</Badge>
+            {/* Room info - stacked on mobile, 3 cols on desktop */}
+            <div className="flex flex-col border-r-0 md:border-r md:col-span-3 p-4 md:p-5"> 
+                <h3 id="name" className="text-base md:text-lg font-semibold">{roomType.name}</h3>
+                <Separator className="hidden md:block" />
+                <div className="py-2 flex flex-wrap gap-1.5 md:gap-2">
+                    {(roomType?.amenities ?? []).slice(0, 4).map((amenity) => (
+                        <Badge key={amenity.id} className="text-xs">{amenity.description}</Badge>
                     ))}
+                    {(roomType?.amenities ?? []).length > 4 && (
+                        <Badge variant="outline" className="text-xs">+{roomType.amenities.length - 4}</Badge>
+                    )}
                 </div>  
             </div>
             
-            <div className="flex flex-col col-span-2 justify-end p-5">
-                <p className="text-lg font-semibold">₹{roomType.avgPricePerNight}</p>
-                <p className="text-xs text-gray-600 whitespace-nowrap mb-4">per night + Taxes</p>
+            {/* Price and selector - horizontal on mobile, vertical on desktop */}
+            <div className="flex flex-row md:flex-col md:col-span-2 justify-between md:justify-end items-center md:items-stretch p-4 md:p-5 border-t md:border-t-0">
+                <div className="md:mb-4">
+                    <p className="text-lg md:text-xl font-semibold">₹{roomType.avgPricePerNight}</p>
+                    <p className="text-xs text-gray-600 whitespace-nowrap">per night + Taxes</p>
+                </div>
                 <Select value={selected} onValueChange={handleValueChange}>
-                    <SelectTrigger className="w-full">
-                        {/* placeholder shown when selected === "" */}
+                    <SelectTrigger className="w-20 md:w-full">
                         <SelectValue placeholder="0" />
                     </SelectTrigger>
                     <SelectContent>
@@ -72,6 +79,6 @@ export default function RoomTypeCard({roomType, selectedQty, onQuantityChange} :
                 </Select>
             </div>
             
-          </div>
+        </div>
     );
 }

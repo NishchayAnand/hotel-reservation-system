@@ -41,8 +41,8 @@ export default function HotelPage() {
 
     const searchParams = useSearchParams();
     const hotelId = searchParams.get("hotelId") ?? "";
-    const checkInDate = searchParams.get("checkInDate") ?? ""; // (ISO: YYYY-MM-DD)
-    const checkOutDate = searchParams.get("checkOutDate") ?? ""; // (ISO: YYYY-MM-DD)
+    const checkInDate = searchParams.get("checkInDate") ?? "";
+    const checkOutDate = searchParams.get("checkOutDate") ?? "";
 
     const [hotel, setHotel] = useState<Hotel | null>(null);
     const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
@@ -51,11 +51,10 @@ export default function HotelPage() {
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
-    // selections map: roomTypeId -> quantity
     const [selections, setSelections] = useState<Record<string, number>>({});
 
     useEffect(() => {
-        let isMounted = true; // 👈 flag to track if component is still mounted
+        let isMounted = true;
         const fetchData = async () => {
             setLoading(true);
             try {
@@ -88,17 +87,14 @@ export default function HotelPage() {
                     setHotel(null);
                     setRoomTypes([]);
                 }
-
             } finally {
                 if(isMounted) setLoading(false);
             }
         };
 
         fetchData();
-
         return () => { isMounted = false; };
-        
-    }, []);
+    }, [hotelId, checkInDate, checkOutDate]);
 
     const handleQuantityChange = (roomTypeId: string, qty: number) => {
         setSelections(prev => {
@@ -114,7 +110,6 @@ export default function HotelPage() {
         ));
     };
 
-    // compute number of nights from checkOutDate - checkInDate
     const nights = useMemo(() => {
         const checkIn = new Date(checkInDate);
         const checkOut = new Date(checkOutDate);
@@ -122,7 +117,6 @@ export default function HotelPage() {
         return Math.round(ms / (1000 * 60 * 60 * 24));
     }, [checkInDate, checkOutDate]);
 
-    // breakdown selection pricing and total
     const breakdown = useMemo(() => {
         const selectedItems: {id: string, name: string, qty: number, rate: number, subtotal: number}[] = [];
         let total = 0;
@@ -137,19 +131,12 @@ export default function HotelPage() {
         return { selectedItems, total };
     }, [selections, roomTypes, nights]);
 
-    // helper for formatting currency
     const formatCurrency = (v: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(v);
-    
-    // taxes & fees (adjust percentages/thresholds as you need)
-    // const taxes = Math.round(breakdown.total * 0.18); // 18% GST example
-    // const serviceFee = breakdown.total > 0 ? Math.max(50, Math.round(breakdown.total * 0.02)) : 0; // min ₹50 or 2%
-    // const grandTotal = breakdown.total + taxes + serviceFee;
 
     const handleCreateReservation = async () => {
         setSubmitError(null);
         setSubmitting(true);
         try {
-            // build reservation items from precomputed breakdown.selectedItems
             const reservationItems = breakdown.selectedItems.map( item => ({
                 roomTypeId: Number(item.id),
                 name: item.name,
@@ -157,7 +144,6 @@ export default function HotelPage() {
                 rate: item.rate
             }));
 
-            // idempotency key
             const requestId = crypto.randomUUID();
 
             const payload = {
@@ -184,7 +170,6 @@ export default function HotelPage() {
             }
 
             const created = await res.json();
-
             const paramString = new URLSearchParams({ reservationId: created.reservationId }).toString();
             router.push(`/bookings/review?${paramString}`);
 
@@ -197,18 +182,18 @@ export default function HotelPage() {
     };
 
     return (
-        <main>
+        <main className="min-h-screen">
             
-            {/* Hero Section - Image Carousel */}
-            <section id="photo-gallery" className="w-full h-screen p-20">
+            {/* Hero Section - Responsive Carousel */}
+            <section id="photo-gallery" className="w-full h-[50vh] sm:h-[60vh] lg:h-screen p-4 sm:p-10 lg:p-20 pt-20 sm:pt-20 lg:pt-20">
                 <Carousel>
                     <CarouselContent>
                         {DEFAULT_CAROUSEL.map((src, idx) => (
                             <CarouselItem key={idx}>
-                                <div id="carousel-image" className="relative aspect-video rounded-2xl overflow-hidden">
+                                <div id="carousel-image" className="relative aspect-video rounded-lg sm:rounded-2xl overflow-hidden">
                                     <Image
                                         src={src}
-                                        alt={`${name} photo ${idx + 1}`}
+                                        alt={`${hotel?.name} photo ${idx + 1}`}
                                         fill={true}
                                         className="object-cover"
                                     />
@@ -216,46 +201,46 @@ export default function HotelPage() {
                             </CarouselItem>
                         ))}
                     </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
+                    <CarouselPrevious className="hidden sm:flex" />
+                    <CarouselNext className="hidden sm:flex" />
                 </Carousel>
             </section>
             
-            {/* Content Section */}
-            <section id="grid-container" className="w-full grid grid-cols-3 p-10">
+            {/* Content Section - Responsive Grid */}
+            <section id="grid-container" className="w-full flex flex-col lg:grid lg:grid-cols-3 gap-6 p-4 sm:p-6 lg:p-10">
                 
                 {/* Main Content */}
-                <div id="main-content" className="col-span-2 pr-10">
+                <div id="main-content" className="lg:col-span-2 order-2 lg:order-1">
 
                     {/* Hotel Details */}
                     {loading ? (
                         <HotelDetailsSkeleton />
                     ) : (
                         <article id="hotel-details">
-                            <h1 className="text-2xl font-semibold">{hotel?.name}</h1>
-                            <p className="text-md my-4 font-semibold">{hotel?.address}</p>
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold">{hotel?.name}</h1>
+                            <p className="text-sm sm:text-md my-3 sm:my-4 font-semibold text-gray-700">{hotel?.address}</p>
                             <Separator />
-                            <div className="flex flex-wrap gap-2 my-5">
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2 my-4 sm:my-5">
                                 {(hotel?.amenities ?? []).map((amenity) => (
-                                    <Badge key={amenity.id}>{amenity.description}</Badge>
+                                    <Badge key={amenity.id} className="text-xs sm:text-sm">{amenity.description}</Badge>
                                 ))}
                             </div>
                             <Separator />
-                            <p className="mt-10 text-gray-600">
-                            {hotel?.shortDescription}
+                            <p className="mt-6 sm:mt-10 text-sm sm:text-base text-gray-600">
+                                {hotel?.shortDescription}
                             </p>
                             <br />
-                            <p className="text-gray-600 mb-10">
+                            <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-10">
                                 {hotel?.longDescription}
                             </p>
                         </article>
                     )}
                                
-                    <Separator className="mb-5"/>
+                    <Separator className="mb-4 sm:mb-5"/>
                     
                     {/* Room Type Details */}
-                    <article id="room-type-details" className="flex flex-col gap-4">
-                        <h2 className="text-md font-semibold mb-4">Select Rooms</h2>
+                    <article id="room-type-details" className="flex flex-col gap-3 sm:gap-4">
+                        <h2 className="text-base sm:text-md lg:text-lg font-semibold mb-2 sm:mb-4">Select Rooms</h2>
                         {loading ? renderSkeletons(2) : (
                             roomTypes.map(roomType => (
                                 <RoomTypeCard 
@@ -268,19 +253,19 @@ export default function HotelPage() {
                         )}   
                     </article>
 
-                    <Separator className="mt-10 mb-5"/>
+                    <Separator className="mt-6 sm:mt-10 mb-4 sm:mb-5"/>
                     
                     {/* Hotel FAQs */}
                     <HotelFaqs />
                     
                 </div>
                 
-                {/* Booking Summary - improved UI */}
-                <aside id="booking-summary" className="col-span-1">
-                  <div className="sticky top-24">
-                    <Card className="w-full shadow-none">
+                {/* Booking Summary - Sticky on desktop, top on mobile */}
+                <aside id="booking-summary" className="lg:col-span-1 order-1 lg:order-2">
+                  <div className="lg:sticky lg:top-24">
+                    <Card className="w-full shadow-lg lg:shadow-none">
                         <CardHeader>
-                            <CardTitle className="text-lg font-semibold">Booking Summary</CardTitle>
+                            <CardTitle className="text-base sm:text-lg font-semibold">Booking Summary</CardTitle>
                             <CardDescription>
                                 <div className="text-xs text-gray-500">
                                     {nights > 0 ? `${nights} night${nights > 1 ? "s" : ""}` : "Dates"}
@@ -290,14 +275,14 @@ export default function HotelPage() {
                             </CardDescription>
                         </CardHeader>
                       <CardContent>
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-3 sm:gap-4">
                           {breakdown.selectedItems.length === 0 ? (
-                            <div className="p-4 bg-gray-50 rounded-md text-sm text-gray-600">
+                            <div className="p-3 sm:p-4 bg-gray-50 rounded-md text-xs sm:text-sm text-gray-600">
                               No rooms selected
                             </div>
                           ) : (
-                            <div className="space-y-3">
-                                <div id="pricing-breakdown" className="text-sm">
+                            <div className="space-y-2 sm:space-y-3">
+                                <div id="pricing-breakdown" className="text-xs sm:text-sm">
                                     {breakdown.selectedItems.map(it => (
                                     <div key={it.id} className="flex items-center justify-between mb-2">
                                         <div>
@@ -313,21 +298,7 @@ export default function HotelPage() {
                                     ))}
                                 </div>
 
-                                <div className="border-t border-gray-200 pt-3 text-sm space-y-2">
-                                    {/*
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Subtotal</span>
-                                        <span>{formatCurrency(breakdown.total)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Taxes (est.)</span>
-                                        <span>{formatCurrency(taxes)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Service fee</span>
-                                        <span>{formatCurrency(serviceFee)}</span>
-                                    </div>
-                                    */}
+                                <div className="border-t border-gray-200 pt-2 sm:pt-3 text-xs sm:text-sm space-y-2">
                                     <div className="flex justify-between font-semibold text-gray-900">
                                         <span>Total</span>
                                         <span>{formatCurrency(breakdown.total)}</span>
@@ -338,16 +309,16 @@ export default function HotelPage() {
                           )}
                         </div>
                       </CardContent>
-                      <CardFooter className="flex-col gap-3">
+                      <CardFooter className="flex-col gap-2 sm:gap-3">
                         <Button
                           type="submit"
-                          className="w-full cursor-pointer"
+                          className="w-full cursor-pointer text-sm sm:text-base"
                           disabled={breakdown.selectedItems.length === 0 || submitting}
                           onClick={handleCreateReservation}
                         >
                           {submitting ? "Processing..." : (breakdown.selectedItems.length === 0 ? "Select rooms to continue" : `Book • ${formatCurrency(breakdown.total)}`)}
                         </Button>
-                        {submitError && <div className="text-xs text-red-600 mt-2">{submitError}</div>}
+                        {submitError && <div className="text-xs text-red-600 mt-1 sm:mt-2">{submitError}</div>}
                       </CardFooter>
                     </Card>
                   </div>
