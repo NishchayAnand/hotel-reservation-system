@@ -209,7 +209,7 @@ export default function ReviewPage() {
     script.async = true;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("Failed to load Razorpay checkout script"));
-    document.body.appendChild(script); // This is the moment the browser actually starts loading the script. Once it’s appended to the DOM, the browser begins downloading it.
+    document.body.appendChild(script);
   });
 
   const handlePayNow = async () => {
@@ -220,8 +220,7 @@ export default function ReviewPage() {
 
     // validation: require guest details
     if( !guestName?.trim() || !guestEmail?.trim() || !guestPhone?.trim() ) {
-      //toast("Name, Email and Phone are required");
-      setPaymentError("Name, Email and P  hone are required");
+      setPaymentError("Name, Email and Phone are required");
       setCreatingPayment(false);
       return;
     }
@@ -249,7 +248,6 @@ export default function ReviewPage() {
       if(!res.ok) {
         const errBody = await res.json().catch(() => null);
         const message = errBody?.message ?? `Create payment failed: ${res.status}`;
-        //toast(message);
         throw new Error(message);
       }
 
@@ -261,9 +259,9 @@ export default function ReviewPage() {
 
       if(!orderId || !key) throw new Error("Payment service did not return provider order id or key");
 
-      await loadRazorpay(); // pause here until the Razorpay script is loaded, or throw an error if it fails.
+      await loadRazorpay();
 
-      const options =   {
+      const options = {
         key,
         order_id: orderId,
         amount: amountPaise,
@@ -278,7 +276,6 @@ export default function ReviewPage() {
         handler: (razorpayResponse: any) => {
           (async () => {
             try {
-              // finalize reservation using payment-service as the orchestrator
               const finalizeRes = await fetch(
                 `${paymentAPIUrl}/api/payments/confirm`,
                 {
@@ -299,7 +296,6 @@ export default function ReviewPage() {
                 throw new Error(errBody?.message ?? `Reservation finalize failed: ${finalizeRes.status}`);
               }
 
-              // on success
               const finalizeData = await finalizeRes.json();
               const paramString = new URLSearchParams({ 
                 reservationId: finalizeData.reservationId,
@@ -310,7 +306,6 @@ export default function ReviewPage() {
               
             } catch (err: any) {
               console.error("Failed to finalize reservation after payment:", err);
-              //toast.error(err?.message ?? "Payment succeeded but finalizing reservation failed");
               setPaymentError("Failed to finalize reservation after payment: " + err);
             } finally {
               setCreatingPayment(false);
@@ -319,8 +314,6 @@ export default function ReviewPage() {
         },
         modal: {
           ondismiss: () => {
-            // is called only when the modal is closed by the user
-            // helps you detect when a user cancels or exits the payment flow
             toast("Payment not completed. Checkout modal was closed by the user");
           }
         },
@@ -340,230 +333,239 @@ export default function ReviewPage() {
   };
 
   return (
-    <main className="mt-16 max-w-6xl mx-auto p-6">
+    <main className="min-h-screen pt-20 pb-10 px-4 sm:px-6 lg:px-10">
+      <div className="max-w-6xl mx-auto">
 
-      {/* Hold expiry timer (bottom-right) */}
-      {timeLeftMs !== null && !holdExpired && (
-        <Item variant="outline" className="fixed bottom-6 right-6 z-50 w-60 bg-white">
-          <ItemContent>
-            <ItemDescription className="font-medium text-gray-800">
-              <ClockIcon className="w-5 h-5 mr-1.5 inline" />
-              {`Hold will expire in ${formatRemaining(timeLeftMs)}`}
-            </ItemDescription>
-          </ItemContent>
-        </Item>
-      )}
+        {/* Hold expiry timer - responsive positioning */}
+        {timeLeftMs !== null && !holdExpired && (
+          <Item variant="outline" className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-56 sm:w-60 bg-white shadow-lg">
+            <ItemContent>
+              <ItemDescription className="font-medium text-gray-800 text-xs sm:text-sm">
+                <ClockIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 inline" />
+                {`Hold expires in ${formatRemaining(timeLeftMs)}`}
+              </ItemDescription>
+            </ItemContent>
+          </Item>
+        )}
 
-      <header id="title" className="mb-6">
-        <h1 className="text-3xl font-semibold">Booking Review</h1>
-        <p className="text-sm text-gray-500 mt-1">Confirm your selection and proceed to payment</p>
-      </header>
+        {/* Header */}
+        <header id="title" className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-semibold">Booking Review</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">Confirm your selection and proceed to payment</p>
+        </header>
 
-      <div id="main-content" className="grid grid-cols-3 gap-6">
+        {/* Main content - responsive grid */}
+        <div id="main-content" className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
 
-        <section id="hero-section" className="col-span-2 space-y-4">
+          {/* Left column - main content, order-2 on mobile (payment summary first) */}
+          <section id="hero-section" className="lg:col-span-2 space-y-4 order-1">
 
-          {/* Hotel Details */}
-          <div
-            id="booking-summary"
-            className="p-5 border rounded-lg bg-white flex flex-col sm:flex-row gap-4 items-start"
-          >
-            <img
-              src="/images/jaipur/the-johri/thumbnail/photo1.jpg"
-              alt="Hotel thumbnail"
-              className="w-full sm:w-28 h-20 rounded-md object-cover flex-shrink-0"
-            />
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-4">
-
-                <div id="hotel-details" className="min-w-0">
-                  <h2 className="text-lg font-semibold truncate">
-                    {hotel?.name ?? <Skeleton className="h-4 w-[250px]" />}
-                  </h2>
-                  <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-                    <span className="inline-flex items-center gap-1">
-                      <MapPinIcon className="w-4 h-4" />
-                      {hotel?.address ?? <Skeleton className="h-4 w-[100px]" />}
-                    </span>
-                    {hotel?.rating ? 
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-800">
-                        {Number(hotel.rating).toFixed(1)} ★
-                      </span>
-                      :
-                      <Skeleton className="h-4 w-[50px]" />
-                    }
-                  </div>
-                </div>
-
-                <div className="text-right flex-shrink-0">
-                  <div className="text-sm text-gray-500">Dates</div>
-                  <div className="text-sm my-1 font-medium">
-                    {reservation?.checkInDate ? 
-                      `${reservation?.checkInDate} → ${reservation?.checkOutDate}`
-                      :
-                      <Skeleton className="h-4 w-[100px]" /> 
-                    }
-                  </div>
-                  {typeof nights === "number" ? (
-                    <div className="text-xs text-gray-400 mt-1">
-                      {nights} {nights === 1 ? "night" : "nights"}
-                    </div>
-                  ) : (
-                    <Skeleton className="h-4 w-[50px] mt-1" />
-                  )}
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-
-          {/* Rooms Summary */}
-          <div id="rooms-summary" className="p-4 border rounded-lg bg-white">
-            <h3 className="text-md font-medium mb-3">Selected rooms</h3>
-            <ul className="divide-y">
-              {reservation?.reservedItems && reservation.reservedItems.length > 0 ? (
-                reservation.reservedItems.map((item, idx) => {
-                  const name = item.name ?? "Unknown Room Type"
-                  const quantity = item.quantity ?? 0;
-                  const rate = item.rate ?? 0;
-
-                  return (
-                    <li key={idx} className="py-3 flex justify-between items-center">
-                      <div>
-                        <div className="font-medium">{name}</div>
-                        <div className="text-xs text-gray-500">{quantity} {quantity === 1 ? "room" : "rooms"} • Non-refundable</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold">{fmt.format(rate)}</div>
-                        <div className="text-xs text-gray-400">per night</div>
-                      </div>
-                    </li>
-
-                  );
-                })
-              ) : (
-                <li className="py-3 text-sm text-gray-500">No rooms selected</li>
-              )}
-            </ul>
-          </div>
-
-          {/* Guest Details */}
-          <div id="guest-details" className="p-4 border rounded-lg bg-white">
-
-            <FieldSet>
-
-              <FieldLegend>Guest details</FieldLegend>
-              <FieldDescription>Primary guest information — used for check-in and confirmation</FieldDescription>
-              
-              <FieldGroup className="mt-2 grid grid-cols-2 gap-y-3 gap-x-6 text-md text-gray-800">
-                
-                <Field>
-                  <FieldLabel htmlFor="username">Name</FieldLabel>
-                  <FieldDescription>Enter your full name exactly as shown on your ID.</FieldDescription>
-                  <Input 
-                    id="username" 
-                    type="text" 
-                    placeholder="Max Leiter" 
-                    value={guestName}
-                    onChange={ (e) => setGuestName(e.target.value) }
-                  />
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
-                  <FieldDescription>We'll send confirmation to this email.</FieldDescription>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="yourname@example.com" 
-                    value={guestEmail}
-                    onChange={ (e) => setGuestEmail(e.target.value) }
-                  />
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="phone">Phone</FieldLabel>
-                  <FieldDescription>Use digits and spaces only.</FieldDescription>
-                  <Input 
-                    id="phone" 
-                    type="tel" 
-                    placeholder="+91 888 888 8888" 
-                    value={guestPhone}
-                    onChange={ (e) => setGuestPhone(e.target.value) }
-                  />
-                </Field>
-
-              </FieldGroup>
-
-            </FieldSet>
-
-            <div className="mt-6 text-xs text-gray-400">
-              Note: Valid ID will be required at check-in.
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* Payment Summary */}
-        <aside id="side-section" className="col-span-1">
-          <div className="p-4 border rounded-lg bg-white sticky top-24">
-            <h3 className="text-lg font-semibold mb-2">Payment summary</h3>
-
-            <div className="text-sm text-gray-600 mb-4">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span className="font-medium">{reservation?.amount ? fmt.format(reservation.amount) : <Skeleton className="h-4 w-[50px]" /> }</span>
-              </div>
-              <div className="flex justify-between mt-2">
-                <span>Taxes (est.)</span>
-                <span className="font-medium">{ reservation ? fmt.format(taxes) : <Skeleton className="h-4 w-[50px]" /> }</span>
-              </div>
-            </div>
-
-            <div className="border-t pt-3 mb-4">
-
-              <div className="flex justify-between items-start gap-4">
-
-                <div>
-                  <div className="text-sm text-gray-500">Total (incl. taxes)</div>
-                  <div className="text-xl my-2 font-semibold text-gray-900">{reservation ? fmt.format(total) : <Skeleton className="h-6 w-[120px]" />}</div>
-                  <div className="text-xs text-gray-400">Includes estimated taxes & fees</div>
-                </div>
-
-                <div className="text-right">
-                  <span className="inline-flex items-center gap-2 text-xs text-gray-500">
-                    <svg className="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                      <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 2v6m0 8v6M4 12h16" />
-                    </svg>
-                    <span>Secure payment</span>
-                  </span>
-                </div>
-
-              </div>
-
-            </div>
-
-            <Button 
-              id="pay-now"
-              type="submit" 
-              className="w-full cursor-pointer"
-              onClick={handlePayNow}
-              disabled={holdExpired || creatingPayment}
-
+            {/* Hotel Details - responsive card */}
+            <div
+              id="booking-summary"
+              className="p-4 sm:p-5 border rounded-lg bg-white flex flex-col sm:flex-row gap-4 items-start"
             >
-              {creatingPayment ? "Processing…" : holdExpired ? "Hold Expired" : "Pay Now"}
-            </Button>
-            {paymentError && <div className="mt-2 text-sm text-red-600">{paymentError}</div>}
-          
-          </div>
+              <img
+                src="/images/jaipur/the-johri/thumbnail/photo1.jpg"
+                alt="Hotel thumbnail"
+                className="w-full sm:w-28 h-32 sm:h-20 rounded-md object-cover flex-shrink-0"
+              />
 
-        </aside>
+              <div className="flex-1 min-w-0 w-full">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+
+                  <div id="hotel-details" className="min-w-0 flex-1">
+                    <h2 className="text-base sm:text-lg font-semibold truncate">
+                      {hotel?.name ?? <Skeleton className="h-4 w-full sm:w-[250px]" />}
+                    </h2>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-500">
+                      <span className="inline-flex items-center gap-1">
+                        <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="truncate">{hotel?.address ?? <Skeleton className="h-4 w-[100px]" />}</span>
+                      </span>
+                      {hotel?.rating ? 
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-50 text-yellow-800">
+                          {Number(hotel.rating).toFixed(1)} ★
+                        </span>
+                        :
+                        <Skeleton className="h-4 w-[50px]" />
+                      }
+                    </div>
+                  </div>
+
+                  <div className="text-left sm:text-right flex-shrink-0 w-full sm:w-auto">
+                    <div className="text-xs sm:text-sm text-gray-500">Dates</div>
+                    <div className="text-xs sm:text-sm my-1 font-medium">
+                      {reservation?.checkInDate ? 
+                        `${reservation?.checkInDate} → ${reservation?.checkOutDate}`
+                        :
+                        <Skeleton className="h-4 w-full sm:w-[100px]" /> 
+                      }
+                    </div>
+                    {typeof nights === "number" ? (
+                      <div className="text-xs text-gray-400 mt-1">
+                        {nights} {nights === 1 ? "night" : "nights"}
+                      </div>
+                    ) : (
+                      <Skeleton className="h-4 w-[50px] mt-1" />
+                    )}
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            {/* Rooms Summary */}
+            <div id="rooms-summary" className="p-4 border rounded-lg bg-white">
+              <h3 className="text-sm sm:text-md font-medium mb-3">Selected rooms</h3>
+              <ul className="divide-y">
+                {reservation?.reservedItems && reservation.reservedItems.length > 0 ? (
+                  reservation.reservedItems.map((item, idx) => {
+                    const name = item.name ?? "Unknown Room Type"
+                    const quantity = item.quantity ?? 0;
+                    const rate = item.rate ?? 0;
+
+                    return (
+                      <li key={idx} className="py-3 flex justify-between items-center gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm sm:text-base truncate">{name}</div>
+                          <div className="text-xs text-gray-500">{quantity} {quantity === 1 ? "room" : "rooms"} • Non-refundable</div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="font-semibold text-sm sm:text-base">{fmt.format(rate)}</div>
+                          <div className="text-xs text-gray-400">per night</div>
+                        </div>
+                      </li>
+
+                    );
+                  })
+                ) : (
+                  <li className="py-3 text-sm text-gray-500">No rooms selected</li>
+                )}
+              </ul>
+            </div>
+
+            {/* Guest Details - responsive form */}
+            <div id="guest-details" className="p-4 border rounded-lg bg-white">
+
+              <FieldSet>
+
+                <FieldLegend className="text-sm sm:text-base">Guest details</FieldLegend>
+                <FieldDescription className="text-xs sm:text-sm">Primary guest information — used for check-in and confirmation</FieldDescription>
+                
+                <FieldGroup className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm sm:text-md text-gray-800">
+                  
+                  <Field className="sm:col-span-2">
+                    <FieldLabel htmlFor="username">Name</FieldLabel>
+                    <FieldDescription className="text-xs">Enter your full name exactly as shown on your ID.</FieldDescription>
+                    <Input 
+                      id="username" 
+                      type="text" 
+                      placeholder="Max Leiter" 
+                      value={guestName}
+                      onChange={ (e) => setGuestName(e.target.value) }
+                      className="text-sm sm:text-base"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="email">Email</FieldLabel>
+                    <FieldDescription className="text-xs">We'll send confirmation to this email.</FieldDescription>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="yourname@example.com" 
+                      value={guestEmail}
+                      onChange={ (e) => setGuestEmail(e.target.value) }
+                      className="text-sm sm:text-base"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="phone">Phone</FieldLabel>
+                    <FieldDescription className="text-xs">Use digits and spaces only.</FieldDescription>
+                    <Input 
+                      id="phone" 
+                      type="tel" 
+                      placeholder="+91 888 888 8888" 
+                      value={guestPhone}
+                      onChange={ (e) => setGuestPhone(e.target.value) }
+                      className="text-sm sm:text-base"
+                    />
+                  </Field>
+
+                </FieldGroup>
+
+              </FieldSet>
+
+              <div className="mt-6 text-xs text-gray-400">
+                Note: Valid ID will be required at check-in.
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* Payment Summary - sticky on desktop, first on mobile */}
+          <aside id="side-section" className="lg:col-span-1 order-2">
+            <div className="p-4 border rounded-lg bg-white lg:sticky lg:top-24 shadow-none">
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Payment summary</h3>
+
+              <div className="text-xs sm:text-sm text-gray-600 mb-4">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span className="font-medium">{reservation?.amount ? fmt.format(reservation.amount) : <Skeleton className="h-4 w-[50px]" /> }</span>
+                </div>
+                <div className="flex justify-between mt-2">
+                  <span>Taxes (est.)</span>
+                  <span className="font-medium">{ reservation ? fmt.format(taxes) : <Skeleton className="h-4 w-[50px]" /> }</span>
+                </div>
+              </div>
+
+              <div className="border-t pt-3 mb-4">
+
+                <div className="flex justify-between items-start gap-4">
+
+                  <div>
+                    <div className="text-xs sm:text-sm text-gray-500">Total (incl. taxes)</div>
+                    <div className="text-lg sm:text-xl my-2 font-semibold text-gray-900">{reservation ? fmt.format(total) : <Skeleton className="h-6 w-[120px]" />}</div>
+                    <div className="text-xs text-gray-400">Includes estimated taxes & fees</div>
+                  </div>
+
+                  <div className="text-right flex-shrink-0">
+                    <span className="inline-flex items-center gap-1 sm:gap-2 text-xs text-gray-500">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 2v6m0 8v6M4 12h16" />
+                      </svg>
+                      <span className="hidden sm:inline">Secure payment</span>
+                      <span className="sm:hidden">Secure</span>
+                    </span>
+                  </div>
+
+                </div>
+
+              </div>
+
+              <Button 
+                id="pay-now"
+                type="submit" 
+                className="w-full cursor-pointer text-sm sm:text-base"
+                onClick={handlePayNow}
+                disabled={holdExpired || creatingPayment}
+
+              >
+                {creatingPayment ? "Processing…" : holdExpired ? "Hold Expired" : "Pay Now"}
+              </Button>
+              {paymentError && <div className="mt-2 text-xs sm:text-sm text-red-600">{paymentError}</div>}
+            
+            </div>
+
+          </aside>
+
+        </div>
 
       </div>
-
     </main>
   );
 }
