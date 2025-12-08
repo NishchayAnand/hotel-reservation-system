@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 import HotelCard from "@/components/ui/hotel-card";
 import SkeletonCard from "@/components/ui/skeleton-card";
@@ -10,7 +10,7 @@ import type { Hotel } from "@/types/hotel";
 
 const searchAPIUrl = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || "http://localhost:8084";
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const checkInDate = searchParams.get("checkInDate") ?? "";
   const checkOutDate = searchParams.get("checkOutDate") ?? "";
@@ -32,7 +32,7 @@ export default function SearchPage() {
         }
         const data = await res.json();
         setHotels(Array.isArray(data) ? data : []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Failed to fetch hotels", err);
         setHotels([]);
       } finally {
@@ -82,5 +82,22 @@ export default function SearchPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen pt-24 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto" />
+            <p className="mt-4 text-gray-600">Loading hotel listings...</p>
+          </div>
+        </div>
+      }
+    >
+      <SearchPageContent />
+    </Suspense>
   );
 }

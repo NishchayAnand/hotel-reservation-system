@@ -28,7 +28,41 @@ import {
   Item,
   ItemContent,
   ItemDescription,
-} from "@/components/ui/item"
+} from "@/components/ui/item";
+
+import { Suspense } from "react";
+
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
+
+interface RazorpayOptions {
+  key: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+  handler: (response: RazorpayResponse) => void;
+  modal: {
+    ondismiss: () => void;
+  };
+  theme: {
+    color: string;
+  };
+}
+
+interface RazorpayInstance {
+  open: () => void;
+}
 
 const formatRemaining = (ms: number) => {
   if (ms <= 0) return "0s";
@@ -47,7 +81,7 @@ const paymentAPIUrl = process.env.NEXT_PUBLIC_PAYMENT_API_BASE_URL || "http://lo
 const reservationAPIUrl = process.env.NEXT_PUBLIC_RESERVATION_API_BASE_URL || "http://localhost:8085";
 const hotelAPIUrl = process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL || "http://localhost:8081";
 
-export default function ReviewPage() {
+function ReviewPageContent() {
 
   const router = useRouter();
 
@@ -55,8 +89,8 @@ export default function ReviewPage() {
   const reservationId = searchParams.get("reservationId") ?? "";
 
   const [reservation, setReservation] = useState<Reservation | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  //const [loading, setLoading] = useState<boolean>(false);
+  //const [error, setError] = useState<string | null>(null);
 
   // hold expiry timer state
   const [timeLeftMs, setTimeLeftMs] = useState<number | null>(null);
@@ -64,8 +98,8 @@ export default function ReviewPage() {
 
   // hotel details after reservation is loaded
   const [hotel, setHotel] = useState<Hotel | null>(null);
-  const [hotelLoading, setHotelLoading] = useState<boolean>(false);
-  const [hotelError, setHotelError] = useState<string | null>(null);
+  //const [hotelLoading, setHotelLoading] = useState<boolean>(false);
+  //const [hotelError, setHotelError] = useState<string | null>(null);
 
   // guest input state (controlled inputs)
   const [guestName, setGuestName] = useState<string>("");
@@ -81,8 +115,8 @@ export default function ReviewPage() {
 
     const abort = new AbortController();
     const fetchReservation = async () => {
-      setLoading(true);
-      setError(null);
+      //setLoading(true);
+      //setError(null);
       try {
         const res = await fetch(`${reservationAPIUrl}/api/reservations/${reservationId}`, {
           method: "GET",
@@ -98,10 +132,10 @@ export default function ReviewPage() {
         const data = await res.json();
         setReservation(data);
 
-      } catch (err: any) {
-        if (err.name !== "AbortError") setError(err.message ?? "Failed to load reservation");
+      } catch (err: unknown) {
+        //if (err instanceof Error && err.name !== "AbortError") setError(err.message ?? "Failed to load reservation");
       } finally {
-        setLoading(false);
+        //setLoading(false);
       }
     };
 
@@ -140,7 +174,7 @@ export default function ReviewPage() {
     const checkOut = new Date(reservation.checkOutDate);
     const ms = checkOut.getTime() - checkIn.getTime();
     return Math.round(ms / (1000 * 60 * 60 * 24));
-  }, [reservation?.checkInDate, reservation?.checkOutDate]);
+  }, [reservation]);
 
   // global currency formatter for this component (recreated only when currency changes)
   const fmt = useMemo(() => {
@@ -171,8 +205,8 @@ export default function ReviewPage() {
 
     const abort = new AbortController();
     const fetchHotel = async () => {
-      setHotelLoading(true);
-      setHotelError(null);
+      //setHotelLoading(true);
+      //setHotelError(null);
 
       try {
         const res = await fetch(`${hotelAPIUrl}/api/hotels/${encodeURIComponent(reservation.hotelId)}`, {
@@ -188,11 +222,11 @@ export default function ReviewPage() {
 
         const data = await res.json();
         setHotel(data);
-      } catch (err: any) {
-        if (err.name !== "AbortError") setHotelError(err.message ?? "Failed to load hotel");
+      } catch (err: unknown) {
+        //if (err instanceof Error && err.name !== "AbortError") setHotelError(err.message ?? "Failed to load hotel");
 
       } finally {
-        setHotelLoading(false);
+        //setHotelLoading(false);
 
       } 
 
@@ -203,7 +237,7 @@ export default function ReviewPage() {
   }, [reservation?.hotelId]);
 
   const loadRazorpay = () => new Promise<void>((resolve, reject) => {
-    if ((window as any).Razorpay) return resolve();
+    if (typeof window !== 'undefined' && 'Razorpay' in window) return resolve();
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -261,7 +295,7 @@ export default function ReviewPage() {
 
       await loadRazorpay();
 
-      const options = {
+      const options: RazorpayOptions = {
         key,
         order_id: orderId,
         amount: amountPaise,
@@ -273,7 +307,7 @@ export default function ReviewPage() {
           email: guestEmail || "",
           contact: guestPhone|| ""
         },
-        handler: (razorpayResponse: any) => {
+        handler: (razorpayResponse: RazorpayResponse) => {
           (async () => {
             try {
               const finalizeRes = await fetch(
@@ -304,7 +338,7 @@ export default function ReviewPage() {
 
               router.push(`/bookings/confirmation?${paramString}`);
               
-            } catch (err: any) {
+            } catch (err: unknown) {
               console.error("Failed to finalize reservation after payment:", err);
               setPaymentError("Failed to finalize reservation after payment: " + err);
             } finally {
@@ -320,12 +354,14 @@ export default function ReviewPage() {
         theme: { color: "#111827" }
       };
 
-      const rzp = new (window as any).Razorpay(options);
+      const Razorpay = (window as unknown as { Razorpay: new (options: RazorpayOptions) => RazorpayInstance }).Razorpay;
+      const rzp = new Razorpay(options);
+      //const rzp = new (window as unknown as { Razorpay: any }).Razorpay(options);
       rzp.open();
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setPaymentError(err?.message ?? "Failed to initiate payment");
+      setPaymentError(err instanceof Error ? err.message : "Failed to initiate payment");
     } finally {
       setCreatingPayment(false);
     }
@@ -471,7 +507,7 @@ export default function ReviewPage() {
 
                   <Field>
                     <FieldLabel htmlFor="email">Email</FieldLabel>
-                    <FieldDescription className="text-xs">We'll send confirmation to this email.</FieldDescription>
+                    <FieldDescription className="text-xs">We&apos;ll send confirmation to this email.</FieldDescription>
                     <Input 
                       id="email" 
                       type="email" 
@@ -567,5 +603,22 @@ export default function ReviewPage() {
 
       </div>
     </main>
+  );
+}
+
+export default function ReviewPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen pt-24 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto" />
+            <p className="mt-4 text-gray-600">Loading booking details...</p>
+          </div>
+        </div>
+      }
+    >
+     <ReviewPageContent />
+    </Suspense>
   );
 }

@@ -6,9 +6,11 @@ import Link from "next/link";
 import { Reservation } from "@/types/reservation";
 import { CheckCircleIcon, ClockIcon, CalendarDaysIcon, CurrencyRupeeIcon } from "@heroicons/react/24/outline";
 
+import { Suspense } from "react";
+
 const reservationAPIUrl = process.env.NEXT_PUBLIC_RESERVATION_API_BASE_URL || "http://localhost:8085";
 
-export default function ConfirmationPage() {
+function ConfirmationPageContent() {
 
   const searchParams = useSearchParams();
   const reservationId = searchParams.get("reservationId") ?? "";
@@ -35,8 +37,8 @@ export default function ConfirmationPage() {
         }
         const data = await res.json();
         setReservation({ ...data });
-      } catch (err: any) {
-        if (err.name !== "AbortError") setError(err.message ?? "Failed to load reservation");
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") setError(err.message ?? "Failed to load reservation");
       } finally {
         setLoading(false);
       }
@@ -182,5 +184,22 @@ export default function ConfirmationPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen pt-24 flex items-center justify-center">
+         <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto" />
+            <p className="mt-4 text-gray-600">Loading confirmation details...</p>
+          </div>
+        </div>
+      }
+    >
+      <ConfirmationPageContent />
+    </Suspense>
   );
 }

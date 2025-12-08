@@ -3,6 +3,7 @@
 import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from "@/components/ui/carousel"
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -25,17 +26,11 @@ import HotelDetailsSkeleton from "@/components/ui/hotel-details-skeleton";
 import HotelFaqs from "@/components/ui/hotel-faqs";
 import { useRouter } from "next/navigation";
 
-// static image list for the carousel
-const DEFAULT_CAROUSEL = [
-    "/images/jaipur/the-johri/carousel/photo1.jpg",
-    "/images/jaipur/the-johri/carousel/photo2.jpg"
-];
-
 const hotelAPIUrl = process.env.NEXT_PUBLIC_HOTEL_API_BASE_URL || "http://localhost:8081";
 const searchAPIUrl = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || "http://localhost:8084";
 const reservationAPIUrl = process.env.NEXT_PUBLIC_RESERVATION_API_BASE_URL || "http://localhost:8085";
 
-export default function HotelPage() {
+function HotelPageContent() {
 
     const router = useRouter();
 
@@ -336,4 +331,17 @@ export default function HotelPage() {
  
         </main>
     );
+}
+
+export default function HotelPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen pt-24 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading hotel details...</p>
+      </div>
+    </div>}>
+      <HotelPageContent />
+    </Suspense>
+  );
 }
