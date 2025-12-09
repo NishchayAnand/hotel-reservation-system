@@ -15,7 +15,7 @@ import lombok.AllArgsConstructor;
 
 @RestController
 @RequestMapping("/api/locations")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://main.d3h5opq9bz2w4u.amplifyapp.com"})
 @AllArgsConstructor
 public class LocationController {
 

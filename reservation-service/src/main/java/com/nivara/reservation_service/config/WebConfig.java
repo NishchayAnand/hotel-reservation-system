@@ -15,7 +15,7 @@ public class WebConfig {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/api/**")                         // adapt path pattern as needed
-                    .allowedOrigins("http://localhost:3000")           // frontend origin
+                    .allowedOrigins("http://localhost:3000", "https://main.d3h5opq9bz2w4u.amplifyapp.com")           // frontend origin
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                     .allowedHeaders("*")
                     .allowCredentials(true)
