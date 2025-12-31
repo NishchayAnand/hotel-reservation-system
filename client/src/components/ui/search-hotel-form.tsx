@@ -156,6 +156,8 @@ export function SearchHotelForm( {destinations} : {destinations: Destination[]} 
                                         mode="single"
                                         selected={field.value} 
                                         captionLayout="dropdown"
+                                        fromYear={new Date().getFullYear()}
+                                        toYear={new Date().getFullYear() + 10}
                                         onSelect={(date) => {
                                             field.onChange(date);
                                             setIsCheckInPopOpen(false);
@@ -189,6 +191,8 @@ export function SearchHotelForm( {destinations} : {destinations: Destination[]} 
                                         mode="single"
                                         selected={field.value}
                                         captionLayout="dropdown"
+                                        fromYear={new Date().getFullYear()}
+                                        toYear={new Date().getFullYear() + 10}
                                         onSelect={(date) => {
                                             field.onChange(date);
                                             setIsCheckOutPopOpen(false);
