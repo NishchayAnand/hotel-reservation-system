@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export function Navbar() {
     return (
-        <nav className="fixed left-0 top-0 w-full z-100 h-[4rem] bg-white flex items-center justify-between px-8 border-b">
+        <nav className="fixed left-0 top-0 w-full z-500 h-[4rem] bg-white flex items-center justify-between px-8 border-b">
 
             {/* Logo */}
             <Link href="/" className="text-lg font-bold">NIVARA</Link>
